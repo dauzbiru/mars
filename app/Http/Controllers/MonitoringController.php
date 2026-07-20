@@ -1344,6 +1344,21 @@ class MonitoringController extends Controller
 
             // --- Fill B44: Grade label with bold grade letter ---
             $b44Ref = 'B44';
+            $makeRPr = function($bold = false) use ($dom1, $ns) {
+                $rPr = $dom1->createElementNS($ns, 'rPr');
+                $rFont = $dom1->createElementNS($ns, 'rFont');
+                $rFont->setAttribute('ascii', 'Arimo');
+                $rFont->setAttribute('hAnsi', 'Arimo');
+                $rPr->appendChild($rFont);
+                $sz = $dom1->createElementNS($ns, 'sz');
+                $sz->setAttribute('val', '12');
+                $rPr->appendChild($sz);
+                if ($bold) {
+                    $b = $dom1->createElementNS($ns, 'b');
+                    $rPr->appendChild($b);
+                }
+                return $rPr;
+            };
             foreach ($xpath1->query("//s:c[@r='$b44Ref']") as $cell) {
                 while ($cell->firstChild) $cell->removeChild($cell->firstChild);
                 $cell->setAttribute('t', 'inlineStr');
@@ -1352,6 +1367,7 @@ class MonitoringController extends Controller
 
                 // "Gerai masuk dalam "
                 $r1 = $dom1->createElementNS($ns, 'r');
+                $r1->appendChild($makeRPr());
                 $t1 = $dom1->createElementNS($ns, 't');
                 $t1->setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:space', 'preserve');
                 $t1->appendChild($dom1->createTextNode('Gerai masuk dalam '));
@@ -1360,10 +1376,7 @@ class MonitoringController extends Controller
 
                 // Bold "Grade X"
                 $r2 = $dom1->createElementNS($ns, 'r');
-                $rPr2 = $dom1->createElementNS($ns, 'rPr');
-                $b2 = $dom1->createElementNS($ns, 'b');
-                $rPr2->appendChild($b2);
-                $r2->appendChild($rPr2);
+                $r2->appendChild($makeRPr(true));
                 $t2 = $dom1->createElementNS($ns, 't');
                 $t2->setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:space', 'preserve');
                 $t2->appendChild($dom1->createTextNode('Grade ' . $grade));
@@ -1372,6 +1385,7 @@ class MonitoringController extends Controller
 
                 // " dengan kategori:"
                 $r3 = $dom1->createElementNS($ns, 'r');
+                $r3->appendChild($makeRPr());
                 $t3 = $dom1->createElementNS($ns, 't');
                 $t3->setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:space', 'preserve');
                 $t3->appendChild($dom1->createTextNode(' dengan kategori:'));
