@@ -127,21 +127,9 @@
         </div>
 
         @if (!empty($groupLabels) && $prefix !== 'pra-monitoring')
-        @php
-            $f2Filled = 0;
-            $f2Total = count($groupLabels);
-            if ($finding && !empty($finding->penjelasan_isi) && is_array($finding->penjelasan_isi)) {
-                foreach ($finding->penjelasan_isi as $v) {
-                    if (!empty(trim($v ?? ''))) $f2Filled++;
-                }
-            }
-        @endphp
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-3">
             <button type="button" class="dropdown-header w-full px-4 py-3.5 flex items-center justify-between cursor-pointer active:bg-gray-50 text-left" onclick="toggleDropdown(this)">
-                <div>
-                    <h3 class="text-sm font-semibold text-gray-800">Penjelasan Formulir 2</h3>
-                        <p id="f2Subtitle" class="text-[11px] text-gray-400 mt-0.5" style="{{ $f2Filled > 0 ? '' : 'display:none' }}">{{ $f2Filled }}/{{ $f2Total }} terisi</p>
-                </div>
+                <h3 class="text-sm font-semibold text-gray-800">Penjelasan Formulir 2</h3>
                 <svg class="dropdown-chevron w-4 h-4 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
@@ -151,7 +139,7 @@
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">{{ $label }}</label>
                         <div class="relative">
-                            <input type="text" name="penjelasan_isi[]" value="{{ isset($finding->penjelasan_isi[$i]) ? $finding->penjelasan_isi[$i] : '' }}" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Ketik atau pilih penjelasan..." autocomplete="off">
+                            <textarea name="penjelasan_isi[]" rows="1" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden" placeholder="Ketik atau pilih penjelasan..." oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ isset($finding->penjelasan_isi[$i]) ? $finding->penjelasan_isi[$i] : '' }}</textarea>
                             <ul class="suggest-list hidden absolute z-10 left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto list-none p-0 m-0 mt-1" style="max-height:200px"></ul>
                         </div>
                     </div>
@@ -161,21 +149,9 @@
         @endif
 
         @if (count($zeroScoreItems) > 0)
-        @php
-            $f3Filled = 0;
-            $f3Total = count($zeroScoreItems);
-            if ($finding && !empty($finding->penjelasan_isi_3) && is_array($finding->penjelasan_isi_3)) {
-                foreach ($zeroScoreItems as $zi) {
-                    if (!empty(trim($finding->penjelasan_isi_3[$zi['id']] ?? ''))) $f3Filled++;
-                }
-            }
-        @endphp
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-3">
             <button type="button" class="dropdown-header w-full px-4 py-3.5 flex items-center justify-between cursor-pointer active:bg-gray-50 text-left" onclick="toggleDropdown(this)">
-                <div>
-                    <h3 class="text-sm font-semibold text-gray-800">Penjelasan Formulir 3</h3>
-                        <p id="f3Subtitle" class="text-[11px] text-gray-400 mt-0.5" style="{{ $f3Filled > 0 ? '' : 'display:none' }}">{{ $f3Filled }}/{{ $f3Total }} terisi</p>
-                </div>
+                <h3 class="text-sm font-semibold text-gray-800">Penjelasan Formulir 3</h3>
                 <svg class="dropdown-chevron w-4 h-4 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
@@ -185,7 +161,7 @@
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">{{ $item['name'] }}</label>
                     <div class="relative" data-formulir="3">
-                        <input type="text" name="penjelasan_isi_3[{{ $item['id'] }}]" value="{{ isset($finding->penjelasan_isi_3[$item['id']]) ? $finding->penjelasan_isi_3[$item['id']] : '' }}" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Ketik atau pilih penjelasan..." autocomplete="off">
+                        <textarea name="penjelasan_isi_3[{{ $item['id'] }}]" rows="1" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden" placeholder="Ketik atau pilih penjelasan..." oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ isset($finding->penjelasan_isi_3[$item['id']]) ? $finding->penjelasan_isi_3[$item['id']] : '' }}</textarea>
                         <ul class="suggest-list hidden absolute z-10 left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto list-none p-0 m-0 mt-1" style="max-height:200px"></ul>
                     </div>
                 </div>
@@ -334,7 +310,7 @@ function renderSuggestList(input, items) {
     list.classList.remove('hidden');
 }
 
-document.querySelectorAll('.relative input').forEach(function(input) {
+document.querySelectorAll('.relative textarea').forEach(function(input) {
     input.addEventListener('focus', function() {
         var items = getItemsForInput(this);
         var val = this.value.toLowerCase();
@@ -472,6 +448,10 @@ var temuanForm = document.querySelector('form[enctype]');
 var temuanFields = temuanForm.querySelectorAll('textarea, input[type=text]');
 temuanFields.forEach(function(el) {
     el.addEventListener('input', function() {
+        if (this.tagName === 'TEXTAREA') {
+            this.style.height = '';
+            this.style.height = this.scrollHeight + 'px';
+        }
         clearTimeout(autoSaveTimer);
         autoSaveTimer = setTimeout(function() {
             var fd = new FormData(temuanForm);
@@ -487,27 +467,5 @@ temuanFields.forEach(function(el) {
     });
 });
 
-function updateFormulirCounts() {
-    var f2Inputs = document.querySelectorAll('input[name="penjelasan_isi[]"]');
-    var f2Total = f2Inputs.length;
-    var f2Filled = 0;
-    f2Inputs.forEach(function(inp) { if (inp.value.trim()) f2Filled++; });
-    var f2Sub = document.getElementById('f2Subtitle');
-    if (f2Sub) {
-        f2Sub.textContent = f2Filled + '/' + f2Total + ' terisi';
-        f2Sub.style.display = f2Filled > 0 ? '' : 'none';
-    }
-
-    var f3Inputs = document.querySelectorAll('input[name^="penjelasan_isi_3"]');
-    var f3Total = f3Inputs.length;
-    var f3Filled = 0;
-    f3Inputs.forEach(function(inp) { if (inp.value.trim()) f3Filled++; });
-    var f3Sub = document.getElementById('f3Subtitle');
-    if (f3Sub) {
-        f3Sub.textContent = f3Filled + '/' + f3Total + ' terisi';
-        f3Sub.style.display = f3Filled > 0 ? '' : 'none';
-    }
-}
-temuanFields.forEach(function(el) { el.addEventListener('input', updateFormulirCounts); });
 </script>
 @endpush
