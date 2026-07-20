@@ -143,11 +143,15 @@ class MonitoringController extends Controller
                         $r = $prevResults->get($item->id);
                         if (!$r || !$r->criterion_id) continue;
                         $criteriaCount = $item->criteria->count();
-                        if (!$item->bobot || $criteriaCount <= 1) continue;
-                        $interval = $item->bobot / ($criteriaCount - 1);
-                        $idx = $item->criteria->search(fn($c) => $c->id === $r->criterion_id);
-                        if ($idx !== false) {
-                            $score += $item->bobot - ($interval * $idx);
+                        if (!$item->bobot) continue;
+                        if ($criteriaCount <= 1) {
+                            $score += $item->bobot;
+                        } else {
+                            $interval = $item->bobot / ($criteriaCount - 1);
+                            $idx = $item->criteria->search(fn($c) => $c->id === $r->criterion_id);
+                            if ($idx !== false) {
+                                $score += $item->bobot - ($interval * $idx);
+                            }
                         }
                     }
                 }
@@ -375,6 +379,9 @@ class MonitoringController extends Controller
                             $catScore += $val;
                             $totalScore += $val;
                         }
+                    } else {
+                        $catScore += $item->bobot;
+                        $totalScore += $item->bobot;
                     }
                 }
             }
@@ -421,7 +428,7 @@ class MonitoringController extends Controller
                 if (!$item->bobot || $item->criteria->count() <= 1) continue;
                 $result = $results->get($item->id);
                 if (!$result || !$result->criterion_id) continue;
-                $criteria = $item->criteria->sortBy('sort')->values();
+                $criteria = $item->criteria;
                 $idx = $criteria->search(fn($c) => $c->id === $result->criterion_id);
                 if ($idx === $criteria->count() - 1) {
                     $zeroScoreItemIds[] = $item->id;
@@ -611,7 +618,7 @@ class MonitoringController extends Controller
             if (!$item->bobot || $item->criteria->count() <= 1) continue;
             $result = $results->get($item->id);
             if (!$result || !$result->criterion_id) continue;
-            $criteria = $item->criteria->sortBy('sort')->values();
+            $criteria = $item->criteria;
             $idx = $criteria->search(fn($c) => $c->id === $result->criterion_id);
             if ($idx === $criteria->count() - 1) {
                 $zeroScoreItems[] = ['id' => $item->id, 'name' => $item->name];
@@ -793,7 +800,7 @@ class MonitoringController extends Controller
                 if (!$item->bobot || $item->criteria->count() <= 1) continue;
                 $result = $results->get($item->id);
                 if (!$result || !$result->criterion_id) continue;
-                $criteria = $item->criteria->sortBy('sort')->values();
+                $criteria = $item->criteria;
                 $idx = $criteria->search(fn($c) => $c->id === $result->criterion_id);
                 if ($idx === $criteria->count() - 1) {
                     $zeroScoreItemIds[] = $item->id;
@@ -825,11 +832,14 @@ class MonitoringController extends Controller
             $item = $result->item;
             if (!$item || !$item->bobot) continue;
             $criteriaCount = $item->criteria->count();
-            if ($criteriaCount <= 1) continue;
-            $interval = $item->bobot / ($criteriaCount - 1);
-            $idx = $item->criteria->search(fn($c) => $c->id === $result->criterion_id);
-            if ($idx !== false) {
-                $total += $item->bobot - ($interval * $idx);
+            if ($criteriaCount <= 1) {
+                $total += $item->bobot;
+            } else {
+                $interval = $item->bobot / ($criteriaCount - 1);
+                $idx = $item->criteria->search(fn($c) => $c->id === $result->criterion_id);
+                if ($idx !== false) {
+                    $total += $item->bobot - ($interval * $idx);
+                }
             }
         }
 
@@ -872,11 +882,15 @@ class MonitoringController extends Controller
                 $r = $results->get($item->id);
                 if (!$r || !$r->criterion_id) continue;
                 $criteriaCount = $item->criteria->count();
-                if (!$item->bobot || $criteriaCount <= 1) continue;
-                $interval = $item->bobot / ($criteriaCount - 1);
-                $idx = $item->criteria->search(fn($c) => $c->id === $r->criterion_id);
-                if ($idx !== false) {
-                    $totalScore += $item->bobot - ($interval * $idx);
+                if (!$item->bobot) continue;
+                if ($criteriaCount <= 1) {
+                    $totalScore += $item->bobot;
+                } else {
+                    $interval = $item->bobot / ($criteriaCount - 1);
+                    $idx = $item->criteria->search(fn($c) => $c->id === $r->criterion_id);
+                    if ($idx !== false) {
+                        $totalScore += $item->bobot - ($interval * $idx);
+                    }
                 }
             }
         }
@@ -963,11 +977,15 @@ class MonitoringController extends Controller
                 $r = $results->get($item->id);
                 if (!$r || !$r->criterion_id) continue;
                 $criteriaCount = $item->criteria->count();
-                if (!$item->bobot || $criteriaCount <= 1) continue;
-                $interval = $item->bobot / ($criteriaCount - 1);
-                $idx = $item->criteria->search(fn($c) => $c->id === $r->criterion_id);
-                if ($idx !== false) {
-                    $totalScore += $item->bobot - ($interval * $idx);
+                if (!$item->bobot) continue;
+                if ($criteriaCount <= 1) {
+                    $totalScore += $item->bobot;
+                } else {
+                    $interval = $item->bobot / ($criteriaCount - 1);
+                    $idx = $item->criteria->search(fn($c) => $c->id === $r->criterion_id);
+                    if ($idx !== false) {
+                        $totalScore += $item->bobot - ($interval * $idx);
+                    }
                 }
             }
         }
@@ -1065,21 +1083,23 @@ class MonitoringController extends Controller
                 $r = $results->get($item->id);
                 if (!$r || !$r->criterion_id) continue;
                 $criteriaCount = $item->criteria->count();
-                if (!$item->bobot || $criteriaCount <= 1) continue;
-                $interval = $item->bobot / ($criteriaCount - 1);
-                $idx = $item->criteria->search(fn($c) => $c->id === $r->criterion_id);
-                if ($idx !== false) {
-                    $score = $item->bobot - ($interval * $idx);
-                    $totalScore += $score;
-                    $items[$item->name] = [
-                        'category' => $cat->name,
-                        'value'    => $r->criterion->description ?? '-',
-                        'score'    => $score,
-                        'bobot'    => $item->bobot,
-                        'notes'    => $r->notes ?? '-',
-                        'item_id'  => $item->id,
-                    ];
+                if (!$item->bobot) continue;
+                if ($criteriaCount <= 1) {
+                    $score = $item->bobot;
+                } else {
+                    $interval = $item->bobot / ($criteriaCount - 1);
+                    $idx = $item->criteria->search(fn($c) => $c->id === $r->criterion_id);
+                    $score = ($idx !== false) ? $item->bobot - ($interval * $idx) : 0;
                 }
+                $totalScore += $score;
+                $items[$item->name] = [
+                    'category' => $cat->name,
+                    'value'    => $r->criterion->description ?? '-',
+                    'score'    => $score,
+                    'bobot'    => $item->bobot,
+                    'notes'    => $r->notes ?? '-',
+                    'item_id'  => $item->id,
+                ];
             }
         }
 
@@ -1102,14 +1122,15 @@ class MonitoringController extends Controller
                 $item = $result->item;
                 if (!$item || !$item->bobot) continue;
                 $criteriaCount = $item->criteria->count();
-                if ($criteriaCount <= 1) continue;
-                $interval = $item->bobot / ($criteriaCount - 1);
-                $idx = $item->criteria->search(fn($c) => $c->id === $result->criterion_id);
-                if ($idx !== false) {
-                    $score = $item->bobot - ($interval * $idx);
-                    $geraiScores[$itemId][$geraiKode] = $score;
-                    $geraiBobots[$itemId] = $item->bobot;
+                if ($criteriaCount <= 1) {
+                    $score = $item->bobot;
+                } else {
+                    $interval = $item->bobot / ($criteriaCount - 1);
+                    $idx = $item->criteria->search(fn($c) => $c->id === $result->criterion_id);
+                    $score = ($idx !== false) ? $item->bobot - ($interval * $idx) : 0;
                 }
+                $geraiScores[$itemId][$geraiKode] = $score;
+                $geraiBobots[$itemId] = $item->bobot;
             }
         }
 
