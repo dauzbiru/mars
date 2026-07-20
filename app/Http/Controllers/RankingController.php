@@ -282,16 +282,15 @@ class RankingController extends Controller
         $filename = storage_path('app/Urutan Peringkat (' . $periodeSuffix . ')-' . uniqid('', true) . '.xlsx');
         $writer->openToFile($filename);
 
-        $writer->addRow(Row::fromValues(['Periode', 'No', 'Kode Gerai', 'Nama Gerai', 'Peringkat', 'Total Gerai']));
+        $writer->addRow(Row::fromValues(['Kode Gerai', 'Nama Gerai', 'Peringkat', 'Total Gerai', 'Periode']));
 
         foreach ($rankings as $r) {
             $writer->addRow(Row::fromValues([
-                $r->periode_label,
-                $r->rank,
                 $r->gerai->kode_gerai ?? '-',
                 $r->gerai->nama_gerai ?? '-',
                 $r->rank . ' / ' . $r->total,
                 $r->total,
+                $r->periode_label,
             ]));
         }
 

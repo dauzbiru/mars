@@ -52,7 +52,7 @@
                                 <td class="px-3 sm:px-5 py-3 text-center whitespace-nowrap">
                                     <button onclick="openEditModal('{{ $r['id'] }}', '{{ str_replace("'", "\\'", $r['gerai']->nama_gerai) }}', '{{ $r['skor'] }}', '{{ $r['tanggal']->format('Y-m-d') }}', '{{ str_replace("'", "\\'", $r['petugas']) }}')"
                                         class="inline-block px-2 py-1 text-xs font-medium rounded-lg hover:opacity-80" style="background:#FEF3C7;color:#D97706">Edit</button>
-                                    <form method="POST" action="/daftar-nilai/{{ $r['id'] }}" onsubmit="showConfirm('Hapus nilai {{ $r['gerai']->nama_gerai }}?', function(){ this.submit(); }.bind(this)); return false;" class="inline">
+                                    <form method="POST" action="/daftar-nilai/{{ $r['id'] }}" onsubmit="if(!confirm('Hapus nilai {{ $r['gerai']->nama_gerai }}?'))return false;" class="inline">
                                         @csrf @method('DELETE')
                                         <button class="inline-block px-2 py-1 text-xs font-medium rounded-lg hover:opacity-80" style="background:#FEE2E2;color:#DC2626">Hapus</button>
                                     </form>
@@ -236,7 +236,7 @@
                 </div>
                 <div class="flex gap-3 mt-6">
                     <button type="button" onclick="closeDownloadModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm font-medium cursor-pointer">Batal</button>
-                    <button type="submit" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium cursor-pointer">Download</button>
+                    <button type="submit" onclick="closeDownloadModal()" class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium cursor-pointer">Download</button>
                 </div>
             </form>
         </div>
@@ -247,7 +247,7 @@
         <div class="absolute inset-0 bg-black/50" onclick="closeHapusPeriodeModal()"></div>
         <div class="relative bg-white rounded-xl shadow-lg w-full max-w-sm mx-4 p-6">
             <h3 class="text-lg font-bold text-gray-800 mb-4">Hapus Nilai per Periode</h3>
-            <form method="POST" action="/daftar-nilai/hapus-periode" onsubmit="return confirm('Yakin hapus semua data nilai periode ini?')">
+            <form method="POST" action="/daftar-nilai/hapus-periode" onsubmit="if(!confirm('Yakin hapus semua data nilai periode ini?'))return false;">
                 @csrf
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Periode</label>

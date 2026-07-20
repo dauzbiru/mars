@@ -5,7 +5,19 @@
 @section('content')
     <div class="bg-white rounded-xl shadow-md">
         <div class="sticky top-0 bg-white z-10 px-4 sm:px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-3">
-            <h2 class="text-base sm:text-lg font-semibold text-gray-800 truncate">Daftar Gerai Pendampingan</h2>
+            <div class="flex items-center gap-3">
+                <h2 class="text-base sm:text-lg font-semibold text-gray-800 truncate">Daftar Gerai Pendampingan</h2>
+                @php
+                    $totalAll = $reports->count();
+                    $totalSelesai = $reports->filter(fn($r) => $r->wa_sent_at)->count();
+                    $totalBelum = $totalAll - $totalSelesai;
+                @endphp
+                <div id="filterBtns" class="flex items-center gap-1">
+                    <button onclick="filterPendampingan('all')" data-filter="all" class="filter-btn px-3 py-1.5 rounded-full text-xs font-medium focus:outline-none bg-blue-100 text-blue-700">All ({{ $totalAll }})</button>
+                    <button onclick="filterPendampingan('selesai')" data-filter="selesai" class="filter-btn px-3 py-1.5 rounded-full text-xs font-medium focus:outline-none bg-gray-100 text-gray-500">Selesai ({{ $totalSelesai }})</button>
+                    <button onclick="filterPendampingan('belum')" data-filter="belum" class="filter-btn px-3 py-1.5 rounded-full text-xs font-medium focus:outline-none bg-gray-100 text-gray-500">Belum ({{ $totalBelum }})</button>
+                </div>
+            </div>
             <div class="flex items-center gap-2">
                 <span class="text-xs sm:text-sm text-gray-500">Periode: {{ $period->label }}</span>
                 <button onclick="openCustomMessageModal()"
@@ -19,7 +31,7 @@
             <div class="p-6 text-center text-sm text-gray-400">Belum ada data monitoring untuk periode {{ $period->label }}.</div>
         @else
             <div class="overflow-x-auto">
-                <table class="w-full text-xs sm:text-sm">
+                <table id="pendampinganTable" class="w-full text-xs sm:text-sm">
                     <thead>
                         <tr class="bg-gray-50 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider sticky top-0 z-10">
                             <th class="px-3 sm:px-5 py-3 whitespace-nowrap">Kode Gerai</th>
@@ -28,7 +40,7 @@
                             <th class="px-3 sm:px-5 py-3 whitespace-nowrap">Petugas</th>
                             <th class="px-3 sm:px-5 py-3 whitespace-nowrap text-center">Grade</th>
                             <th class="px-3 sm:px-5 py-3 whitespace-nowrap text-right">Nilai</th>
-                            <th class="px-3 sm:px-5 py-3 whitespace-nowrap text-center">WA</th>
+                            <th class="px-3 sm:px-5 py-3 whitespace-nowrap text-center">Status</th>
                             <th class="px-3 sm:px-5 py-3 whitespace-nowrap text-center"></th>
                         </tr>
                     </thead>
@@ -54,7 +66,7 @@
                                 <td class="px-3 sm:px-5 py-3 text-gray-500 whitespace-nowrap hidden sm:table-cell">{{ $r->gerai->franchisee }}</td>
                                 <td class="px-3 sm:px-5 py-3 text-gray-700 whitespace-nowrap">{{ $r->user?->name ?? '-' }}</td>
                                 <td class="px-3 sm:px-5 py-3 text-center font-semibold whitespace-nowrap {{ $grade === 'A' ? 'text-green-600' : ($grade === 'B' ? 'text-blue-600' : ($grade === 'C' ? 'text-yellow-600' : ($grade === 'D' ? 'text-orange-500' : 'text-red-600'))) }}">{{ $grade }}</td>
-                                <td class="px-3 sm:px-5 py-3 text-right font-semibold text-blue-600 whitespace-nowrap">{{ $r->nilai ?? '-' }}</td>
+                                <td class="px-3 sm:px-5 py-3 text-right font-semibold text-blue-600 whitespace-nowrap">{{ $r->nilai ? round((float) $r->nilai) : '-' }}</td>
                                 <td class="px-3 sm:px-5 py-3 text-center whitespace-nowrap">
                                     <span data-report-id="{{ $r->id }}"
                                         class="wa-status cursor-pointer inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium {{ $r->wa_sent_at ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500' }}">
@@ -64,6 +76,11 @@
                                 <td class="px-3 sm:px-5 py-3 text-center whitespace-nowrap">
                                     <button type="button"
                                         data-gerai="{{ $r->gerai->kode_gerai }} - {{ $r->gerai->nama_gerai }}"
+                                        data-kode="{{ $r->gerai->kode_gerai }}"
+                                        data-nama="{{ $r->gerai->nama_gerai }}"
+                                        data-franchisee="{{ $r->gerai->franchisee }}"
+                                        data-grade="{{ $grade }}"
+                                        data-nilai="{{ $r->nilai ? round((float) $r->nilai) : '-' }}"
                                         data-finding="{{ base64_encode(json_encode($f?->toArray() ?: [])) }}"
                                         data-phone="{{ $waNumber }}"
                                         data-report-id="{{ $r->id }}"
@@ -86,6 +103,14 @@
         <div class="relative bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6">
             <h3 class="text-base font-semibold text-gray-800 mb-3">Pesan WhatsApp</h3>
             <textarea id="customMessageInput" rows="6" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="Tulis pesan yang akan dikirim ke gerai...">{{ $period->label }}</textarea>
+            <p class="text-xs text-gray-400 mt-2">Klik placeholder untuk menyisipkan:</p>
+            <div class="flex flex-wrap gap-1.5 mt-1">
+                <button onclick="insertPlaceholder('{kode_gerai}')" type="button" class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">{kode_gerai}</button>
+                <button onclick="insertPlaceholder('{nama_gerai}')" type="button" class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">{nama_gerai}</button>
+                <button onclick="insertPlaceholder('{franchisee}')" type="button" class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">{franchisee}</button>
+                <button onclick="insertPlaceholder('{grade}')" type="button" class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">{grade}</button>
+                <button onclick="insertPlaceholder('{nilai}')" type="button" class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">{nilai}</button>
+            </div>
             <div class="mt-4 flex justify-end gap-3">
                 <button onclick="closeCustomMessageModal()" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300">Tutup</button>
                 <button onclick="saveCustomMessage()" class="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600">Simpan</button>
@@ -130,9 +155,34 @@
 
     @push('scripts')
     <script>
+    function filterPendampingan(filter) {
+        document.querySelectorAll('.filter-btn').forEach(function(btn) {
+            var active = btn.dataset.filter === filter;
+            btn.className = 'filter-btn px-3 py-1.5 rounded-full text-xs font-medium focus:outline-none ' +
+                (active ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500');
+        });
+        document.querySelectorAll('#pendampinganTable tbody tr').forEach(function(row) {
+            if (filter === 'all') { row.style.display = ''; return; }
+            var status = row.querySelector('.wa-status');
+            if (!status) { row.style.display = 'none'; return; }
+            var isSelesai = status.textContent.trim() === 'Selesai';
+            row.style.display = (filter === 'selesai' && isSelesai) || (filter === 'belum' && !isSelesai) ? '' : 'none';
+        });
+    }
+
     var customWaMessage = '';
     var currentReportId = null;
     var confirmCallback = null;
+    var currentGeraiData = {};
+
+    function insertPlaceholder(tag) {
+        var ta = document.getElementById('customMessageInput');
+        var pos = ta.selectionStart;
+        var text = ta.value;
+        ta.value = text.slice(0, pos) + tag + text.slice(pos);
+        ta.focus();
+        ta.selectionStart = ta.selectionEnd = pos + tag.length;
+    }
 
     // WA button click
     document.addEventListener('click', function(e) {
@@ -145,6 +195,13 @@
             try {
                 finding = JSON.parse(atob(btn.dataset.finding));
             } catch(_) {}
+            currentGeraiData = {
+                kode_gerai: btn.dataset.kode || '',
+                nama_gerai: btn.dataset.nama || '',
+                franchisee: btn.dataset.franchisee || '',
+                grade: btn.dataset.grade || '',
+                nilai: btn.dataset.nilai || ''
+            };
             openTemuanModal(gerai, finding, phone, reportId);
         }
     });
@@ -252,6 +309,11 @@
         document.getElementById('waError').classList.add('hidden');
         closeTemuanModal();
         var text = customWaMessage || document.getElementById('temuanGeraiLabel').textContent;
+        text = text.replace(/\{kode_gerai\}/g, currentGeraiData.kode_gerai)
+                   .replace(/\{nama_gerai\}/g, currentGeraiData.nama_gerai)
+                   .replace(/\{franchisee\}/g, currentGeraiData.franchisee)
+                   .replace(/\{grade\}/g, currentGeraiData.grade)
+                   .replace(/\{nilai\}/g, currentGeraiData.nilai);
         window.open('https://wa.me/' + number + '?text=' + encodeURIComponent(text), '_blank');
         if (currentReportId) {
             var xhr = new XMLHttpRequest();
