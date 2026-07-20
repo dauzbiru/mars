@@ -1343,14 +1343,6 @@ class MonitoringController extends Controller
             $this->fillSheet1Custom($dom1, $xpath1, $ns, $totalScore, $grade, $kesimpulanText, $wrapStyleIdx);
 
             // --- Fill B44: Grade label with bold grade letter ---
-            $gradeDescriptions = [
-                'A' => 'Sangat Baik',
-                'B' => 'Baik',
-                'C' => 'Cukup',
-                'D' => 'Kurang',
-                'E' => 'Sangat Kurang',
-            ];
-            $gradeDesc = $gradeDescriptions[$grade] ?? '-';
             $b44Ref = 'B44';
             foreach ($xpath1->query("//s:c[@r='$b44Ref']") as $cell) {
                 while ($cell->firstChild) $cell->removeChild($cell->firstChild);
@@ -1358,43 +1350,33 @@ class MonitoringController extends Controller
                 $cell->setAttribute('s', '1');
                 $is = $dom1->createElementNS($ns, 'is');
 
-                // "Gerai masuk dalam Grade "
+                // "Gerai masuk dalam "
                 $r1 = $dom1->createElementNS($ns, 'r');
                 $t1 = $dom1->createElementNS($ns, 't');
                 $t1->setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:space', 'preserve');
-                $t1->appendChild($dom1->createTextNode('Gerai masuk dalam Grade '));
+                $t1->appendChild($dom1->createTextNode('Gerai masuk dalam '));
                 $r1->appendChild($t1);
                 $is->appendChild($r1);
 
-                // Bold grade letter
+                // Bold "Grade X"
                 $r2 = $dom1->createElementNS($ns, 'r');
                 $rPr2 = $dom1->createElementNS($ns, 'rPr');
                 $b2 = $dom1->createElementNS($ns, 'b');
                 $rPr2->appendChild($b2);
                 $r2->appendChild($rPr2);
                 $t2 = $dom1->createElementNS($ns, 't');
-                $t2->appendChild($dom1->createTextNode($grade));
+                $t2->setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:space', 'preserve');
+                $t2->appendChild($dom1->createTextNode('Grade ' . $grade));
                 $r2->appendChild($t2);
                 $is->appendChild($r2);
 
-                // " dengan kategori "
+                // " dengan kategori:"
                 $r3 = $dom1->createElementNS($ns, 'r');
                 $t3 = $dom1->createElementNS($ns, 't');
                 $t3->setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:space', 'preserve');
-                $t3->appendChild($dom1->createTextNode(' dengan kategori '));
+                $t3->appendChild($dom1->createTextNode(' dengan kategori:'));
                 $r3->appendChild($t3);
                 $is->appendChild($r3);
-
-                // Bold grade description
-                $r4 = $dom1->createElementNS($ns, 'r');
-                $rPr4 = $dom1->createElementNS($ns, 'rPr');
-                $b4 = $dom1->createElementNS($ns, 'b');
-                $rPr4->appendChild($b4);
-                $r4->appendChild($rPr4);
-                $t4 = $dom1->createElementNS($ns, 't');
-                $t4->appendChild($dom1->createTextNode($gradeDesc));
-                $r4->appendChild($t4);
-                $is->appendChild($r4);
 
                 $cell->appendChild($is);
             }
