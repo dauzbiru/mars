@@ -2241,6 +2241,22 @@ class MonitoringController extends Controller
                     $penjelasanIsi3 = array_filter($penjelasanIsi3, fn($v) => trim($v) !== '');
 
                     if (!empty($penjelasanIsi3)) {
+                        $zeroScoreItemIds = [];
+                        foreach ($categories as $zcat) {
+                            foreach ($zcat->items as $zitem) {
+                                if (!$zitem->bobot || $zitem->criteria->count() <= 1) continue;
+                                $zr = $results->get($zitem->id);
+                                if (!$zr || !$zr->criterion_id) continue;
+                                $zidx = $zitem->criteria->search(fn($c) => $c->id === $zr->criterion_id);
+                                if ($zidx === $zitem->criteria->count() - 1) {
+                                    $zeroScoreItemIds[] = $zitem->id;
+                                }
+                            }
+                        }
+                        $penjelasanIsi3 = array_filter($penjelasanIsi3, fn($v, $k) => in_array((int)$k, $zeroScoreItemIds), ARRAY_FILTER_USE_KEY);
+                    }
+
+                    if (!empty($penjelasanIsi3)) {
                         $ssContent3b = $zip->getFromName('xl/sharedStrings.xml');
                         $ssTextByIndex3 = [];
                         if ($ssContent3b !== false) {
