@@ -226,7 +226,8 @@
             <form method="GET" action="/daftar-nilai/excel">
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Periode</label>
-                    <select name="periode_label" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select name="periode_label" {{ count($periodeLabels) > 10 ? 'size="10"' : '' }}
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 {{ count($periodeLabels) > 10 ? 'overflow-y-auto' : '' }}">
                         <option value="">Semua Periode</option>
                         @foreach ($periodeLabels as $label)
                             <option value="{{ $label }}">{{ $label }}</option>
@@ -250,7 +251,8 @@
                 @csrf
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Periode</label>
-                    <select name="periode_label" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <select name="periode_label" {{ count($periodeLabels) > 10 ? 'size="10"' : '' }}
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 {{ count($periodeLabels) > 10 ? 'overflow-y-auto' : '' }}" required>
                         <option value="">Pilih Periode</option>
                         @foreach ($periodeLabels as $label)
                             <option value="{{ $label }}">{{ $label }}</option>
