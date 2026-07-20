@@ -1342,59 +1342,6 @@ class MonitoringController extends Controller
             // --- Pra-Monitoring specific cells ---
             $this->fillSheet1Custom($dom1, $xpath1, $ns, $totalScore, $grade, $kesimpulanText, $wrapStyleIdx);
 
-            // --- Fill B44: Grade label with bold grade letter ---
-            $b44Ref = 'B44';
-            $makeRPr = function($bold = false) use ($dom1, $ns) {
-                $rPr = $dom1->createElementNS($ns, 'rPr');
-                $rFont = $dom1->createElementNS($ns, 'rFont');
-                $rFont->setAttribute('ascii', 'Arimo');
-                $rFont->setAttribute('hAnsi', 'Arimo');
-                $rPr->appendChild($rFont);
-                $sz = $dom1->createElementNS($ns, 'sz');
-                $sz->setAttribute('val', '12');
-                $rPr->appendChild($sz);
-                if ($bold) {
-                    $b = $dom1->createElementNS($ns, 'b');
-                    $rPr->appendChild($b);
-                }
-                return $rPr;
-            };
-            foreach ($xpath1->query("//s:c[@r='$b44Ref']") as $cell) {
-                while ($cell->firstChild) $cell->removeChild($cell->firstChild);
-                $cell->setAttribute('t', 'inlineStr');
-                $cell->setAttribute('s', '1');
-                $is = $dom1->createElementNS($ns, 'is');
-
-                // "Gerai masuk dalam "
-                $r1 = $dom1->createElementNS($ns, 'r');
-                $r1->appendChild($makeRPr());
-                $t1 = $dom1->createElementNS($ns, 't');
-                $t1->setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:space', 'preserve');
-                $t1->appendChild($dom1->createTextNode('Gerai masuk dalam '));
-                $r1->appendChild($t1);
-                $is->appendChild($r1);
-
-                // Bold "Grade X"
-                $r2 = $dom1->createElementNS($ns, 'r');
-                $r2->appendChild($makeRPr(true));
-                $t2 = $dom1->createElementNS($ns, 't');
-                $t2->setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:space', 'preserve');
-                $t2->appendChild($dom1->createTextNode('Grade ' . $grade));
-                $r2->appendChild($t2);
-                $is->appendChild($r2);
-
-                // " dengan kategori:"
-                $r3 = $dom1->createElementNS($ns, 'r');
-                $r3->appendChild($makeRPr());
-                $t3 = $dom1->createElementNS($ns, 't');
-                $t3->setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:space', 'preserve');
-                $t3->appendChild($dom1->createTextNode(' dengan kategori:'));
-                $r3->appendChild($t3);
-                $is->appendChild($r3);
-
-                $cell->appendChild($is);
-            }
-
             // --- Fill E9 (previous period score) and G9 (current score) ---
             $prevTotalScore = $this->getPreviousScore($report, $totalScore);
 
@@ -1405,6 +1352,20 @@ class MonitoringController extends Controller
             }
 
             $zip->addFromString('xl/worksheets/sheet1.xml', $dom1->saveXML());
+
+            // --- Fill B44: Grade label with bold grade letter ---
+            $gradeXml = '<r><rPr><rFont ascii="Arimo" hAnsi="Arimo"/><sz val="12"/></rPr><t xml:space="preserve">Gerai masuk dalam </t></r>'
+                . '<r><rPr><rFont ascii="Arimo" hAnsi="Arimo"/><sz val="12"/><b/></rPr><t xml:space="preserve">Grade ' . htmlspecialchars($grade) . '</t></r>'
+                . '<r><rPr><rFont ascii="Arimo" hAnsi="Arimo"/><sz val="12"/></rPr><t xml:space="preserve"> dengan kategori:</t></r>';
+            $sheet1Xml = $zip->getFromName('xl/worksheets/sheet1.xml');
+            if ($sheet1Xml !== false) {
+                $sheet1Xml = preg_replace(
+                    '/<c r="B44"[^>]*>.*?<\/c>/s',
+                    '<c r="B44" t="inlineStr" s="1"><is>' . $gradeXml . '</is></c>',
+                    $sheet1Xml
+                );
+                $zip->addFromString('xl/worksheets/sheet1.xml', $sheet1Xml);
+            }
         }
 
         // --- Phase 3: convert item_score shared string cells to number type ---
