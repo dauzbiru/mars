@@ -139,8 +139,23 @@
             @endif
             @php
                 $penjelasanIsi3 = $report->finding->penjelasan_isi_3 ?? [];
+                $showF3 = false;
+                if (!empty($penjelasanIsi3) && is_array($penjelasanIsi3)) {
+                    foreach ($filteredCategories as $cat) {
+                        foreach ($cat->items as $item) {
+                            if (!$item->bobot || $item->criteria->count() <= 1) continue;
+                            $r = $results->get($item->id);
+                            if (!$r || !$r->criterion_id) continue;
+                            $idx = $item->criteria->search(fn($c) => $c->id === $r->criterion_id);
+                            if ($idx === $item->criteria->count() - 1 && !empty(trim($penjelasanIsi3[$item->id] ?? ''))) {
+                                $showF3 = true;
+                                break 2;
+                            }
+                        }
+                    }
+                }
             @endphp
-            @if (!empty(array_filter($penjelasanIsi3)))
+            @if ($showF3)
                 <div class="space-y-2 mb-4">
                     <p class="text-xs font-medium text-gray-500">Penjelasan Formulir 3</p>
                     @foreach ($penjelasanIsi3 as $itemId => $teks)
