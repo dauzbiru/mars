@@ -2253,7 +2253,7 @@ class MonitoringController extends Controller
                                 }
                             }
                         }
-                        $penjelasanIsi3 = array_filter($penjelasanIsi3, fn($v, $k) => in_array((int)$k, $zeroScoreItemIds), ARRAY_FILTER_USE_KEY);
+                        $penjelasanIsi3 = array_filter($penjelasanIsi3, fn($k) => in_array((int)$k, $zeroScoreItemIds), ARRAY_FILTER_USE_KEY);
                     }
 
                     if (!empty($penjelasanIsi3)) {
