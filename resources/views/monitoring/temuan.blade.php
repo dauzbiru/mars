@@ -148,7 +148,7 @@
         </div>
         @endif
 
-        @if (count($penjelasanItems3) > 0 && count($zeroScoreItems) > 0)
+        @if (count($zeroScoreItems) > 0)
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-3">
             <button type="button" class="dropdown-header w-full px-4 py-3.5 flex items-center justify-between cursor-pointer active:bg-gray-50 text-left" onclick="toggleDropdown(this)">
                 <h3 class="text-sm font-semibold text-gray-800">Penjelasan</h3>
