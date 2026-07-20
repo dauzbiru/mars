@@ -623,7 +623,7 @@ class RankingController extends Controller
         $reports = $reports->sort(function ($a, $b) {
             $cmp = strcmp($a['gerai']->kode_gerai, $b['gerai']->kode_gerai);
             if ($cmp !== 0) return $cmp;
-            return $b['tanggal']->timestamp <=> $a['tanggal']->timestamp;
+            return $a['tanggal']->timestamp <=> $b['tanggal']->timestamp;
         })->values();
 
         return compact('reports', 'periodeLabels', 'periodeLabel', 'search');
