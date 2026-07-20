@@ -303,6 +303,7 @@ function renderSuggestList(input, items) {
         li.addEventListener('mousedown', function(e) {
             e.preventDefault();
             input.value = item.penjelasan;
+            input.dispatchEvent(new Event('input'));
             list.classList.add('hidden');
         });
         list.appendChild(li);
