@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class MonitoringFinding extends Model
 {
     protected $fillable = [
+        'reportable_type',
+        'reportable_id',
         'monitoring_report_id',
         'major',
         'minor',
