@@ -145,14 +145,14 @@ Route::middleware('auth')->group(function () {
         Route::post('/import', [ImportController::class, 'import']);
         Route::get('/import/template', [ImportController::class, 'template']);
 
-        // Ranking write operations
+        // Daftar Nilai write operations
         Route::post('/gerai-pendampingan/{report}/mark-sent', [\App\Http\Controllers\RankingController::class, 'markWaSent']);
-        Route::post('/ranking/hapus-periode', [\App\Http\Controllers\RankingController::class, 'hapusPeriode']);
-        Route::delete('/ranking/{id}', [\App\Http\Controllers\RankingController::class, 'destroy']);
-        Route::put('/ranking/{id}', [\App\Http\Controllers\RankingController::class, 'update']);
-        Route::get('/ranking/import', [\App\Http\Controllers\RankingController::class, 'importForm']);
-        Route::post('/ranking/import', [\App\Http\Controllers\RankingController::class, 'import']);
-        Route::get('/ranking/import/template', [\App\Http\Controllers\RankingController::class, 'template']);
+        Route::post('/daftar-nilai/hapus-periode', [\App\Http\Controllers\RankingController::class, 'hapusPeriode']);
+        Route::delete('/daftar-nilai/{id}', [\App\Http\Controllers\RankingController::class, 'destroy']);
+        Route::put('/daftar-nilai/{id}', [\App\Http\Controllers\RankingController::class, 'update']);
+        Route::get('/daftar-nilai/import', [\App\Http\Controllers\RankingController::class, 'importForm']);
+        Route::post('/daftar-nilai/import', [\App\Http\Controllers\RankingController::class, 'import']);
+        Route::get('/daftar-nilai/import/template', [\App\Http\Controllers\RankingController::class, 'template']);
 
         // Excel Templates
         Route::get('/excel-template', function () {
@@ -173,14 +173,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
 
-        // Ranking
-        Route::get('/ranking', [\App\Http\Controllers\RankingController::class, 'index']);
-        Route::get('/ranking/pra-monitoring', [\App\Http\Controllers\RankingController::class, 'praMonitoring']);
-        Route::get('/ranking/peringkat', [\App\Http\Controllers\RankingController::class, 'peringkat']);
-        Route::get('/ranking/peringkat/excel', [\App\Http\Controllers\RankingController::class, 'peringkatExcel']);
-        Route::get('/ranking/peringkat/rankings', [\App\Http\Controllers\RankingController::class, 'peringkatRankings']);
-        Route::get('/ranking/excel', [\App\Http\Controllers\RankingController::class, 'excel']);
-        Route::get('/ranking/performa', [\App\Http\Controllers\RankingController::class, 'performa']);
+        // Daftar Nilai
+        Route::get('/daftar-nilai', [\App\Http\Controllers\RankingController::class, 'index']);
+        Route::get('/daftar-nilai/pra-monitoring', [\App\Http\Controllers\RankingController::class, 'praMonitoring']);
+        Route::get('/daftar-nilai/peringkat', [\App\Http\Controllers\RankingController::class, 'peringkat']);
+        Route::get('/daftar-nilai/peringkat/excel', [\App\Http\Controllers\RankingController::class, 'peringkatExcel']);
+        Route::get('/daftar-nilai/peringkat/rankings', [\App\Http\Controllers\RankingController::class, 'peringkatRankings']);
+        Route::get('/daftar-nilai/excel', [\App\Http\Controllers\RankingController::class, 'excel']);
+        Route::get('/daftar-nilai/performa', [\App\Http\Controllers\RankingController::class, 'performa']);
         Route::get('/gerai-pendampingan', [\App\Http\Controllers\RankingController::class, 'pendampingan']);
 
         // Report admin-only

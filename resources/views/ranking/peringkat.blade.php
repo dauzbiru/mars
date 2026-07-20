@@ -17,7 +17,7 @@
                 </p>
             </div>
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto shrink-0">
-                <form method="GET" action="/ranking/peringkat" class="flex-1 sm:flex-none">
+                <form method="GET" action="/daftar-nilai/peringkat" class="flex-1 sm:flex-none">
                     <select name="periode" onchange="this.form.submit()"
                         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="">Pilih Periode</option>
@@ -26,14 +26,14 @@
                         @endforeach
                     </select>
                 </form>
-                <a href="/ranking/peringkat/excel{{ $selectedPeriode ? '?periode=' . urlencode($selectedPeriode) : '' }}"
+                <a href="/daftar-nilai/peringkat/excel{{ $selectedPeriode ? '?periode=' . urlencode($selectedPeriode) : '' }}"
                    style="background:#ECFDF5;color:#059669" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg hover:opacity-80 transition">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
                     Excel
                 </a>
-                <a href="/ranking/peringkat/rankings"
+                <a href="/daftar-nilai/peringkat/rankings"
                    style="background:#EFF6FF;color:#2563EB" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg hover:opacity-80 transition">
                     <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>

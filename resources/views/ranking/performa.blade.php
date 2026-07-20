@@ -103,7 +103,7 @@ function renderSuggest(filter) {
         li.addEventListener('click', function() {
             input.value = g.kode + ' - ' + g.nama;
             suggest.classList.add('hidden');
-            window.location.href = '/ranking/performa?gerai_id=' + g.id;
+            window.location.href = '/daftar-nilai/performa?gerai_id=' + g.id;
         });
         suggest.appendChild(li);
     });

@@ -513,7 +513,7 @@ class RankingController extends Controller
 
         if (!empty($errors)) {
             $safeErrors = array_map(fn($e) => e($e), $errors);
-            return redirect('/ranking/import')->with('error',
+            return redirect('/daftar-nilai/import')->with('error',
                 'Import dibatalkan. ' . count($safeErrors) . ' error ditemukan:<br>' . implode('<br>', $safeErrors));
         }
 
@@ -573,7 +573,7 @@ class RankingController extends Controller
         }
 
         $total = count($validatedRows);
-        return redirect('/ranking/import')->with('success', "Berhasil import {$total} data.");
+        return redirect('/daftar-nilai/import')->with('success', "Berhasil import {$total} data.");
     }
 
     private function loadRanking(Request $request)
@@ -655,7 +655,7 @@ class RankingController extends Controller
         $report->submit_at = \Carbon\Carbon::parse($request->input('checkin_at'));
         $report->save();
 
-        return redirect('/ranking')->with('success', 'Nilai berhasil diperbarui.');
+        return redirect('/daftar-nilai')->with('success', 'Nilai berhasil diperbarui.');
     }
 
     public function destroy($id)
@@ -669,7 +669,7 @@ class RankingController extends Controller
         $report->finding()?->delete();
         $report->delete();
 
-        return redirect('/ranking')->with('success', 'Nilai berhasil dihapus.');
+        return redirect('/daftar-nilai')->with('success', 'Nilai berhasil dihapus.');
     }
 
     public function hapusPeriode(Request $request)
@@ -681,7 +681,7 @@ class RankingController extends Controller
         $periodeLabel = $request->input('periode_label');
 
         if (!$periodeLabel) {
-            return redirect('/ranking')->with('error', 'Pilih periode terlebih dahulu.');
+            return redirect('/daftar-nilai')->with('error', 'Pilih periode terlebih dahulu.');
         }
 
         $reports = MonitoringReport::whereIn('type', ['monitoring', 'import'])
@@ -697,6 +697,6 @@ class RankingController extends Controller
             $count++;
         }
 
-        return redirect('/ranking')->with('success', "Berhasil menghapus {$count} data nilai periode {$periodeLabel}.");
+        return redirect('/daftar-nilai')->with('success', "Berhasil menghapus {$count} data nilai periode {$periodeLabel}.");
     }
 }

@@ -5,7 +5,7 @@
 @section('content')
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-bold text-gray-800">Import Nilai Monitoring</h1>
-        <a href="/ranking/import/template"
+        <a href="/daftar-nilai/import/template"
             class="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700">
             Download Template
         </a>
@@ -21,7 +21,7 @@
     </div>
 
     <div class="bg-white rounded-xl shadow-md p-6">
-        <form method="POST" action="/ranking/import" enctype="multipart/form-data">
+        <form method="POST" action="/daftar-nilai/import" enctype="multipart/form-data">
             @csrf
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-600 mb-1">File Excel</label>

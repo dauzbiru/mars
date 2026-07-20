@@ -154,7 +154,7 @@
                 <hr class="border-gray-200 my-1">
                 {{-- Monitoring Dropdown --}}
                 @php
-                    $isMonitoringActive = request()->is('report/monitoring') || request()->is('ranking') || request()->is('ranking/peringkat') || request()->is('ranking/performa') || request()->is('ranking/import') || request()->is('semester-periods*') || request()->is('gerai-pendampingan');
+                    $isMonitoringActive = request()->is('report/monitoring') || request()->is('daftar-nilai') || request()->is('daftar-nilai/peringkat') || request()->is('daftar-nilai/performa') || request()->is('daftar-nilai/import') || request()->is('semester-periods*') || request()->is('gerai-pendampingan');
                 @endphp
                 <button onclick="toggleMonitoring()"
                     class="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ $isMonitoringActive ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700' }}">
@@ -171,24 +171,24 @@
                         class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->is('report/monitoring') && !request()->is('report/pra-monitoring') && !request()->is('report/re-monitoring') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-blue-50 hover:text-blue-700' }}">
                         Laporan Monitoring
                     </a>
-                    <a href="/ranking"
-                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->is('ranking') && !request()->is('ranking/performa') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-blue-50 hover:text-blue-700' }}">
+                    <a href="/daftar-nilai"
+                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->is('daftar-nilai') && !request()->is('daftar-nilai/performa') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-blue-50 hover:text-blue-700' }}">
                         Daftar Nilai Monitoring
                     </a>
-                    <a href="/ranking/peringkat"
-                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->is('ranking/peringkat') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-blue-50 hover:text-blue-700' }}">
+                    <a href="/daftar-nilai/peringkat"
+                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->is('daftar-nilai/peringkat') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-blue-50 hover:text-blue-700' }}">
                         Peringkat Monitoring
                     </a>
-                    <a href="/ranking/performa"
-                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->is('ranking/performa') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-blue-50 hover:text-blue-700' }}">
+                    <a href="/daftar-nilai/performa"
+                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->is('daftar-nilai/performa') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-blue-50 hover:text-blue-700' }}">
                         Performa Gerai
                     </a>
                     <a href="/gerai-pendampingan"
                         class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->is('gerai-pendampingan') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-blue-50 hover:text-blue-700' }}">
                         Daftar Gerai Pendampingan
                     </a>
-                    <a href="/ranking/import"
-                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->is('ranking/import') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-blue-50 hover:text-blue-700' }}">
+                    <a href="/daftar-nilai/import"
+                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->is('daftar-nilai/import') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-blue-50 hover:text-blue-700' }}">
                         Import Nilai
                     </a>
                     <a href="/semester-periods"

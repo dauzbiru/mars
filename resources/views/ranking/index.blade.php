@@ -52,7 +52,7 @@
                                 <td class="px-3 sm:px-5 py-3 text-center whitespace-nowrap">
                                     <button onclick="openEditModal('{{ $r['id'] }}', '{{ str_replace("'", "\\'", $r['gerai']->nama_gerai) }}', '{{ $r['skor'] }}', '{{ $r['tanggal']->format('Y-m-d') }}', '{{ str_replace("'", "\\'", $r['petugas']) }}')"
                                         class="inline-block px-2 py-1 text-xs font-medium rounded-lg hover:opacity-80" style="background:#FEF3C7;color:#D97706">Edit</button>
-                                    <form method="POST" action="/ranking/{{ $r['id'] }}" onsubmit="showConfirm('Hapus nilai {{ $r['gerai']->nama_gerai }}?', function(){ this.submit(); }.bind(this)); return false;" class="inline">
+                                    <form method="POST" action="/daftar-nilai/{{ $r['id'] }}" onsubmit="showConfirm('Hapus nilai {{ $r['gerai']->nama_gerai }}?', function(){ this.submit(); }.bind(this)); return false;" class="inline">
                                         @csrf @method('DELETE')
                                         <button class="inline-block px-2 py-1 text-xs font-medium rounded-lg hover:opacity-80" style="background:#FEE2E2;color:#DC2626">Hapus</button>
                                     </form>
@@ -159,7 +159,7 @@
 
     function openEditModal(id, nama, nilai, tanggal, petugas) {
         closeFab();
-        document.getElementById('editForm').action = '/ranking/' + id;
+        document.getElementById('editForm').action = '/daftar-nilai/' + id;
         document.getElementById('editGeraiName').textContent = nama;
         document.getElementById('editNilai').value = nilai;
         document.getElementById('editTanggal').value = tanggal;
@@ -223,7 +223,7 @@
         <div class="absolute inset-0 bg-black/50" onclick="closeDownloadModal()"></div>
         <div class="relative bg-white rounded-xl shadow-lg w-full max-w-sm mx-4 p-6">
             <h3 class="text-lg font-bold text-gray-800 mb-4">Download Excel</h3>
-            <form method="GET" action="/ranking/excel">
+            <form method="GET" action="/daftar-nilai/excel">
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Periode</label>
                     <select name="periode_label" class="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -246,7 +246,7 @@
         <div class="absolute inset-0 bg-black/50" onclick="closeHapusPeriodeModal()"></div>
         <div class="relative bg-white rounded-xl shadow-lg w-full max-w-sm mx-4 p-6">
             <h3 class="text-lg font-bold text-gray-800 mb-4">Hapus Nilai per Periode</h3>
-            <form method="POST" action="/ranking/hapus-periode" onsubmit="return confirm('Yakin hapus semua data nilai periode ini?')">
+            <form method="POST" action="/daftar-nilai/hapus-periode" onsubmit="return confirm('Yakin hapus semua data nilai periode ini?')">
                 @csrf
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Periode</label>
