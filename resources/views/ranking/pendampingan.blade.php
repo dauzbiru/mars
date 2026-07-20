@@ -289,7 +289,7 @@
                         penjelasan3Html += '<p class="text-sm text-gray-800">' + (idx++) + '. ' + esc(penjelasan3[key]) + '</p>';
                     }
                 });
-                html += '<div><p class="text-xs font-medium text-gray-500 mb-1">Penjelasan</p>' + penjelasan3Html + '</div>';
+                html += '<div><p class="text-xs font-medium text-gray-500 mb-1">Penjelasan Formulir 3</p>' + penjelasan3Html + '</div>';
             }
         }
         document.getElementById('temuanContent').innerHTML = html;

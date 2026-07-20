@@ -142,7 +142,7 @@
             @endphp
             @if (!empty(array_filter($penjelasanIsi3)))
                 <div class="space-y-2 mb-4">
-                    <p class="text-xs font-medium text-gray-500">Penjelasan</p>
+                    <p class="text-xs font-medium text-gray-500">Penjelasan Formulir 3</p>
                     @foreach ($penjelasanIsi3 as $itemId => $teks)
                         @if (trim($teks))
                             <p class="text-sm text-gray-800">{{ $loop->iteration }}. {{ $teks }}</p>
