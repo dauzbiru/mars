@@ -117,12 +117,28 @@
     </div>
 <div id="fabMenu" class="fixed bottom-6 right-6 z-40 flex flex-col items-center gap-3">
     <div id="fabActions" class="flex flex-col items-center gap-3 transition-all duration-200 ease-in-out opacity-0 scale-0 pointer-events-none">
-        <button onclick="openDownloadModal()"
-            style="background:#ECFDF5;color:#059669"
-            class="w-12 h-12 rounded-full shadow-lg hover:opacity-80 flex items-center justify-center text-xs font-medium relative cursor-pointer">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-            <span class="absolute right-full mr-3 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">Download Excel</span>
-        </button>
+        <div class="relative">
+            <button onclick="toggleDownloadDd()"
+                style="background:#ECFDF5;color:#059669"
+                class="w-12 h-12 rounded-full shadow-lg hover:opacity-80 flex items-center justify-center text-xs font-medium relative cursor-pointer">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <span class="absolute right-full mr-3 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">Download Excel</span>
+            </button>
+            <div id="downloadDd" class="absolute bottom-full right-0 mb-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-1 hidden z-50">
+                <a href="/gerais/export?status=all" class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-sm text-gray-700 transition-colors">
+                    <span class="text-xs font-semibold px-1.5 py-0.5 rounded" style="background:#F3F4F6;color:#374151">{{ $gerais->count() }}</span>
+                    Semua Gerai
+                </a>
+                <a href="/gerais/export?status=active" class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-sm text-gray-700 transition-colors">
+                    <span class="text-xs font-semibold px-1.5 py-0.5 rounded" style="background:#DCFCE7;color:#16A34A">{{ $gerais->where('is_active', true)->count() }}</span>
+                    Gerai Buka
+                </a>
+                <a href="/gerais/export?status=closed" class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-sm text-gray-700 transition-colors">
+                    <span class="text-xs font-semibold px-1.5 py-0.5 rounded" style="background:#F3F4F6;color:#6B7280">{{ $gerais->where('is_active', false)->count() }}</span>
+                    Gerai Tutup
+                </a>
+            </div>
+        </div>
         <button onclick="openImportModal()"
             class="w-12 h-12 bg-green-600 text-white rounded-full shadow-lg hover:bg-green-700 flex items-center justify-center text-xs font-medium relative cursor-pointer">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
@@ -369,111 +385,17 @@
     </div>
 </div>
 
-<div id="downloadModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
-    <div class="absolute inset-0 bg-black/50" onclick="closeDownloadModal()"></div>
-    <div class="relative bg-white rounded-xl shadow-lg w-full max-w-sm mx-4 p-6">
-        <h2 class="text-lg font-bold text-gray-800 mb-4">Download Data Gerai</h2>
-        <div class="flex flex-col gap-3">
-            <button type="button" onclick="selectDownload(this, 'all')"
-                data-status="all"
-                class="dl-option flex items-center gap-3 px-4 py-3 rounded-lg border-2 border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-150 cursor-pointer text-left">
-                <span class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold shrink-0" style="background:#F3F4F6;color:#374151">
-                    {{ $gerais->count() }}
-                </span>
-                <div class="flex-1">
-                    <div class="text-sm font-medium text-gray-800">Semua Gerai</div>
-                    <div class="text-xs text-gray-500">Export semua data gerai</div>
-                </div>
-                <div class="w-5 h-5 rounded-full border-2 border-gray-300 shrink-0 dl-radio"></div>
-            </button>
-            <button type="button" onclick="selectDownload(this, 'active')"
-                data-status="active"
-                class="dl-option flex items-center gap-3 px-4 py-3 rounded-lg border-2 border-gray-200 hover:border-green-300 hover:bg-green-50 transition-all duration-150 cursor-pointer text-left">
-                <span class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold shrink-0" style="background:#DCFCE7;color:#16A34A">
-                    {{ $gerais->where('is_active', true)->count() }}
-                </span>
-                <div class="flex-1">
-                    <div class="text-sm font-medium text-gray-800">Gerai Buka</div>
-                    <div class="text-xs text-gray-500">Export gerai yang aktif saja</div>
-                </div>
-                <div class="w-5 h-5 rounded-full border-2 border-gray-300 shrink-0 dl-radio"></div>
-            </button>
-            <button type="button" onclick="selectDownload(this, 'closed')"
-                data-status="closed"
-                class="dl-option flex items-center gap-3 px-4 py-3 rounded-lg border-2 border-gray-200 hover:border-gray-400 hover:bg-gray-50 transition-all duration-150 cursor-pointer text-left">
-                <span class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold shrink-0" style="background:#F3F4F6;color:#6B7280">
-                    {{ $gerais->where('is_active', false)->count() }}
-                </span>
-                <div class="flex-1">
-                    <div class="text-sm font-medium text-gray-800">Gerai Tutup</div>
-                    <div class="text-xs text-gray-500">Export gerai yang sudah tutup</div>
-                </div>
-                <div class="w-5 h-5 rounded-full border-2 border-gray-300 shrink-0 dl-radio"></div>
-            </button>
-        </div>
-        <a id="dlDownloadBtn" href="#" class="block w-full mt-4 px-4 py-2 rounded-lg text-sm font-medium text-center transition-colors duration-150 pointer-events-none"
-           style="background:#E5E7EB;color:#9CA3AF;">Pilih salah satu</a>
-        <button onclick="closeDownloadModal()" class="w-full mt-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm font-medium cursor-pointer">Batal</button>
-    </div>
-</div>
-
 <script>
-var selectedDlStatus = null;
-function openDownloadModal() {
-    closeFab();
-    selectedDlStatus = null;
-    resetDownloadModal();
-    document.getElementById('downloadModal').classList.remove('hidden');
+function toggleDownloadDd() {
+    var dd = document.getElementById('downloadDd');
+    dd.classList.toggle('hidden');
 }
-function closeDownloadModal() {
-    document.getElementById('downloadModal').classList.add('hidden');
-}
-function resetDownloadModal() {
-    var btn = document.getElementById('dlDownloadBtn');
-    btn.href = '#';
-    btn.style.background = '#E5E7EB';
-    btn.style.color = '#9CA3AF';
-    btn.classList.add('pointer-events-none');
-    btn.textContent = 'Pilih salah satu';
-    document.querySelectorAll('.dl-option').forEach(function(opt) {
-        opt.style.borderColor = '#E5E7EB';
-        opt.style.backgroundColor = '';
-        var radio = opt.querySelector('.dl-radio');
-        radio.style.borderColor = '#D1D5DB';
-        radio.style.backgroundColor = '';
-        radio.innerHTML = '';
-    });
-}
-function selectDownload(el, status) {
-    var colors = {
-        'all':    { border: '#3B82F6', bg: '#EFF6FF', radio: '#3B82F6' },
-        'active': { border: '#22C55E', bg: '#F0FDF4', radio: '#22C55E' },
-        'closed': { border: '#6B7280', bg: '#F9FAFB', radio: '#6B7280' }
-    };
-    document.querySelectorAll('.dl-option').forEach(function(opt) {
-        opt.style.borderColor = '#E5E7EB';
-        opt.style.backgroundColor = '';
-        var radio = opt.querySelector('.dl-radio');
-        radio.style.borderColor = '#D1D5DB';
-        radio.style.backgroundColor = '';
-        radio.innerHTML = '';
-    });
-    var c = colors[status];
-    el.style.borderColor = c.border;
-    el.style.backgroundColor = c.bg;
-    var radio = el.querySelector('.dl-radio');
-    radio.style.borderColor = c.radio;
-    radio.style.backgroundColor = c.radio;
-    radio.innerHTML = '<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="margin:-2px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>';
-
-    var btn = document.getElementById('dlDownloadBtn');
-    btn.href = '/gerais/export?status=' + status;
-    btn.style.background = '#2563EB';
-    btn.style.color = '#FFFFFF';
-    btn.classList.remove('pointer-events-none');
-    btn.textContent = 'Download';
-    selectedDlStatus = status;
-}
+document.addEventListener('click', function(e) {
+    var dd = document.getElementById('downloadDd');
+    if (dd && !dd.classList.contains('hidden') && !e.target.closest('#downloadDd') && !e.target.closest('[onclick="toggleDownloadDd()"]')) {
+        dd.classList.add('hidden');
+    }
+});
 </script>
 
 <script>
