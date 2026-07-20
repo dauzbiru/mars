@@ -118,26 +118,12 @@
 <div id="fabMenu" class="fixed bottom-6 right-6 z-40 flex flex-col items-center gap-3">
     <div id="fabActions" class="flex flex-col items-center gap-3 transition-all duration-200 ease-in-out opacity-0 scale-0 pointer-events-none">
         <div class="relative">
-            <button onclick="toggleDownloadDd()"
+            <button onclick="openDownloadModal()"
                 style="background:#ECFDF5;color:#059669"
                 class="w-12 h-12 rounded-full shadow-lg hover:opacity-80 flex items-center justify-center text-xs font-medium relative cursor-pointer">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 <span class="absolute right-full mr-3 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">Download Excel</span>
             </button>
-            <div id="downloadDd" class="absolute bottom-full right-0 mb-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-1 hidden z-50">
-                <a href="/gerais/export?status=all" class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-sm text-gray-700 transition-colors">
-                    <span class="text-xs font-semibold px-1.5 py-0.5 rounded" style="background:#F3F4F6;color:#374151">{{ $gerais->count() }}</span>
-                    Semua Gerai
-                </a>
-                <a href="/gerais/export?status=active" class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-sm text-gray-700 transition-colors">
-                    <span class="text-xs font-semibold px-1.5 py-0.5 rounded" style="background:#DCFCE7;color:#16A34A">{{ $gerais->where('is_active', true)->count() }}</span>
-                    Gerai Buka
-                </a>
-                <a href="/gerais/export?status=closed" class="flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 text-sm text-gray-700 transition-colors">
-                    <span class="text-xs font-semibold px-1.5 py-0.5 rounded" style="background:#F3F4F6;color:#6B7280">{{ $gerais->where('is_active', false)->count() }}</span>
-                    Gerai Tutup
-                </a>
-            </div>
         </div>
         <button onclick="openImportModal()"
             class="w-12 h-12 bg-green-600 text-white rounded-full shadow-lg hover:bg-green-700 flex items-center justify-center text-xs font-medium relative cursor-pointer">
@@ -385,17 +371,40 @@
     </div>
 </div>
 
+<div id="downloadModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+    <div class="absolute inset-0 bg-black/50" onclick="closeDownloadModal()"></div>
+    <div class="relative bg-white rounded-xl shadow-lg w-full max-w-sm mx-4 p-6">
+        <h2 class="text-lg font-bold text-gray-800 mb-4">Download Data Gerai</h2>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Pilih data yang ingin didownload</label>
+        <select id="dlStatus" onchange="updateDlLink()" class="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white mb-4">
+            <option value="all">Semua Gerai ({{ $gerais->count() }})</option>
+            <option value="active">Gerai Buka ({{ $gerais->where('is_active', true)->count() }})</option>
+            <option value="closed">Gerai Tutup ({{ $gerais->where('is_active', false)->count() }})</option>
+        </select>
+        <div class="flex gap-3">
+            <button onclick="closeDownloadModal()" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm font-medium cursor-pointer">Batal</button>
+            <a id="dlDownloadBtn" href="/gerais/export?status=all" onclick="closeDownloadModal()"
+                class="flex-1 px-4 py-2 rounded-lg text-sm font-medium text-center cursor-pointer"
+                style="background:#2563EB;color:#FFFFFF;">Download</a>
+        </div>
+    </div>
+</div>
+
 <script>
-function toggleDownloadDd() {
-    var dd = document.getElementById('downloadDd');
-    dd.classList.toggle('hidden');
+function openDownloadModal() {
+    closeFab();
+    var sel = document.getElementById('dlStatus');
+    sel.value = 'all';
+    updateDlLink();
+    document.getElementById('downloadModal').classList.remove('hidden');
 }
-document.addEventListener('click', function(e) {
-    var dd = document.getElementById('downloadDd');
-    if (dd && !dd.classList.contains('hidden') && !e.target.closest('#downloadDd') && !e.target.closest('[onclick="toggleDownloadDd()"]')) {
-        dd.classList.add('hidden');
-    }
-});
+function closeDownloadModal() {
+    document.getElementById('downloadModal').classList.add('hidden');
+}
+function updateDlLink() {
+    var status = document.getElementById('dlStatus').value;
+    document.getElementById('dlDownloadBtn').href = '/gerais/export?status=' + status;
+}
 </script>
 
 <script>
