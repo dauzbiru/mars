@@ -127,9 +127,21 @@
         </div>
 
         @if (!empty($groupLabels) && $prefix !== 'pra-monitoring')
+        @php
+            $f2Filled = 0;
+            $f2Total = count($groupLabels);
+            if ($finding && !empty($finding->penjelasan_isi) && is_array($finding->penjelasan_isi)) {
+                foreach ($finding->penjelasan_isi as $v) {
+                    if (!empty(trim($v ?? ''))) $f2Filled++;
+                }
+            }
+        @endphp
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-3">
             <button type="button" class="dropdown-header w-full px-4 py-3.5 flex items-center justify-between cursor-pointer active:bg-gray-50 text-left" onclick="toggleDropdown(this)">
-                <h3 class="text-sm font-semibold text-gray-800">Penjelasan Formulir 2</h3>
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-800">Penjelasan Formulir 2</h3>
+                        <p id="f2Subtitle" class="text-[11px] text-gray-400 mt-0.5" style="{{ $f2Filled > 0 ? '' : 'display:none' }}">{{ $f2Filled }}/{{ $f2Total }} terisi</p>
+                </div>
                 <svg class="dropdown-chevron w-4 h-4 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
@@ -149,9 +161,21 @@
         @endif
 
         @if (count($zeroScoreItems) > 0)
+        @php
+            $f3Filled = 0;
+            $f3Total = count($zeroScoreItems);
+            if ($finding && !empty($finding->penjelasan_isi_3) && is_array($finding->penjelasan_isi_3)) {
+                foreach ($zeroScoreItems as $zi) {
+                    if (!empty(trim($finding->penjelasan_isi_3[$zi['id']] ?? ''))) $f3Filled++;
+                }
+            }
+        @endphp
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-3">
             <button type="button" class="dropdown-header w-full px-4 py-3.5 flex items-center justify-between cursor-pointer active:bg-gray-50 text-left" onclick="toggleDropdown(this)">
-                <h3 class="text-sm font-semibold text-gray-800">Penjelasan Formulir 3</h3>
+                <div>
+                    <h3 class="text-sm font-semibold text-gray-800">Penjelasan Formulir 3</h3>
+                        <p id="f3Subtitle" class="text-[11px] text-gray-400 mt-0.5" style="{{ $f3Filled > 0 ? '' : 'display:none' }}">{{ $f3Filled }}/{{ $f3Total }} terisi</p>
+                </div>
                 <svg class="dropdown-chevron w-4 h-4 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
@@ -462,5 +486,28 @@ temuanFields.forEach(function(el) {
         }, 1000);
     });
 });
+
+function updateFormulirCounts() {
+    var f2Inputs = document.querySelectorAll('input[name="penjelasan_isi[]"]');
+    var f2Total = f2Inputs.length;
+    var f2Filled = 0;
+    f2Inputs.forEach(function(inp) { if (inp.value.trim()) f2Filled++; });
+    var f2Sub = document.getElementById('f2Subtitle');
+    if (f2Sub) {
+        f2Sub.textContent = f2Filled + '/' + f2Total + ' terisi';
+        f2Sub.style.display = f2Filled > 0 ? '' : 'none';
+    }
+
+    var f3Inputs = document.querySelectorAll('input[name^="penjelasan_isi_3"]');
+    var f3Total = f3Inputs.length;
+    var f3Filled = 0;
+    f3Inputs.forEach(function(inp) { if (inp.value.trim()) f3Filled++; });
+    var f3Sub = document.getElementById('f3Subtitle');
+    if (f3Sub) {
+        f3Sub.textContent = f3Filled + '/' + f3Total + ' terisi';
+        f3Sub.style.display = f3Filled > 0 ? '' : 'none';
+    }
+}
+temuanFields.forEach(function(el) { el.addEventListener('input', updateFormulirCounts); });
 </script>
 @endpush
