@@ -35,16 +35,16 @@
                                         $interval = $count > 1 ? $item->bobot / ($count - 1) : 0;
                                         $nilai = $selectedCriterion ? $item->bobot - ($interval * $item->criteria->search(fn($c) => $c->id === $selectedCriterion->id)) : $item->bobot;
                                     @endphp
-                                    <span class="score-badge text-xs font-bold px-2 py-0.5 rounded-full {{ $nilai < $item->bobot ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700' }}">{{ $nilai == (int)$nilai ? (int)$nilai : number_format($nilai, 2, '.', '') }}/{{ $item->bobot == (int)$item->bobot ? (int)$item->bobot : $item->bobot }}</span>
+                                    <span data-bobot="{{ $item->bobot }}" data-interval="{{ $interval }}" class="score-badge text-xs font-bold px-2 py-0.5 rounded-full {{ $nilai < $item->bobot ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700' }}">{{ $nilai == (int)$nilai ? (int)$nilai : number_format($nilai, 2, '.', '') }}/{{ $item->bobot == (int)$item->bobot ? (int)$item->bobot : $item->bobot }}</span>
                                 @endif
                             </div>
                         </div>
                         @if ($item->criteria->isNotEmpty())
                             <div class="p-3 space-y-1.5">
-                                @php
-                                    $count = $item->criteria->count();
-                                    $interval = $item->bobot && $count > 1 ? $item->bobot / ($count - 1) : null;
-                                @endphp
+                                    @php
+                                        $count = $item->criteria->count();
+                                        $interval = $item->bobot && $count > 1 ? $item->bobot / ($count - 1) : 0;
+                                    @endphp
                                 @foreach ($item->criteria as $c)
                                     @php
                                         $isSelected = $result ? $result->criterion_id === $c->id : $loop->first;
@@ -116,6 +116,21 @@ function recalculateScore() {
         updateRadioVisual(el);
     });
     document.getElementById('liveScore').textContent = total % 1 === 0 ? total.toString() : total.toFixed(2);
+
+    document.querySelectorAll('.score-badge[data-bobot]').forEach(function(badge) {
+        var bobot = parseFloat(badge.dataset.bobot);
+        var interval = parseFloat(badge.dataset.interval) || 0;
+        var card = badge.closest('.bg-white');
+        if (!card) return;
+        var checked = card.querySelector('input[type=radio]:checked');
+        if (!checked) return;
+        var radios = Array.from(card.querySelectorAll('input[type=radio]'));
+        var idx = radios.indexOf(checked);
+        var nilai = bobot - (interval * idx);
+        var display = nilai % 1 === 0 ? nilai.toString() : nilai.toFixed(2);
+        badge.textContent = display + '/' + (bobot % 1 === 0 ? bobot.toString() : bobot.toFixed(2));
+        badge.className = 'score-badge text-xs font-bold px-2 py-0.5 rounded-full ' + (nilai < bobot ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700');
+    });
 }
 recalculateScore();
 </script>

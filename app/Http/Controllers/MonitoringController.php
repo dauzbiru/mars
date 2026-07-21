@@ -194,7 +194,10 @@ class MonitoringController extends Controller
     {
         $pending = $this->pendingReport();
         if ($pending) {
-            return redirect("/{$this->prefix()}/{$pending->id}/assessment")
+            $pendingUrl = $this->type === 'evaluasi'
+                ? "/{$this->prefix()}/{$pending->id}"
+                : "/{$this->prefix()}/{$pending->id}/assessment";
+            return redirect($pendingUrl)
                 ->with('warning', 'Anda masih memiliki laporan yang belum diselesaikan. Selesaikan dulu.');
         }
 
@@ -924,28 +927,16 @@ class MonitoringController extends Controller
             $filename = ($revisi ? 'revisi-' : '') . "laporan-{$this->type}-{$report->gerai->kode_gerai}-" . $this->getReportDateForFilename($report, 'Asia/Jakarta');
         }
 
-        // Check if LibreOffice is available
-        $sofficePath = 'C:\\Program Files\\LibreOffice\\program\\soffice.exe';
-        $hasLibreOffice = false;
-        if (function_exists('exec')) {
-            $checkCmd = 'where soffice 2>nul || (if exist ' . escapeshellarg($sofficePath) . ' (echo found) else (echo notfound))';
-            exec($checkCmd, $checkOutput, $checkCode);
-            $hasLibreOffice = strpos(implode('', $checkOutput), 'found') !== false || $checkCode === 0;
-        }
-
-        if ($hasLibreOffice && ($this->useExcelPdf() || request()->boolean('excel'))) {
-            // Generate Excel first
+        if (request()->boolean('excel')) {
             $tempDir = storage_path('app/temp-pdf');
             if (!is_dir($tempDir)) mkdir($tempDir, 0755, true);
 
-                $excelPath = $this->excel($report->id, $tempDir);
+            $excelPath = $this->excel($report->id, $tempDir);
             if ($excelPath && file_exists($excelPath)) {
-                // Convert Excel to PDF using LibreOffice
                 $pdfPath = $tempDir . '/' . $filename . '.pdf';
-                $cmd = escapeshellarg($sofficePath) . ' --headless --convert-to pdf --outdir ' . escapeshellarg($tempDir) . ' ' . escapeshellarg($excelPath) . ' 2>&1';
+                $pyScript = base_path('storage/app/xlwings-to-pdf.py');
+                $cmd = 'python ' . escapeshellarg($pyScript) . ' ' . escapeshellarg($excelPath) . ' ' . escapeshellarg($pdfPath) . ' 2>&1';
                 exec($cmd, $output, $returnCode);
-
-                // Cleanup Excel temp file
                 @unlink($excelPath);
 
                 if ($returnCode === 0 && file_exists($pdfPath)) {
@@ -1342,6 +1333,22 @@ class MonitoringController extends Controller
             // --- Pra-Monitoring specific cells ---
             $this->fillSheet1Custom($dom1, $xpath1, $ns, $totalScore, $grade, $kesimpulanText, $wrapStyleIdx);
 
+            // --- Fill B44: Grade label with bold grade letter (via DOMDocument) ---
+            $b44cells = $xpath1->query("//s:c[@r='B44']");
+            if ($b44cells->length > 0) {
+                $b44 = $b44cells->item(0);
+                $b44->setAttribute('t', 'inlineStr');
+                foreach (['v', 'f'] as $tag) {
+                    $existing = $b44->getElementsByTagNameNS($ns, $tag)->item(0);
+                    if ($existing) $b44->removeChild($existing);
+                }
+                $is = $dom1->createElementNS($ns, 'is');
+                $is->appendChild(static::xmlMakeRun($dom1, $ns, 'Gerai masuk dalam '));
+                $is->appendChild(static::xmlMakeRun($dom1, $ns, 'Grade ' . $grade, true));
+                $is->appendChild(static::xmlMakeRun($dom1, $ns, ' dengan kategori:'));
+                $b44->appendChild($is);
+            }
+
             // --- Fill E9 (previous period score) and G9 (current score) ---
             $prevTotalScore = $this->getPreviousScore($report, $totalScore);
 
@@ -1352,20 +1359,6 @@ class MonitoringController extends Controller
             }
 
             $zip->addFromString('xl/worksheets/sheet1.xml', $dom1->saveXML());
-
-            // --- Fill B44: Grade label with bold grade letter ---
-            $gradeXml = '<r><rPr><rFont ascii="Arimo" hAnsi="Arimo"/><sz val="12"/></rPr><t xml:space="preserve">Gerai masuk dalam </t></r>'
-                . '<r><rPr><rFont ascii="Arimo" hAnsi="Arimo"/><sz val="12"/><b/></rPr><t xml:space="preserve">Grade ' . htmlspecialchars($grade) . '</t></r>'
-                . '<r><rPr><rFont ascii="Arimo" hAnsi="Arimo"/><sz val="12"/></rPr><t xml:space="preserve"> dengan kategori:</t></r>';
-            $sheet1Xml = $zip->getFromName('xl/worksheets/sheet1.xml');
-            if ($sheet1Xml !== false) {
-                $sheet1Xml = preg_replace(
-                    '/<c r="B44"[^>]*>.*?<\/c>/s',
-                    '<c r="B44" t="inlineStr" s="1"><is>' . $gradeXml . '</is></c>',
-                    $sheet1Xml
-                );
-                $zip->addFromString('xl/worksheets/sheet1.xml', $sheet1Xml);
-            }
         }
 
         // --- Phase 3: convert item_score shared string cells to number type ---

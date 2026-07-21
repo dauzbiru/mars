@@ -51,7 +51,7 @@
                 @if ($prefix === 'pra-monitoring')
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Pengawas</label>
-                    <textarea name="pengawas" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('pengawas', $finding?->pengawas ?? '') }}</textarea>
+                    <textarea name="pengawas" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="PS&#10;PS" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('pengawas', $finding?->pengawas ?? '') }}</textarea>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
@@ -151,7 +151,7 @@
         @if (count($zeroScoreItems) > 0)
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 mb-3">
             <button type="button" class="dropdown-header w-full px-4 py-3.5 flex items-center justify-between cursor-pointer active:bg-gray-50 text-left" onclick="toggleDropdown(this)">
-                <h3 class="text-sm font-semibold text-gray-800">Penjelasan Formulir 3</h3>
+                <h3 class="text-sm font-semibold text-gray-800">{{ $prefix === 'pra-monitoring' ? 'Penjelasan' : 'Penjelasan Formulir 3' }}</h3>
                 <svg class="dropdown-chevron w-4 h-4 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>

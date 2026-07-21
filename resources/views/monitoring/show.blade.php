@@ -38,10 +38,7 @@
                 <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm font-medium text-gray-500">Franchisee</td>
                 <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm text-gray-800">{{ $report->gerai->franchisee }}</td>
             </tr>
-            <tr>
-                <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm font-medium text-gray-500">Periode</td>
-                <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm text-gray-800">{{ $report->periode_label ?? '-' }}</td>
-            </tr>
+
             <tr>
                 <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm font-medium text-gray-500">Lokasi Checkin</td>
                 <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm text-gray-800">{{ $report->location }}</td>
@@ -157,7 +154,7 @@
             @endphp
             @if ($showF3)
                 <div class="space-y-2 mb-4">
-                    <p class="text-xs font-medium text-gray-500">Penjelasan Formulir 3</p>
+                    <p class="text-xs font-medium text-gray-500">{{ $prefix === 'pra-monitoring' ? 'Penjelasan' : 'Penjelasan Formulir 3' }}</p>
                     @foreach ($penjelasanIsi3 as $itemId => $teks)
                         @if (trim($teks))
                             <p class="text-sm text-gray-800">{{ $loop->iteration }}. {{ $teks }}</p>

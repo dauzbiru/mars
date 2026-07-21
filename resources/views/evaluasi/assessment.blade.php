@@ -103,9 +103,29 @@
 var kodeGerai = @json($report->gerai->kode_gerai);
 var namaGerai = @json($report->gerai->nama_gerai);
 
-var catatanTemplate = '1. Kinerja operasional serta pemahaman untuk Pengawas & Karyawan Baik.\n2. Kebersihan di halaman gerai serta kelengkapan teknis di gerai Baik.\n3. Pimpinan Gerai mampu menerapkan & mengarahkan dengan baik standar pelayanan pelanggan kepada karyawan sesuai standar PSSO.';
+var lastGrade = @json($lastReport->grade ?? null);
+var gradeLabel = {A:'Sangat Baik',B:'Baik',C:'Cukup',D:'Kurang Baik',E:'Tidak Baik'}[lastGrade] || 'Baik';
+var pimpinanText = ['C','D','E'].includes(lastGrade)
+    ? 'Pimpinan Gerai belum mampu menerapkan & mengarahkan dengan baik standar pelayanan pelanggan kepada karyawan sesuai standar PSSO.'
+    : 'Pimpinan Gerai mampu menerapkan & mengarahkan dengan baik standar pelayanan pelanggan kepada karyawan sesuai standar PSSO.';
+var catatanTemplate = '1. Kinerja operasional serta pemahaman untuk Pengawas & Karyawan ' + gradeLabel + '.\n2. Kebersihan di halaman gerai serta kelengkapan teknis di gerai ' + gradeLabel + '.\n3. ' + pimpinanText;
 
-var keteranganTemplate = '1. Poin kinerja di gerai ' + kodeGerai + ' berada di atas Rerata pada monitoring periode terbaru dan pernah berada di bawah Rerata pada monitoring periode sebelumnya.\n2. Gerai ' + kodeGerai + ' mampu menempatkan posisi kinerja gerainya untuk berada di atas rerata monitoring semua gerai BIRU.\n3. Gerai ' + kodeGerai + ' masuk dalam Grade B dengan kategori Baik.';
+var lastReportType = @json($lastReportType);
+var belowAvgCount = @json($belowAverageCount);
+var lastReport = @json($lastReport ? ['month' => $lastReport->checkin_at->locale('id')->isoFormat('MMMM YYYY')] : null);
+var periodeLabel1 = lastReportType === 're-monitoring'
+    ? 'Re-Monitoring ' + (lastReport ? lastReport.month : 'terbaru')
+    : 'monitoring periode terbaru';
+var poin1 = '1. Poin kinerja di gerai ' + kodeGerai + ' berada di atas Rerata pada ' + periodeLabel1;
+if (belowAvgCount > 0) {
+    poin1 += ' dan pernah ' + belowAvgCount + 'x berada di bawah Rerata pada monitoring periode sebelumnya.';
+} else {
+    poin1 += '.';
+}
+var posisiText = ['C','D','E'].includes(lastGrade)
+    ? '2. Gerai ' + kodeGerai + ' belum mampu menempatkan posisi kinerja gerainya untuk berada di atas rerata monitoring semua gerai BIRU.'
+    : '2. Gerai ' + kodeGerai + ' mampu menempatkan posisi kinerja gerainya untuk berada di atas rerata monitoring semua gerai BIRU.';
+var keteranganTemplate = poin1 + '\n' + posisiText + '\n3. Gerai ' + kodeGerai + ' masuk dalam Grade ' + (lastGrade || 'B') + ' dengan kategori ' + gradeLabel + '.';
 
 var catatanEl = document.getElementById('catatan');
 var keteranganEl = document.getElementById('keterangan');

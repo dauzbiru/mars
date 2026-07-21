@@ -26,7 +26,9 @@
                 <tr class="bg-gray-50 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider sticky top-0 z-10">
                     <th class="px-4 sm:px-6 py-3">Gerai</th>
                     <th class="px-4 sm:px-6 py-3">Petugas</th>
-                    @if ($type !== 'pra-monitoring' && $type !== 're-monitoring' && $type !== 'evaluasi')
+                    @if ($type === 'pra-monitoring' || $type === 're-monitoring')
+                    <th class="px-4 sm:px-6 py-3">Bulan/Tahun</th>
+                    @elseif ($type !== 'evaluasi')
                     <th class="px-4 sm:px-6 py-3">Periode</th>
                     @endif
                     @if ($type === 'evaluasi')
@@ -49,7 +51,9 @@
                             <span class="font-medium">{{ $r->gerai->kode_gerai }}</span> - {{ $r->gerai->nama_gerai }}
                         </td>
                         <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm text-gray-600">{{ $r->user?->name ?? '-' }}</td>
-                        @if ($type !== 'pra-monitoring' && $type !== 're-monitoring' && $type !== 'evaluasi')
+                        @if ($type === 'pra-monitoring' || $type === 're-monitoring')
+                        <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm text-gray-600">{{ $r->checkin_at->locale('id')->isoFormat('MMMM YYYY') }}</td>
+                        @elseif ($type !== 'evaluasi')
                         <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm text-gray-600">{{ $r->periode_label ?? '-' }}</td>
                         @endif
                         @if ($type === 'evaluasi')
@@ -72,7 +76,7 @@
                                     default => $type,
                                 };
                             @endphp
-                            @if ($type === 'monitoring')
+                            @if (in_array($type, ['monitoring', 'pra-monitoring', 're-monitoring']))
                             <a href="/{{ $rPrefix }}/{{ $r->id }}/pdf?excel=1"
                                 style="background:#F3E8FF;color:#7C3AED" class="inline-block px-3 py-1 text-xs font-medium rounded-lg hover:opacity-80">PDF</a>
                             @endif
@@ -118,7 +122,7 @@
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             <span class="absolute right-full mr-3 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">Export All Excel</span>
         </button>
-        @if ($type === 'monitoring')
+        @if (in_array($type, ['monitoring', 'pra-monitoring', 're-monitoring']))
         <button onclick="document.getElementById('modalExportAllPdf').classList.remove('hidden'); closeFab()"
             style="background:#FEE2E2;color:#DC2626" class="w-12 h-12 rounded-full shadow-lg hover:opacity-80 flex items-center justify-center text-xs font-medium relative cursor-pointer">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
@@ -179,7 +183,6 @@ document.addEventListener('click', function(e) {
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Periode</label>
                 <select name="periode_label" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">-- Pilih Periode --</option>
                     @foreach ($periods as $p)
                         <option value="{{ $p->label }}">{{ $p->label }}</option>
                     @endforeach
@@ -196,16 +199,21 @@ document.addEventListener('click', function(e) {
 <div id="modalChecklistTidakSempurna" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40" onclick="if(event.target===this)this.classList.add('hidden')">
     <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm mx-4">
         <h3 class="text-base font-semibold text-gray-800 mb-4">Checklist Tidak Sempurna</h3>
-        <p class="text-xs text-gray-500 mb-4">Pilih periode untuk mengekspor data checklist yang nilainya tidak sempurna (tidak mencapai kriteria terbaik).</p>
+        <p class="text-xs text-gray-500 mb-4">Pilih {{ in_array($type, ['pra-monitoring', 're-monitoring']) ? 'bulan' : 'periode' }} untuk mengekspor data checklist yang nilainya tidak sempurna (tidak mencapai kriteria terbaik).</p>
         <form method="GET" action="/report/checklist-tidak-sempurna">
+            <input type="hidden" name="type" value="{{ $type }}">
             <div class="mb-4">
+                @if (in_array($type, ['pra-monitoring', 're-monitoring']))
+                <label class="block text-sm font-medium text-gray-700 mb-1">Bulan</label>
+                <input type="month" name="month" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
+                @else
                 <label class="block text-sm font-medium text-gray-700 mb-1">Periode Semester</label>
                 <select name="periode_label" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500">
-                    <option value="">-- Pilih Periode --</option>
                     @foreach ($periods as $p)
                         <option value="{{ $p->label }}">{{ $p->label }}</option>
                     @endforeach
                 </select>
+                @endif
             </div>
             <div class="flex gap-2 justify-end">
                 <button type="button" onclick="document.getElementById('modalChecklistTidakSempurna').classList.add('hidden')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Batal</button>
@@ -228,7 +236,6 @@ document.addEventListener('click', function(e) {
                 @else
                 <label class="block text-sm font-medium text-gray-700 mb-1">Periode Semester</label>
                 <select name="periode_label" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500">
-                    <option value="">-- Pilih Periode --</option>
                     @foreach ($periods as $p)
                         <option value="{{ $p->label }}">{{ $p->label }}</option>
                     @endforeach
@@ -246,17 +253,21 @@ document.addEventListener('click', function(e) {
 <div id="modalExportAllPdf" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/40" onclick="if(event.target===this)this.classList.add('hidden')">
     <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm mx-4">
         <h3 class="text-base font-semibold text-gray-800 mb-4">Export Semua Laporan PDF</h3>
-        <p class="text-xs text-gray-500 mb-4">Pilih periode untuk mendownload semua laporan PDF (konversi dari Excel) dalam satu file ZIP.</p>
+        <p class="text-xs text-gray-500 mb-4">Pilih {{ in_array($type, ['pra-monitoring', 're-monitoring']) ? 'bulan' : 'periode' }} untuk mendownload semua laporan PDF (konversi dari Excel) dalam satu file ZIP.</p>
         <form method="GET" action="/report/export-all-pdf">
             <input type="hidden" name="type" value="{{ $type }}">
             <div class="mb-4">
+                @if (in_array($type, ['pra-monitoring', 're-monitoring']))
+                <label class="block text-sm font-medium text-gray-700 mb-1">Bulan</label>
+                <input type="month" name="month" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+                @else
                 <label class="block text-sm font-medium text-gray-700 mb-1">Periode Semester</label>
                 <select name="periode_label" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
-                    <option value="">-- Pilih Periode --</option>
                     @foreach ($periods as $p)
                         <option value="{{ $p->label }}">{{ $p->label }}</option>
                     @endforeach
                 </select>
+                @endif
             </div>
             <div class="flex gap-2 justify-end">
                 <button type="button" onclick="document.getElementById('modalExportAllPdf').classList.add('hidden')" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Batal</button>
@@ -279,7 +290,6 @@ document.addEventListener('click', function(e) {
                 @else
                 <label class="block text-sm font-medium text-gray-700 mb-1">Periode Semester</label>
                 <select name="periode_label" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-                    <option value="">-- Pilih Periode --</option>
                     @foreach ($periods as $p)
                         <option value="{{ $p->label }}">{{ $p->label }}</option>
                     @endforeach

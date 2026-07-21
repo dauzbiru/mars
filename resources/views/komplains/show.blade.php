@@ -242,8 +242,11 @@
                     <p class="text-xs font-medium text-blue-700 mb-1.5">Gunakan placeholder untuk mengisi otomatis:</p>
                     <div class="flex flex-wrap gap-1.5" id="placeholderGuide"></div>
                 </div>
+                <div class="mt-3 flex justify-end">
+                    <button onclick="saveTemplate()" class="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 cursor-pointer">Simpan Template</button>
+                </div>
             </div>
-            <div class="mt-4 flex justify-end gap-3">
+            <div id="waFooter" class="mt-4 flex justify-end gap-3">
                 <button onclick="document.getElementById('waModal').classList.add('hidden')" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300">Batal</button>
                 <button onclick="sendWa()" class="px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600">Kirim</button>
             </div>
@@ -302,6 +305,7 @@
         var editing = !document.getElementById('waTemplateSection').classList.contains('hidden');
         document.getElementById('waTemplateSection').classList.toggle('hidden', editing);
         document.getElementById('waPreviewSection').classList.toggle('hidden', !editing);
+        document.getElementById('waFooter').classList.toggle('hidden', !editing);
         document.getElementById('btnEditTemplate').textContent = editing ? 'Edit Template' : 'Lihat Preview';
         document.getElementById('btnEditTemplate').style.background = editing ? '#FEF3C7' : '#DCFCE7';
         document.getElementById('btnEditTemplate').style.color = editing ? '#D97706' : '#16A34A';
@@ -336,7 +340,11 @@
             },
             body: JSON.stringify({ wa_template: newTemplate })
         }).then(function(r) { return r.json(); }).then(function(d) {
-            if (d.success) showAlert('Template berhasil disimpan.');
+            if (d.success) {
+                toggleTemplateEdit();
+                renderPreview();
+                showAlert('Template berhasil disimpan.');
+            }
         });
     }
 

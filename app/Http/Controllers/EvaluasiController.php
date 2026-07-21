@@ -396,7 +396,8 @@ class EvaluasiController extends MonitoringController
                 $ns2 = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
                 $xpath2->registerNamespace('s', $ns2);
 
-                $lastFinding = $history->last()->finding ?? null;
+                $lastReport = $historyBuilder->getLastReport();
+                $lastFinding = $lastReport->finding ?? null;
 
                 if ($lastFinding) {
                     // Parse peringatan_awal into numbered items (strip "1. " prefix)
@@ -566,7 +567,7 @@ class EvaluasiController extends MonitoringController
             ->first();
 
         if ($pending) {
-            return redirect("/{$this->prefix()}/{$pending->id}/assessment")
+            return redirect("/{$this->prefix()}/{$pending->id}")
                 ->with('warning', 'Anda masih memiliki laporan evaluasi yang belum diselesaikan. Selesaikan atau batalkan dulu.');
         }
 
@@ -584,7 +585,53 @@ class EvaluasiController extends MonitoringController
             'user_id' => auth()->id(),
         ]);
 
-        return redirect("/{$this->prefix()}/{$report->id}/assessment");
+        $historyBuilder = new \App\Services\EvaluasiHistoryBuilder($gerai->id);
+        $historyData = $historyBuilder->mapHistoryData();
+        $lastReportModel = $historyBuilder->getLastReport();
+
+        $gradeLabel = 'Baik';
+        $pimpinanText = 'Pimpinan Gerai mampu menerapkan & mengarahkan dengan baik standar pelayanan pelanggan kepada karyawan sesuai standar PSSO.';
+        $periodeLabel = 'monitoring periode terbaru';
+        $posisiText = "2. Gerai {$gerai->kode_gerai} mampu menempatkan posisi kinerja gerainya untuk berada di atas Standar Kinerja monitoring semua gerai BIRU.";
+        $gradeLetter = 'B';
+        $belowAvgCount = 0;
+
+        if ($lastReportModel) {
+            $gradeLetter = $lastReportModel->grade ?? 'B';
+            $gradeLabel = ['A' => 'Sangat Baik', 'B' => 'Baik', 'C' => 'Cukup', 'D' => 'Kurang Baik', 'E' => 'Tidak Baik'][$gradeLetter] ?? 'Baik';
+
+            if (in_array($gradeLetter, ['C', 'D', 'E'])) {
+                $pimpinanText = 'Pimpinan Gerai belum mampu menerapkan & mengarahkan dengan baik standar pelayanan pelanggan kepada karyawan sesuai standar PSSO.';
+                $posisiText = "2. Gerai {$gerai->kode_gerai} belum mampu menempatkan posisi kinerja gerainya untuk berada di atas Standar Kinerja monitoring semua gerai BIRU.";
+            }
+
+            $lastReportType = class_basename($lastReportModel) === 'ReMonitoringReport' ? 're-monitoring' : 'monitoring';
+            if ($lastReportType === 're-monitoring') {
+                $periodeLabel = 'Re-Monitoring ' . $lastReportModel->checkin_at->locale('id')->isoFormat('MMMM YYYY');
+            }
+
+            $belowAvgCount = $historyData->slice(0, -1)
+                ->filter(fn($h) => $h['nilai'] !== null && round((float) $h['nilai']) < 975)
+                ->count();
+        }
+
+        $catatan = "1. Kinerja operasional serta pemahaman untuk Pengawas & Karyawan {$gradeLabel}.\n2. Kebersihan di halaman gerai serta kelengkapan teknis di gerai {$gradeLabel}.\n3. {$pimpinanText}";
+
+        $poin1 = "1. Poin kinerja di gerai {$gerai->kode_gerai} berada di atas Standar Kinerja pada {$periodeLabel}";
+        if ($belowAvgCount > 0) {
+            $poin1 .= " dan pernah {$belowAvgCount}x berada di bawah Standar Kinerja pada monitoring periode sebelumnya.";
+        } else {
+            $poin1 .= '.';
+        }
+        $keterangan = "{$poin1}\n{$posisiText}\n3. Gerai {$gerai->kode_gerai} masuk dalam Grade {$gradeLetter} dengan kategori {$gradeLabel}.";
+
+        $report->update([
+            'catatan' => $catatan,
+            'keterangan' => $keterangan,
+            'tanggal' => now()->toDateString(),
+        ]);
+
+        return redirect("/{$this->prefix()}/{$report->id}")->with('success', 'Laporan evaluasi berhasil dibuat.');
     }
 
     public function assessment($id)
@@ -611,7 +658,23 @@ class EvaluasiController extends MonitoringController
         $lastReport = $lastRemonReport && (!$lastMonReport || $lastRemonReport->checkin_at->gt($lastMonReport->checkin_at))
             ? $lastRemonReport : $lastMonReport;
 
-        return response()->view('evaluasi.assessment', compact('report', 'prefix', 'incomplete', 'lastReport'))
+        $lastReportType = null;
+        if ($lastReport) {
+            $lastReportType = class_basename($lastReport) === 'ReMonitoringReport' ? 're-monitoring' : 'monitoring';
+        }
+
+        $belowAverageCount = 0;
+        if ($lastReport) {
+            $prevReports = MonitoringReport::where('gerai_id', $report->gerai_id)
+                ->where('type', 'monitoring')
+                ->whereNotNull('submit_at')
+                ->where('checkin_at', '<', $lastReport->checkin_at)
+                ->orderByDesc('checkin_at')
+                ->get();
+            $belowAverageCount = $prevReports->filter(fn($r) => $r->nilai !== null && round((float) $r->nilai) < 975)->count();
+        }
+
+        return response()->view('evaluasi.assessment', compact('report', 'prefix', 'incomplete', 'lastReport', 'lastReportType', 'belowAverageCount'))
             ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');
@@ -629,7 +692,7 @@ class EvaluasiController extends MonitoringController
 
         $report->update($validated);
 
-        return redirect("/{$this->prefix()}/{$report->id}/assessment");
+        return redirect("/{$this->prefix()}/{$report->id}");
     }
 
     public function cancelAssessment(Request $request, $id)
@@ -683,8 +746,24 @@ class EvaluasiController extends MonitoringController
 
         $historyBuilder = new EvaluasiHistoryBuilder($geraiId);
         $historyData = $historyBuilder->mapHistoryData();
+        $lastReportModel = $historyBuilder->getLastReport();
 
-        return view('evaluasi.show', compact('report', 'prefix', 'historyData'));
+        $lastReportType = null;
+        $lastReportGrade = null;
+        $lastReportMonth = null;
+        $belowAverageCount = 0;
+
+        if ($lastReportModel) {
+            $lastReportType = class_basename($lastReportModel) === 'ReMonitoringReport' ? 're-monitoring' : 'monitoring';
+            $lastReportGrade = $lastReportModel->grade;
+            $lastReportMonth = $lastReportModel->checkin_at->locale('id')->isoFormat('MMMM YYYY');
+
+            $belowAverageCount = $historyData->slice(0, -1)
+                ->filter(fn($h) => $h['nilai'] !== null && round((float) $h['nilai']) < 975)
+                ->count();
+        }
+
+        return view('evaluasi.show', compact('report', 'prefix', 'historyData', 'lastReportType', 'belowAverageCount', 'lastReportGrade', 'lastReportMonth'));
     }
 
     public function pdf($id)
@@ -692,15 +771,29 @@ class EvaluasiController extends MonitoringController
         $report = EvaluasiReport::findOrFail($id);
         $this->authorizeReport($report);
 
-        $geraiId = $report->gerai_id;
+        $filename = "laporan-evaluasi-{$report->gerai->kode_gerai}";
+        $tempDir = storage_path('app/temp-pdf');
+        if (!is_dir($tempDir)) mkdir($tempDir, 0755, true);
 
+        $excelPath = $this->excel($report->id, $tempDir);
+
+        if ($excelPath && file_exists($excelPath)) {
+            $pdfPath = $tempDir . '/' . $filename . '.pdf';
+            $pyScript = base_path('storage/app/xlwings-to-pdf.py');
+            $cmd = 'python ' . escapeshellarg($pyScript) . ' ' . escapeshellarg($excelPath) . ' ' . escapeshellarg($pdfPath) . ' 2>&1';
+            exec($cmd, $output, $returnCode);
+            @unlink($excelPath);
+
+            if ($returnCode === 0 && file_exists($pdfPath)) {
+                return response()->download($pdfPath, $filename . '.pdf')->deleteFileAfterSend(true);
+            }
+        }
+
+        $geraiId = $report->gerai_id;
         $historyBuilder = new EvaluasiHistoryBuilder($geraiId);
         $historyData = $historyBuilder->mapHistoryData();
         $lastReport = $historyBuilder->getLastReport();
-
         $fontLoaded = $this->registerArimoFont();
-
-        $filename = "laporan-evaluasi-{$report->gerai->kode_gerai}";
 
         $pdf = Pdf::loadView('evaluasi.pdf', compact('report', 'historyData', 'lastReport', 'fontLoaded'));
 

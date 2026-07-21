@@ -16,7 +16,7 @@
     </style>
 </head>
 <body>
-    <h1>{{ $revisi ? 'Revisi - ' : '' }}Laporan Sementara Temuan Monitoring</h1>
+    <h1>{{ $revisi ? 'Revisi - ' : '' }}Laporan Sementara Temuan {{ $prefix === 're-monitoring' ? 'Re-Monitoring' : ($prefix === 'pra-monitoring' ? 'Pra-Monitoring' : 'Monitoring') }}</h1>
 
     <table class="header-table">
         <tr>

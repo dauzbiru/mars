@@ -521,7 +521,17 @@ class PraMonitoringController extends MonitoringController
 
         // --- Penjelasan Formulir 3 (match monitoring Sheet3 line 2296-2410) ---
         $penjelasanIsi3 = $finding ? ($finding->penjelasan_isi_3 ?? []) : [];
-        $penjelasanIsi3 = array_values(array_filter($penjelasanIsi3, fn($v) => trim($v) !== ''));
+
+        // Filter: only keep entries whose key (item ID) matches a current zero-score item
+        $zeroScoreIds = [];
+        foreach ($zeroItems as $zName) {
+            if (isset($items[$zName]['item_id'])) {
+                $zeroScoreIds[] = (int) $items[$zName]['item_id'];
+            }
+        }
+        $penjelasanIsi3 = array_filter($penjelasanIsi3, fn($k) => in_array((int)$k, $zeroScoreIds), ARRAY_FILTER_USE_KEY);
+        $penjelasanIsi3 = array_filter($penjelasanIsi3, fn($v) => trim($v) !== '');
+        $penjelasanIsi3 = array_values($penjelasanIsi3);
 
         if (!empty($penjelasanIsi3)) {
             $penjelasanRn3 = 0;
@@ -617,6 +627,29 @@ class PraMonitoringController extends MonitoringController
                     $cell->setAttribute('r', preg_replace('/\d+$/', (string)$rn, $ref));
                 }
                 $rn++;
+            }
+        } else {
+            // No penjelasan: clear the PENJELASAN row from the template
+            $toRemove = [];
+            foreach ($xpath2->query('//s:sheetData/s:row') as $row) {
+                foreach ($xpath2->query('s:c', $row) as $cell) {
+                    $text = '';
+                    $type = $cell->getAttribute('t');
+                    if ($type === 's') {
+                        $v = $cell->getElementsByTagName('v')->item(0);
+                        if ($v) { $idx = (int)$v->textContent; $text = $ssTextByIndex[$idx] ?? ''; }
+                    } elseif ($type === 'inlineStr') {
+                        $t = $cell->getElementsByTagName('t')->item(0);
+                        $text = $t ? $t->textContent : '';
+                    }
+                    if (str_contains($text, 'PENJELASAN')) {
+                        $toRemove[] = $row;
+                        break;
+                    }
+                }
+            }
+            foreach ($toRemove as $row) {
+                $row->parentNode->removeChild($row);
             }
         }
 

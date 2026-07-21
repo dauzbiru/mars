@@ -54,7 +54,7 @@ class ReportController extends Controller
         $search = $request->input('search');
         if ($search) $search = str_replace(['%', '_'], '', $search);
 
-        $periods = SemesterPeriod::orderBy('year', 'desc')->orderBy('start_month')->get();
+        $periods = SemesterPeriod::orderBy('year', 'desc')->orderBy('start_month', 'desc')->get();
 
         $query = $modelClass::with('gerai', 'user');
 
@@ -146,7 +146,7 @@ class ReportController extends Controller
 
     public function analytics()
     {
-        $periods = SemesterPeriod::orderBy('year', 'desc')->orderBy('start_month')->get();
+        $periods = SemesterPeriod::orderBy('year', 'desc')->orderBy('start_month', 'desc')->get();
         return view('report.analytics', compact('periods'));
     }
 
@@ -170,8 +170,6 @@ class ReportController extends Controller
         foreach ($allCategories as $cat) {
             foreach ($cat->items as $item) {
                 if (!$item->bobot) continue;
-                $criteriaCount = $item->criteria->count();
-                if ($criteriaCount <= 1) continue;
                 $itemScores[$item->id] = [
                     'bobot' => (float) $item->bobot,
                     'scores' => [],
@@ -187,11 +185,14 @@ class ReportController extends Controller
                 $item = $result->item;
                 if (!$item || !$item->bobot) continue;
                 $criteriaCount = $item->criteria->count();
-                if ($criteriaCount <= 1) continue;
-                $interval = $item->bobot / ($criteriaCount - 1);
-                $idx = $item->criteria->search(fn($c) => $c->id === $result->criterion_id);
-                if ($idx !== false) {
-                    $itemScores[$itemId]['scores'][$geraiKode] = round($item->bobot - ($interval * $idx), 2);
+                if ($criteriaCount <= 1) {
+                    $itemScores[$itemId]['scores'][$geraiKode] = round((float) $item->bobot, 2);
+                } else {
+                    $interval = $item->bobot / ($criteriaCount - 1);
+                    $idx = $item->criteria->search(fn($c) => $c->id === $result->criterion_id);
+                    if ($idx !== false) {
+                        $itemScores[$itemId]['scores'][$geraiKode] = round($item->bobot - ($interval * $idx), 2);
+                    }
                 }
             }
         }
@@ -374,15 +375,32 @@ class ReportController extends Controller
 
     public function checklistTidakSempurna(Request $request)
     {
-        $request->validate(['periode_label' => 'required|string']);
+        $type = $request->input('type', 'monitoring');
+        if (in_array($type, ['pra-monitoring', 're-monitoring'])) {
+            $request->validate(['month' => 'required|string', 'type' => 'required|string']);
+        } else {
+            $request->validate(['periode_label' => 'required|string']);
+        }
 
-        $periodeLabel = $request->periode_label;
+        $modelClass = match ($type) {
+            'pra-monitoring' => \App\Models\PraMonitoringReport::class,
+            're-monitoring' => \App\Models\ReMonitoringReport::class,
+            default => MonitoringReport::class,
+        };
 
-        $reports = MonitoringReport::with('gerai', 'results.item.criteria', 'results.criterion')
-            ->where('type', 'monitoring')
-            ->whereNotNull('submit_at')
-            ->where('periode_label', $periodeLabel)
-            ->get();
+        $query = $modelClass::with('gerai', 'results.item.criteria', 'results.criterion')
+            ->whereNotNull('submit_at');
+
+        if (in_array($type, ['pra-monitoring', 're-monitoring'])) {
+            $month = $request->month;
+            $query->whereYear('checkin_at', substr($month, 0, 4))
+                  ->whereMonth('checkin_at', substr($month, 5, 2));
+        } else {
+            $query->where('type', 'monitoring')
+                  ->where('periode_label', $request->periode_label);
+        }
+
+        $reports = $query->get();
 
         if ($reports->isEmpty()) {
             return back()->with('error', 'Tidak ada data untuk periode tersebut.');
@@ -591,16 +609,25 @@ class ReportController extends Controller
         }
         $request->validate($rules);
 
-        $query = MonitoringReport::with('gerai', 'user')
-            ->where('type', $request->type)
+        $modelClass = match ($request->type) {
+            'pra-monitoring' => \App\Models\PraMonitoringReport::class,
+            're-monitoring' => \App\Models\ReMonitoringReport::class,
+            default => MonitoringReport::class,
+        };
+        $query = $modelClass::with('gerai', 'user')
             ->whereNotNull('submit_at');
+
+        if (Auth::user()->role !== 'admin') {
+            $query->where('user_id', Auth::id());
+        }
 
         if ($request->type === 'pra-monitoring' || $request->type === 're-monitoring') {
             $month = $request->month; // YYYY-MM
             $query->whereYear('checkin_at', substr($month, 0, 4))
                   ->whereMonth('checkin_at', substr($month, 5, 2));
         } else {
-            $query->where('periode_label', $request->periode_label);
+            $query->where('type', $request->type)
+                  ->where('periode_label', $request->periode_label);
         }
 
         $reports = $query->orderBy('checkin_at')->get();
@@ -621,9 +648,10 @@ class ReportController extends Controller
         $generated = [];
         foreach ($reports as $report) {
             try {
-                $path = $controller->excel($report, $tempDir);
-                $generated[] = $path;
-            } catch (\Exception $e) {
+                $path = $controller->excel($report->id, $tempDir);
+                if ($path) $generated[] = $path;
+            } catch (\Throwable $e) {
+                \Log::error('Export excel failed', ['report_id' => $report->id, 'error' => $e->getMessage()]);
                 continue;
             }
         }
@@ -658,37 +686,51 @@ class ReportController extends Controller
 
     public function exportAllPdf(Request $request)
     {
-        $rules = ['type' => 'required|in:monitoring'];
-        $rules['periode_label'] = 'required|string';
+        $rules = ['type' => 'required|in:monitoring,pra-monitoring,re-monitoring'];
+        if (in_array($request->type, ['pra-monitoring', 're-monitoring'])) {
+            $rules['month'] = 'required|string';
+        } else {
+            $rules['periode_label'] = 'required|string';
+        }
         $request->validate($rules);
 
-        $reports = MonitoringReport::with('gerai', 'user')
-            ->where('type', $request->type)
-            ->whereNotNull('submit_at')
-            ->where('periode_label', $request->periode_label)
-            ->orderBy('checkin_at')
-            ->get();
+        $modelClass = match ($request->type) {
+            'pra-monitoring' => \App\Models\PraMonitoringReport::class,
+            're-monitoring' => \App\Models\ReMonitoringReport::class,
+            default => MonitoringReport::class,
+        };
+        $query = $modelClass::with('gerai', 'user')
+            ->whereNotNull('submit_at');
+
+        if (in_array($request->type, ['pra-monitoring', 're-monitoring'])) {
+            $month = $request->month;
+            $query->whereYear('checkin_at', substr($month, 0, 4))
+                  ->whereMonth('checkin_at', substr($month, 5, 2));
+        } else {
+            $query->where('type', $request->type)
+                  ->where('periode_label', $request->periode_label);
+        }
+
+        if (Auth::user()->role !== 'admin') {
+            $query->where('user_id', Auth::id());
+        }
+
+        $reports = $query->orderBy('checkin_at')->get();
 
         if ($reports->isEmpty()) {
             return back()->with('error', 'Tidak ada laporan untuk periode ini.');
         }
 
-        $sofficePath = 'C:\\Program Files\\LibreOffice\\program\\soffice.exe';
-        $hasLibreOffice = false;
-        if (function_exists('exec')) {
-            $checkCmd = 'where soffice 2>nul || (if exist ' . escapeshellarg($sofficePath) . ' (echo found) else (echo notfound))';
-            exec($checkCmd, $checkOutput, $checkCode);
-            $hasLibreOffice = strpos(implode('', $checkOutput), 'found') !== false || $checkCode === 0;
-        }
-
-        if (!$hasLibreOffice) {
-            return back()->with('error', 'LibreOffice tidak tersedia untuk konversi PDF.');
-        }
-
         $tempDir = storage_path('app/temp-pdf-' . now()->format('Ymd_His'));
         mkdir($tempDir, 0755, true);
 
-        $controller = app(MonitoringController::class);
+        $controllerClass = match ($request->type) {
+            'pra-monitoring' => \App\Http\Controllers\PraMonitoringController::class,
+            're-monitoring' => \App\Http\Controllers\ReMonitoringController::class,
+            default => \App\Http\Controllers\MonitoringController::class,
+        };
+        $controller = app($controllerClass);
+        $pyScript = base_path('storage/app/xlwings-to-pdf.py');
         $generated = [];
 
         foreach ($reports as $report) {
@@ -698,18 +740,20 @@ class ReportController extends Controller
 
                 $pdfName = pathinfo(basename($excelPath), PATHINFO_FILENAME) . '.pdf';
                 $pdfPath = $tempDir . '/' . $pdfName;
-                $cmd = escapeshellarg($sofficePath) . ' --headless --convert-to pdf --outdir ' . escapeshellarg($tempDir) . ' ' . escapeshellarg($excelPath) . ' 2>&1';
+                $cmd = 'python ' . escapeshellarg($pyScript) . ' ' . escapeshellarg($excelPath) . ' ' . escapeshellarg($pdfPath);
                 exec($cmd, $output, $returnCode);
 
                 @unlink($excelPath);
 
                 if ($returnCode === 0 && file_exists($pdfPath)) {
-                    $newName = "{$report->gerai->kode_gerai} - {$report->periode_label}.pdf";
+                    $pdfLabel = $report->periode_label ?? $report->checkin_at->format('M-Y');
+                    $newName = "{$report->gerai->kode_gerai} - {$pdfLabel}.pdf";
                     $newPath = $tempDir . '/' . $newName;
                     rename($pdfPath, $newPath);
                     $generated[] = $newPath;
                 }
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
+                \Log::error('Export pdf failed', ['report_id' => $report->id, 'error' => $e->getMessage()]);
                 continue;
             }
         }
@@ -720,9 +764,10 @@ class ReportController extends Controller
             return back()->with('error', 'Gagal membuat file PDF.');
         }
 
-        $label = $request->periode_label;
+        $label = in_array($request->type, ['pra-monitoring', 're-monitoring']) ? $request->month : $request->periode_label;
         $safeLabel = preg_replace('/[^a-zA-Z0-9\-\s]/', '', $label);
-        $zipPath = storage_path("app/laporan-monitoring-pdf-{$safeLabel}-" . now()->format('Y-m-d_H-i') . '.zip');
+        $safeType = preg_replace('/[^a-z\-]/', '', $request->type);
+        $zipPath = storage_path("app/laporan-{$safeType}-pdf-{$safeLabel}-" . now()->format('Y-m-d_H-i') . '.zip');
         $zip = new ZipArchive;
         if ($zip->open($zipPath, ZipArchive::CREATE) !== true) {
             array_map('unlink', glob("$tempDir/*.pdf"));

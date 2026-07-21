@@ -43,7 +43,11 @@
                             <td class="px-4 sm:px-6 py-3 text-right"><span class="text-xs text-orange-500 font-medium">Sedang dikerjakan: {{ $pendingByOthers[$g->id] }}</span></td>
                         </tr>
                     @else
+                        @if ($prefix === 'evaluasi')
+                        <tr class="hover:bg-blue-50 active:bg-blue-200 cursor-pointer transition-colors" onclick="showConfirm('Buat laporan evaluasi untuk {{ $g->kode_gerai }} - {{ $g->nama_gerai }}?', function(){ window.location='/{{ $prefix }}/checkin/{{ $g->id }}'; })">
+                        @else
                         <tr class="hover:bg-blue-50 active:bg-blue-200 cursor-pointer transition-colors" onclick="window.location='/{{ $prefix }}/checkin/{{ $g->id }}'">
+                        @endif
                             <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm font-medium text-gray-800">{{ $g->kode_gerai }}</td>
                             <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm text-gray-600">{{ $g->nama_gerai }}</td>
                             <td class="px-4 sm:px-6 py-3 text-right"><span class="text-blue-600 text-xs font-medium">&rarr;</span></td>

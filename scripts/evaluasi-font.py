@@ -68,7 +68,7 @@ for row in range(8, 70):
     cell.font.color = (0, 0, 0)
     cell.api.VerticalAlignment = -4160  # top
 
-    if len(sval) > 115:
+    if len(sval) > 116:
         cell.api.WrapText = True
         ws2.range(f"{row}:{row}").api.RowHeight = 30
 

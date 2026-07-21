@@ -87,8 +87,8 @@
                 <td style="text-align: center;">
                     @if ($h['type'] === 're-monitoring')
                         <span style="font-weight: 600;">REMON</span>
-                    @elseif ($h['rank'] && $h['total_ranked'])
-                        {{ $h['rank'] }} - {{ $h['total_ranked'] }}
+                    @elseif ($h['rank'] && $h['total'])
+                        {{ $h['rank'] }} - {{ $h['total'] }}
                     @else
                         -
                     @endif
