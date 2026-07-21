@@ -455,18 +455,21 @@
             var bot = document.getElementById('burgerBot');
             var navbarMars = document.getElementById('navbarMars');
             var sidebarMars = document.getElementById('sidebarMars');
+            var fabMenus = document.querySelectorAll('#fabMenu');
             if (sidebar.classList.contains('-translate-x-full')) {
                 top.style.transform = 'none';
                 mid.style.opacity = '1';
                 bot.style.transform = 'none';
                 navbarMars.style.opacity = '1';
                 navbarMars.style.transform = 'translateX(0)';
+                fabMenus.forEach(function(el) { el.classList.remove('pointer-events-none'); });
             } else {
                 top.style.transform = 'translateY(11px) rotate(45deg)';
                 mid.style.opacity = '0';
                 bot.style.transform = 'translateY(-11px) rotate(-45deg)';
                 navbarMars.style.opacity = '0';
                 navbarMars.style.transform = 'translateX(20px)';
+                fabMenus.forEach(function(el) { el.classList.add('pointer-events-none'); });
             }
         }
         function toggleBuatLaporan() {
