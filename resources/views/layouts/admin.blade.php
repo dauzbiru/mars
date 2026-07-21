@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/themes/airbnb.css" integrity="sha256-LmZ7wnicF1GBpKNxhhOURrtTXXl7vgjlNtFyVcjZsHk=" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js" integrity="sha256-Huqxy3eUcaCwqqk92RwusapTfWlvAasF6p2rxV6FJaE=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/id.js" integrity="sha256-cvHCpHmt9EqKfsBeDHOujIlR5wZ8Wy3s90da1L3sGkc=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         button[type="submit"], button:not([type]) {
             transition: all 0.15s ease;
@@ -24,21 +25,43 @@
             transform: scale(0.97);
             filter: brightness(0.75);
         }
+        .swal2-popup.swal2-toast {
+            font-size: 13px;
+        }
+        .swal2-popup:not(.swal2-toast) {
+            max-width: 360px !important;
+            padding: 24px !important;
+            border-radius: 12px !important;
+        }
+        .swal2-popup:not(.swal2-toast) .swal2-icon {
+            margin: 0 auto 14px !important;
+            width: 48px !important;
+            height: 48px !important;
+        }
+        .swal2-popup:not(.swal2-toast) .swal2-title {
+            font-size: 16px !important;
+            padding: 0 !important;
+            margin-bottom: 8px !important;
+        }
+        .swal2-popup:not(.swal2-toast) .swal2-html-container {
+            font-size: 14px !important;
+            margin: 0 !important;
+        }
+        .swal2-popup:not(.swal2-toast) .swal2-actions {
+            margin-top: 14px !important;
+            gap: 8px !important;
+        }
+        .swal2-popup:not(.swal2-toast) .swal2-styled {
+            padding: 8px 20px !important;
+            font-size: 14px !important;
+            border-radius: 8px !important;
+        }
     </style>
     @stack('head')
 </head>
 <body class="bg-gray-100 min-h-screen">
 @if (request('embedded'))
     <main class="p-4 sm:p-6">
-        @if (session('success'))
-            <div class="mb-4 px-4 py-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm" id="alertSuccess">{{ session('success') }}</div>
-        @endif
-        @if (session('warning'))
-            <div class="mb-4 px-4 py-3 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-lg text-sm" id="alertWarning">{{ session('warning') }}</div>
-        @endif
-        @if (session('error'))
-            <div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm" id="alertError">{{ session('error') }}</div>
-        @endif
         @yield('content')
     </main>
 @else
@@ -154,7 +177,7 @@
                 <hr class="border-gray-200 my-1">
                 {{-- Monitoring Dropdown --}}
                 @php
-                    $isMonitoringActive = request()->is('report/monitoring') || request()->is('daftar-nilai') || request()->is('daftar-nilai/peringkat') || request()->is('daftar-nilai/performa') || request()->is('daftar-nilai/import') || request()->is('semester-periods*') || request()->is('gerai-pendampingan');
+                    $isMonitoringActive = request()->is('report/monitoring') || request()->is('daftar-nilai') || request()->is('daftar-nilai/peringkat') || request()->is('daftar-nilai/performa') || request()->is('daftar-nilai/import') || request()->is('semester-periods*') || request()->is('gerai-pendampingan') || request()->is('nilai-pairing');
                 @endphp
                 <button onclick="toggleMonitoring()"
                     class="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ $isMonitoringActive ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700' }}">
@@ -186,6 +209,10 @@
                     <a href="/gerai-pendampingan"
                         class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->is('gerai-pendampingan') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-blue-50 hover:text-blue-700' }}">
                         Daftar Gerai Pendampingan
+                    </a>
+                    <a href="/nilai-pairing"
+                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->is('nilai-pairing') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-blue-50 hover:text-blue-700' }}">
+                        Nilai Pairing
                     </a>
                     <a href="/daftar-nilai/import"
                         class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors {{ request()->is('daftar-nilai/import') ? 'bg-blue-50 text-blue-700' : 'text-gray-500 hover:bg-blue-50 hover:text-blue-700' }}">
@@ -236,15 +263,17 @@
         </nav>
 
         <div class="p-4 border-t">
-            <form method="POST" action="/logout">
+            <button onclick="showConfirm('Yakin ingin logout?', function(){ document.getElementById('sidebarLogoutForm').submit(); })" class="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-red-50 hover:text-red-600">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                Logout
+            </button>
+            <form id="sidebarLogoutForm" method="POST" action="/logout" class="hidden">
                 @csrf
-                <button type="submit" class="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm text-gray-600 hover:bg-red-50 hover:text-red-600">
-                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                    </svg>
-                    Logout
-                </button>
             </form>
+        </div>
+
+        <div class="px-4 py-3 text-center text-xs text-gray-400">
+            &copy; 2026 VirdauzyRizky. All Rights Reserved.
         </div>
     </aside>
 
@@ -261,7 +290,7 @@
             <div class="ml-auto flex items-center gap-2 shrink-0">
                 @php
                     $pendingReports = collect();
-                    $isAssessmentPage = request()->is('*/assessment') || request()->is('*/assessment/*');
+                    $isAssessmentPage = request()->is('*/assessment') || request()->is('*/assessment/*') || request()->is('*/temuan');
                     if (!$isAssessmentPage) {
                         $userId = auth()->id();
                         $rows = \DB::select("
@@ -358,10 +387,12 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                         Re-Monitoring
                     </a>
+                    @if (auth()->user()->role === 'admin')
                     <a href="/evaluasi" class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                         Evaluasi
                     </a>
+                    @endif
                 </div>
             </div>
             <span class="text-sm font-medium text-gray-700 shrink-0">{{ auth()->user()->name }}</span>
@@ -370,35 +401,10 @@
 
         {{-- Content --}}
         <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-x-auto">
-            @if (session('success'))
-                <div class="mb-4 px-4 py-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm" id="alertSuccess">
-                    {{ session('success') }}
-                </div>
-            @endif
-            @if (session('warning'))
-                <div class="mb-4 px-4 py-3 bg-yellow-50 border border-yellow-200 text-yellow-700 rounded-lg text-sm" id="alertWarning">
-                    {{ session('warning') }}
-                </div>
-            @endif
-            @if (session('error'))
-                <div class="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm" id="alertError">
-                    {{ session('error') }}
-                </div>
-            @endif
-
             @yield('content')
         </main>
     </div>
 @endif
-
-    {{-- Custom Modal --}}
-    <div id="customModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
-        <div class="fixed inset-0 bg-black/50" onclick="closeModal()"></div>
-        <div class="relative bg-white rounded-xl shadow-xl max-w-sm w-full mx-4 p-6" onclick="event.stopPropagation()">
-            <p id="modalMessage" class="text-sm text-gray-700 whitespace-pre-wrap"></p>
-            <div id="modalActions" class="mt-5 flex justify-end gap-3"></div>
-        </div>
-    </div>
 
     <script>
         function toggleSearch(inputId, btn, submitOnCollapse) {
@@ -487,29 +493,25 @@
         }
 
         function closeModal() {
-            document.getElementById('customModal').classList.add('hidden');
+            Swal.close();
         }
 
         function showAlert(msg) {
-            var modal = document.getElementById('customModal');
-            document.getElementById('modalMessage').textContent = msg;
-            document.getElementById('modalActions').innerHTML = '<button onclick="closeModal()" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">OK</button>';
-            modal.classList.remove('hidden');
+            Swal.fire({ icon: 'info', title: msg, confirmButtonText: 'OK', confirmButtonColor: '#3B82F6' });
         }
 
         function showConfirm(msg, onConfirm) {
-            var modal = document.getElementById('customModal');
-            document.getElementById('modalMessage').textContent = msg;
-            document.getElementById('modalActions').innerHTML =
-                '<button onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300">Tidak</button>' +
-                '<button id="confirmBtn" class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700">Ya</button>';
-            var confirmBtn = document.getElementById('confirmBtn');
-            confirmBtn.addEventListener('click', function() {
-                confirmBtn.disabled = true;
-                closeModal();
-                if (onConfirm) onConfirm();
+            Swal.fire({
+                title: msg,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3B82F6',
+                cancelButtonColor: '#9CA3AF',
+                confirmButtonText: 'Ya',
+                cancelButtonText: 'Tidak'
+            }).then(function(result) {
+                if (result.isConfirmed) onConfirm();
             });
-            modal.classList.remove('hidden');
         }
 
         document.addEventListener('submit', function(e) {
@@ -523,15 +525,15 @@
         });
     </script>
     <script>
-    setTimeout(function() {
-        var el;
-        el = document.getElementById('alertSuccess');
-        if (el) { el.style.transition = 'opacity 0.3s, max-height 0.3s, margin 0.3s, padding 0.3s'; el.style.opacity = '0'; el.style.maxHeight = '0'; el.style.margin = '0'; el.style.padding = '0'; el.style.overflow = 'hidden'; setTimeout(function() { el.remove(); }, 300); }
-        el = document.getElementById('alertError');
-        if (el) { el.style.transition = 'opacity 0.3s, max-height 0.3s, margin 0.3s, padding 0.3s'; el.style.opacity = '0'; el.style.maxHeight = '0'; el.style.margin = '0'; el.style.padding = '0'; el.style.overflow = 'hidden'; setTimeout(function() { el.remove(); }, 300); }
-        el = document.getElementById('alertWarning');
-        if (el) { el.style.transition = 'opacity 0.3s, max-height 0.3s, margin 0.3s, padding 0.3s'; el.style.opacity = '0'; el.style.maxHeight = '0'; el.style.margin = '0'; el.style.padding = '0'; el.style.overflow = 'hidden'; setTimeout(function() { el.remove(); }, 300); }
-    }, 5000);
+        @if (session('success'))
+        Swal.fire({ toast: true, position: 'top', icon: 'success', title: @json(session('success')), showConfirmButton: false, timer: 3000, timerProgressBar: true, confirmButtonColor: '#3B82F6' });
+        @endif
+        @if (session('warning'))
+        Swal.fire({ toast: true, position: 'top', icon: 'warning', title: @json(session('warning')), showConfirmButton: false, timer: 3000, timerProgressBar: true, confirmButtonColor: '#3B82F6' });
+        @endif
+        @if (session('error'))
+        Swal.fire({ toast: true, position: 'top', icon: 'error', title: @json(session('error')), showConfirmButton: false, timer: 3000, timerProgressBar: true, confirmButtonColor: '#3B82F6' });
+        @endif
     </script>
 @stack('scripts')
 </body>

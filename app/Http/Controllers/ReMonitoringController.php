@@ -21,7 +21,7 @@ class ReMonitoringController extends MonitoringController
 
     public function excel($id, $outputDir = null)
     {
-        $report = $this->modelClass()::findOrFail($id);
+        $report = $this->modelClass()::withoutGlobalScope('no_pairing')->findOrFail($id);
         $this->authorizeReport($report);
         set_time_limit(120);
 
@@ -66,17 +66,6 @@ class ReMonitoringController extends MonitoringController
                 ->with('warning', 'Anda masih memiliki laporan yang belum diselesaikan.');
         }
 
-        $checkinDate = $request->input('checkin_at', now()->toDateString());
-
-        $existing = ReMonitoringReport::where('gerai_id', $gerai->id)
-            ->where('user_id', Auth::id())
-            ->whereDate('checkin_at', $checkinDate)
-            ->exists();
-
-        if ($existing) {
-            return redirect("/{$this->prefix()}")->with('warning', 'Laporan untuk gerai ini sudah dibuat pada tanggal ini.');
-        }
-
         $data = $request->validate([
             'location' => 'required|string|max:255',
             'checkin_at' => 'required|date',
@@ -109,7 +98,7 @@ class ReMonitoringController extends MonitoringController
 
     public function destroy(Request $request, $id)
     {
-        $report = $this->modelClass()::findOrFail($id);
+        $report = $this->modelClass()::withoutGlobalScope('no_pairing')->findOrFail($id);
         $this->authorizeReport($report);
 
         session()->forget('assessment_snapshot_' . $report->id);
@@ -210,3 +199,4 @@ class ReMonitoringController extends MonitoringController
         return $report->periode_label;
     }
 }
+

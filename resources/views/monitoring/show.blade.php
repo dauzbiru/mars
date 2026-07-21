@@ -13,7 +13,11 @@
             };
         @endphp
         <a href="{{ $reportListUrl }}" class="text-sm text-blue-600 hover:underline">&larr; Kembali ke Daftar Laporan</a>
-        <h2 class="text-lg sm:text-xl font-bold text-gray-800 mt-1">{{ $report->gerai->kode_gerai }} - {{ $report->gerai->nama_gerai }}</h2>
+        <h2 class="text-lg sm:text-xl font-bold text-gray-800 mt-1">{{ $report->gerai->kode_gerai }} - {{ $report->gerai->nama_gerai }}
+            @if($report->is_pairing)
+                <span style="background:#6B7280;color:#fff;font-size:11px;padding:2px 8px;border-radius:4px;margin-left:6px;vertical-align:middle;">Pairing</span>
+            @endif
+        </h2>
     </div>
     <div class="flex gap-2">
     </div>
@@ -74,7 +78,7 @@
 @if ($report->finding)
     <div class="bg-white rounded-xl shadow-md overflow-hidden mb-4">
         <div class="px-4 sm:px-6 py-3 border-b border-gray-200 bg-gray-50">
-            <h3 class="text-sm font-semibold text-gray-700">{{ $prefix === 'evaluasi' ? 'Temuan Evaluasi' : 'Temuan Monitoring' }}</h3>
+                <h3 class="text-sm font-semibold text-gray-700">{{ $prefix === 'evaluasi' ? 'Temuan Evaluasi' : ($prefix === 'pra-monitoring' ? 'Temuan Pra-Monitoring' : ($prefix === 're-monitoring' ? 'Temuan Re-Monitoring' : 'Temuan Monitoring')) }}</h3>
         </div>
         <div class="p-4 sm:p-5 space-y-3">
             @if ($report->finding->major)

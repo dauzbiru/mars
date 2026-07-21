@@ -7,7 +7,11 @@
     {{-- Header --}}
     <div class="flex items-center gap-3 mb-4">
         <div class="min-w-0 flex-1">
-            <h2 class="text-base font-bold text-gray-900 truncate">{{ $report->gerai->kode_gerai }} - {{ $report->gerai->nama_gerai }}</h2>
+            <h2 class="text-base font-bold text-gray-900 truncate">{{ $report->gerai->kode_gerai }} - {{ $report->gerai->nama_gerai }}
+                @if($report->is_pairing)
+                    <span style="background:#6B7280;color:#fff;font-size:10px;padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:middle;">Pairing</span>
+                @endif
+            </h2>
             <p class="text-xs text-gray-500">{{ $category->name }}</p>
         </div>
         <div class="text-right shrink-0">

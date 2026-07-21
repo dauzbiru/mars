@@ -20,10 +20,11 @@
 
         <form method="POST" action="/{{ $prefix }}/checkin/{{ $gerai->id }}">
             @csrf
+            <input type="hidden" name="pairing" id="pairingField" value="{{ request('pairing') }}">
 
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Lokasi Checkin</label>
-                <div id="map" class="w-full h-48 rounded-lg border border-gray-300 mb-2"></div>
+                <div id="map" class="w-full h-48 rounded-lg border border-gray-300 mb-2" style="z-index:10;position:relative;"></div>
                 <div class="flex gap-2">
                     <input type="text" name="location" id="location" required readonly
                         class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-blue-400 bg-gray-50"
@@ -187,11 +188,27 @@
     detectLocation();
     document.getElementById('refreshLocation').addEventListener('click', detectLocation);
 
+    var mapContainer = document.getElementById('map');
+    var origToggleSidebar = window.toggleSidebar;
+    window.toggleSidebar = function() {
+        origToggleSidebar();
+        var sidebar = document.getElementById('sidebar');
+        if (sidebar.classList.contains('-translate-x-full')) {
+            mapContainer.style.pointerEvents = 'auto';
+        } else {
+            mapContainer.style.pointerEvents = 'none';
+        }
+    };
+
     var existingPeriods = @json(isset($existingPeriods) ? $existingPeriods : []);
+    var pairingField = document.getElementById('pairingField');
+    if (localStorage.getItem('pairingOn') === '1') {
+        pairingField.value = '1';
+    }
     var form = document.querySelector('form');
     form.addEventListener('submit', function(e) {
         var sel = document.getElementById('periode_label');
-        if (sel && existingPeriods.indexOf(sel.value) !== -1) {
+        if (sel && existingPeriods.indexOf(sel.value) !== -1 && pairingField.value !== '1') {
             e.preventDefault();
             document.getElementById('popupMessage').textContent = 'Laporan atau nilai untuk gerai ini sudah ada di periode ' + sel.value + '. Silahkan pilih periode lain.';
             document.getElementById('existingPopup').style.display = 'flex';

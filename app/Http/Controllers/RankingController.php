@@ -176,6 +176,190 @@ class RankingController extends Controller
         return view('ranking.pendampingan', compact('reports', 'period'));
     }
 
+    public function nilaiPairing(Request $request)
+    {
+        $geraiId = $request->input('gerai_id');
+
+        $geraiWithPairing = \App\Models\MonitoringReport::withoutGlobalScope('no_pairing')
+            ->where('is_pairing', true)
+            ->whereNotNull('submit_at')
+            ->distinct()
+            ->pluck('gerai_id');
+
+        $gerais = \App\Models\Gerai::whereIn('id', $geraiWithPairing)
+            ->orderBy('kode_gerai')
+            ->get();
+
+        $selectedGerai = null;
+        $items = collect();
+        $pairingUsers = collect();
+        $nonPairingUsers = collect();
+        $resultsByUser = [];
+
+        if ($geraiId && $gerais->contains('id', $geraiId)) {
+            $selectedGerai = $gerais->firstWhere('id', $geraiId);
+
+            $items = \App\Models\Category::whereNull('parent_id')
+                ->with(['items.criteria'])
+                ->orderBy('sort')
+                ->get();
+
+            $pairingReportIds = \App\Models\MonitoringReport::withoutGlobalScope('no_pairing')
+                ->where('gerai_id', $geraiId)
+                ->where('is_pairing', true)
+                ->whereNotNull('submit_at')
+                ->pluck('id');
+
+            $nonPairingReportIds = \App\Models\MonitoringReport::where('gerai_id', $geraiId)
+                ->where('is_pairing', false)
+                ->whereNotNull('submit_at')
+                ->pluck('id');
+
+            $allResults = \App\Models\Result::where(function ($q) use ($pairingReportIds, $nonPairingReportIds) {
+                    $q->whereIn('reportable_id', $pairingReportIds)
+                      ->orWhereIn('reportable_id', $nonPairingReportIds);
+                })
+                ->where('reportable_type', \App\Models\MonitoringReport::class)
+                ->whereNotNull('criterion_id')
+                ->with('user', 'criterion')
+                ->get();
+
+            $pairingUsers = $allResults->filter(fn($r) => in_array($r->reportable_id, $pairingReportIds->toArray()))
+                ->pluck('user')->unique('id')->values();
+
+            $nonPairingUsers = $allResults->filter(fn($r) => in_array($r->reportable_id, $nonPairingReportIds->toArray()))
+                ->pluck('user')->unique('id')->values();
+
+            // resultsByUser[userId][itemId] = score
+            foreach ($allResults as $r) {
+                $item = $r->item;
+                if (!$item || !$item->bobot) continue;
+                $criteriaCount = $item->criteria->count();
+                if ($criteriaCount <= 1) {
+                    $resultsByUser[$r->user_id][$r->item_id] = $item->bobot;
+                    continue;
+                }
+                $interval = $item->bobot / ($criteriaCount - 1);
+                $idx = $item->criteria->search(fn($c) => $c->id === $r->criterion_id);
+                $resultsByUser[$r->user_id][$r->item_id] = $idx !== false ? $item->bobot - ($interval * $idx) : 0;
+            }
+        }
+
+        return view('ranking.nilai-pairing', compact(
+            'gerais', 'selectedGerai', 'items',
+            'pairingUsers', 'nonPairingUsers', 'resultsByUser'
+        ));
+    }
+
+    public function nilaiPairingExcel(Request $request)
+    {
+        $geraiId = $request->input('gerai_id');
+        $gerai = \App\Models\Gerai::find($geraiId);
+        if (!$gerai) abort(404);
+
+        $items = \App\Models\Category::whereNull('parent_id')
+            ->with(['items.criteria'])
+            ->orderBy('sort')
+            ->get();
+
+        $pairingReportIds = \App\Models\MonitoringReport::withoutGlobalScope('no_pairing')
+            ->where('gerai_id', $geraiId)
+            ->where('is_pairing', true)
+            ->whereNotNull('submit_at')
+            ->pluck('id');
+
+        $nonPairingReportIds = \App\Models\MonitoringReport::where('gerai_id', $geraiId)
+            ->where('is_pairing', false)
+            ->whereNotNull('submit_at')
+            ->pluck('id');
+
+        $allResults = \App\Models\Result::where(function ($q) use ($pairingReportIds, $nonPairingReportIds) {
+                $q->whereIn('reportable_id', $pairingReportIds)
+                  ->orWhereIn('reportable_id', $nonPairingReportIds);
+            })
+            ->where('reportable_type', \App\Models\MonitoringReport::class)
+            ->whereNotNull('criterion_id')
+            ->with('user', 'criterion')
+            ->get();
+
+        $pairingUsers = $allResults->filter(fn($r) => in_array($r->reportable_id, $pairingReportIds->toArray()))
+            ->pluck('user')->unique('id')->values();
+
+        $nonPairingUsers = $allResults->filter(fn($r) => in_array($r->reportable_id, $nonPairingReportIds->toArray()))
+            ->pluck('user')->unique('id')->values();
+
+        $resultsByUser = [];
+        foreach ($allResults as $r) {
+            $item = $r->item;
+            if (!$item || !$item->bobot) continue;
+            $criteriaCount = $item->criteria->count();
+            if ($criteriaCount <= 1) {
+                $resultsByUser[$r->user_id][$r->item_id] = $item->bobot;
+                continue;
+            }
+            $interval = $item->bobot / ($criteriaCount - 1);
+            $idx = $item->criteria->search(fn($c) => $c->id === $r->criterion_id);
+            $resultsByUser[$r->user_id][$r->item_id] = $idx !== false ? $item->bobot - ($interval * $idx) : 0;
+        }
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle($gerai->kode_gerai);
+
+        // Header row 1: Kriteria, Bobot, then user names
+        $col = 1;
+        $sheet->getCellByColumnAndRow($col++, 1)->setValue('Kriteria');
+        $sheet->getCellByColumnAndRow($col++, 1)->setValue('Bobot');
+        foreach ($nonPairingUsers as $u) {
+            $sheet->getCellByColumnAndRow($col++, 1)->setValue($u->name);
+        }
+        foreach ($pairingUsers as $u) {
+            $sheet->getCellByColumnAndRow($col++, 1)->setValue($u->name);
+        }
+
+        // Header row 2: Non-Pairing / Pairing labels
+        $sheet->getCellByColumnAndRow(1, 2)->setValue('');
+        $sheet->getCellByColumnAndRow(2, 2)->setValue('');
+        for ($i = 0; $i < $nonPairingUsers->count(); $i++) {
+            $sheet->getCellByColumnAndRow(3 + $i, 2)->setValue('Non-Pairing');
+        }
+        for ($i = 0; $i < $pairingUsers->count(); $i++) {
+            $sheet->getCellByColumnAndRow(3 + $nonPairingUsers->count() + $i, 2)->setValue('Pairing');
+        }
+
+        // Bold headers
+        for ($c = 1; $c < $col; $c++) {
+            $sheet->getCellByColumnAndRow($c, 1)->getFont()->setBold(true);
+            $sheet->getCellByColumnAndRow($c, 2)->getFont()->setBold(true);
+        }
+
+        $row = 3;
+        foreach ($items as $cat) {
+            foreach ($cat->items as $item) {
+                $c = 1;
+                $sheet->getCellByColumnAndRow($c++, $row)->setValue($item->name);
+                $sheet->getCellByColumnAndRow($c++, $row)->setValue($item->bobot);
+                foreach ($nonPairingUsers as $u) {
+                    $sheet->getCellByColumnAndRow($c++, $row)->setValue($resultsByUser[$u->id][$item->id] ?? '-');
+                }
+                foreach ($pairingUsers as $u) {
+                    $sheet->getCellByColumnAndRow($c++, $row)->setValue($resultsByUser[$u->id][$item->id] ?? '-');
+                }
+                $row++;
+            }
+        }
+
+        for ($c = 1; $c < $col; $c++) {
+            $sheet->getColumnDimension(\PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c))->setAutoSize(true);
+        }
+
+        $writer = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $filename = 'nilai-pairing-' . $gerai->kode_gerai . '.xlsx';
+        $writer->save(storage_path('app/' . $filename));
+
+        return response()->download(storage_path('app/' . $filename), $filename)->deleteFileAfterSend(true);
+    }
+
     public function markWaSent($reportId)
     {
         if (auth()->user()->role !== 'admin') {

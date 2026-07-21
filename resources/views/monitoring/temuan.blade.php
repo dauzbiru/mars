@@ -1,6 +1,15 @@
 @extends('layouts.admin')
 
-@section('title', ($prefix === 'evaluasi' ? 'Temuan Evaluasi' : 'Temuan Monitoring') . ' - ' . $report->gerai->nama_gerai)
+@php
+    $temuanLabel = match($prefix) {
+        'pra-monitoring' => 'Temuan Pra-Monitoring',
+        're-monitoring' => 'Temuan Re-Monitoring',
+        'evaluasi' => 'Temuan Evaluasi',
+        default => 'Temuan Monitoring',
+    };
+@endphp
+
+@section('title', $temuanLabel . ' - ' . $report->gerai->nama_gerai)
 
 @section('content')
 <div class="max-w-lg mx-auto">
@@ -12,7 +21,11 @@
             </svg>
         </a>
         <div class="min-w-0">
-            <h2 class="text-base font-bold text-gray-900 truncate">{{ $prefix === 'evaluasi' ? 'Temuan Evaluasi' : 'Temuan Monitoring' }}</h2>
+            <h2 class="text-base font-bold text-gray-900 truncate">{{ $temuanLabel }}
+                @if($report->is_pairing)
+                    <span style="background:#6B7280;color:#fff;font-size:10px;padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:middle;">Pairing</span>
+                @endif
+            </h2>
         </div>
     </div>
 

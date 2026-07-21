@@ -204,11 +204,6 @@ class MonitoringController extends Controller
         $gerais = Gerai::active()->orderBy('kode_gerai')->get();
 
         if ($this->type === 'evaluasi') {
-            $todayReportGeraiIds = $this->modelClass()::where('user_id', Auth::id())
-                ->whereDate('tanggal', now()->toDateString())
-                ->pluck('gerai_id')
-                ->toArray();
-
             $pendingByOthers = $this->modelClass()::where('user_id', '!=', Auth::id())
                 ->whereNull('tanggal')
                 ->with('user')
@@ -216,11 +211,6 @@ class MonitoringController extends Controller
                 ->pluck('user.name', 'gerai_id')
                 ->toArray();
         } else {
-            $todayReportGeraiIds = $this->modelClass()::where('user_id', Auth::id())
-                ->whereDate('checkin_at', now()->toDateString())
-                ->pluck('gerai_id')
-                ->toArray();
-
             $pendingByOthers = $this->modelClass()::where('user_id', '!=', Auth::id())
                 ->whereNotNull('checkin_at')
                 ->whereNull('submit_at')
@@ -230,13 +220,13 @@ class MonitoringController extends Controller
                 ->toArray();
         }
 
-        return view('monitoring.select-gerai', compact('gerais', 'todayReportGeraiIds', 'pendingByOthers') + ['prefix' => $this->prefix()]);
+        return view('monitoring.select-gerai', compact('gerais', 'pendingByOthers') + ['prefix' => $this->prefix()]);
     }
 
     public function checkinForm(Gerai $gerai)
     {
         $pending = $this->pendingReport();
-        if ($pending) {
+        if ($pending && request('pairing') !== '1') {
             return redirect("/{$this->prefix()}/{$pending->id}/assessment")
                 ->with('warning', 'Anda masih memiliki laporan yang belum diselesaikan. Selesaikan dulu.');
         }
@@ -263,7 +253,7 @@ class MonitoringController extends Controller
     public function doCheckin(Request $request, Gerai $gerai)
     {
         $pending = $this->pendingReport();
-        if ($pending) {
+        if ($pending && $request->input('pairing') !== '1') {
             return redirect("/{$this->prefix()}/{$pending->id}/assessment")
                 ->with('warning', 'Anda masih memiliki laporan yang belum diselesaikan.');
         }
@@ -274,39 +264,18 @@ class MonitoringController extends Controller
             'checkin_at' => 'required|date',
         ]);
 
-        $hasData = MonitoringReport::where('gerai_id', $gerai->id)
-            ->where('periode_label', $data['periode_label'])
-            ->where(function ($q) {
-                $q->where('type', 'import')
-                    ->orWhere(function ($q2) {
-                        $q2->where('type', $this->type)
-                            ->whereNotNull('submit_at');
-                    });
-            })
-            ->exists();
+        $pairing = $request->input('pairing') === '1';
 
-        if ($hasData) {
-            return redirect("/{$this->prefix()}/checkin/{$gerai->id}")
-                ->with('error', 'Laporan atau nilai untuk gerai ini sudah ada di periode ' . $data['periode_label'] . '. Silahkan pilih periode lain.');
-        }
+        $report = DB::transaction(function () use ($gerai, $data, $pairing) {
+            if (!$pairing) {
+                $duplicate = $this->modelClass()::where('gerai_id', $gerai->id)
+                    ->where('periode_label', $data['periode_label'])
+                    ->whereNotNull('submit_at')
+                    ->exists();
 
-        $report = DB::transaction(function () use ($gerai, $data) {
-            $duplicate = $this->modelClass()::where('gerai_id', $gerai->id)
-                ->where('periode_label', $data['periode_label'])
-                ->whereNotNull('submit_at')
-                ->exists();
-
-            if ($duplicate) {
-                return null;
-            }
-
-            $existing = $this->modelClass()::where('gerai_id', $gerai->id)
-                ->where('user_id', Auth::id())
-                ->whereDate('checkin_at', now()->toDateString())
-                ->exists();
-
-            if ($existing) {
-                return 'existing';
+                if ($duplicate) {
+                    return null;
+                }
             }
 
             $report = $this->modelClass()::create([
@@ -315,6 +284,7 @@ class MonitoringController extends Controller
                 'location' => $data['location'],
                 'periode_label' => $data['periode_label'],
                 'checkin_at' => \Carbon\Carbon::parse($data['checkin_at'] . ' ' . now()->format('H:i:s')),
+                'is_pairing' => $pairing,
             ]);
 
             $categories = Category::whereNull('parent_id')->with('items.criteria')->get();
@@ -336,11 +306,7 @@ class MonitoringController extends Controller
         });
 
         if ($report === null) {
-            return redirect("/{$this->prefix()}")->with('warning', 'Nilai untuk gerai dan periode ini sudah ada. Hapus data yang ada terlebih dahulu jika ingin mengganti.');
-        }
-
-        if ($report === 'existing') {
-            return redirect("/{$this->prefix()}")->with('warning', 'Laporan untuk gerai ini sudah dibuat hari ini.');
+            return redirect("/{$this->prefix()}/checkin/{$gerai->id}")->with('warning', 'Nilai untuk gerai dan periode ini sudah ada. Hapus data yang ada terlebih dahulu jika ingin mengganti.');
         }
 
         return redirect("/{$this->prefix()}/{$report->id}/assessment");
@@ -348,7 +314,7 @@ class MonitoringController extends Controller
 
     public function assessment($id)
     {
-        $report = $this->modelClass()::findOrFail($id);
+        $report = $this->modelClass()::withoutGlobalScope('no_pairing')->findOrFail($id);
         $this->authorizeReport($report);
 
         $categories = Category::whereNull('parent_id')
@@ -471,7 +437,7 @@ class MonitoringController extends Controller
 
     public function cancelAssessment(Request $request, $id)
     {
-        $report = $this->modelClass()::findOrFail($id);
+        $report = $this->modelClass()::withoutGlobalScope('no_pairing')->findOrFail($id);
         $this->authorizeReport($report);
 
         $snapshotKey = 'assessment_snapshot_' . $report->id;
@@ -517,7 +483,7 @@ class MonitoringController extends Controller
 
     public function itemForm($id, \App\Models\Item $item)
     {
-        $report = $this->modelClass()::findOrFail($id);
+        $report = $this->modelClass()::withoutGlobalScope('no_pairing')->findOrFail($id);
         $result = Result::where('reportable_type', get_class($report))
             ->where('reportable_id', $report->id)
             ->where('item_id', $item->id)
@@ -528,7 +494,7 @@ class MonitoringController extends Controller
 
     public function assessmentForm($id, Category $category)
     {
-        $report = $this->modelClass()::findOrFail($id);
+        $report = $this->modelClass()::withoutGlobalScope('no_pairing')->findOrFail($id);
         $this->authorizeReport($report);
 
         $category->load('items.criteria');
@@ -544,7 +510,7 @@ class MonitoringController extends Controller
 
     public function saveAssessmentForm(Request $request, $id, ?Category $category = null)
     {
-        $report = $this->modelClass()::findOrFail($id);
+        $report = $this->modelClass()::withoutGlobalScope('no_pairing')->findOrFail($id);
         $this->authorizeReport($report);
 
         $category->load('items.criteria');
@@ -569,7 +535,7 @@ class MonitoringController extends Controller
 
     public function temuanForm($id)
     {
-        $report = $this->modelClass()::findOrFail($id);
+        $report = $this->modelClass()::withoutGlobalScope('no_pairing')->findOrFail($id);
         $this->authorizeReport($report);
 
         $finding = $report->finding;
@@ -653,7 +619,7 @@ class MonitoringController extends Controller
 
     public function saveTemuan(Request $request, $id)
     {
-        $report = $this->modelClass()::findOrFail($id);
+        $report = $this->modelClass()::withoutGlobalScope('no_pairing')->findOrFail($id);
         $this->authorizeReport($report);
 
         $validationRules = [
@@ -727,7 +693,7 @@ class MonitoringController extends Controller
 
     public function submit(Request $request, $id)
     {
-        $report = $this->modelClass()::findOrFail($id);
+        $report = $this->modelClass()::withoutGlobalScope('no_pairing')->findOrFail($id);
         $this->authorizeReport($report);
 
         $savedResults = Result::where('reportable_type', get_class($report))
@@ -865,7 +831,7 @@ class MonitoringController extends Controller
 
     public function show($id)
     {
-        $report = $this->modelClass()::findOrFail($id);
+        $report = $this->modelClass()::withoutGlobalScope('no_pairing')->findOrFail($id);
         $this->authorizeReport($report);
 
         $categories = Category::whereNull('parent_id')
@@ -917,7 +883,7 @@ class MonitoringController extends Controller
 
     public function pdf($id)
     {
-        $report = $this->modelClass()::findOrFail($id);
+        $report = $this->modelClass()::withoutGlobalScope('no_pairing')->findOrFail($id);
         $this->authorizeReport($report);
 
         $revisi = request()->boolean('revisi');
@@ -1028,7 +994,7 @@ class MonitoringController extends Controller
 
     public function excel($id, $outputDir = null)
     {
-        $report = $this->modelClass()::findOrFail($id);
+        $report = $this->modelClass()::withoutGlobalScope('no_pairing')->findOrFail($id);
         $this->authorizeReport($report);
         set_time_limit(120);
 
@@ -2741,7 +2707,7 @@ class MonitoringController extends Controller
 
     public function destroy(Request $request, $id)
     {
-        $report = $this->modelClass()::findOrFail($id);
+        $report = $this->modelClass()::withoutGlobalScope('no_pairing')->findOrFail($id);
         $this->authorizeReport($report);
 
         session()->forget('assessment_snapshot_' . $report->id);
@@ -2849,3 +2815,4 @@ class MonitoringController extends Controller
         \App\Models\Ranking::insert($updates);
     }
 }
+

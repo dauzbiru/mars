@@ -56,7 +56,7 @@ class ReportController extends Controller
 
         $periods = SemesterPeriod::orderBy('year', 'desc')->orderBy('start_month', 'desc')->get();
 
-        $query = $modelClass::with('gerai', 'user');
+        $query = $modelClass::with('gerai', 'user')->withoutGlobalScope('no_pairing');
 
         if ($options['filterByType'] ?? false) {
             $query->where('type', $type);

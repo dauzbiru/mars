@@ -29,14 +29,20 @@
         <div class="flex items-start justify-between gap-4">
             <div>
                 <p class="text-xs text-blue-200 font-medium uppercase tracking-wide">Total Skor</p>
-                <p class="text-4xl font-bold mt-1">{{ $totalScore == (int)$totalScore ? (int)$totalScore : number_format($totalScore, 2, '.', '') }}</p>
+                <p class="text-4xl font-bold mt-1">{{ $totalScore == (int)$totalScore ? (int)$totalScore : number_format($totalScore, 2, '.', '') }}
+                    <span style="background:rgba(255,255,255,0.25);color:#fff;font-size:11px;padding:2px 8px;border-radius:4px;vertical-align:middle;margin-left:6px;font-weight:500;">{{ match($prefix) { 'pra-monitoring' => 'Pra-Monitoring', 're-monitoring' => 'Re-Monitoring', default => 'Monitoring' } }}</span>
+                </p>
                 <div class="mt-3 flex items-center gap-4 text-xs text-blue-100">
                     <span>{{ $categories->sum(fn($c) => $c->items->count()) }} item</span>
                     <span>{{ $results->whereNotNull('criterion_id')->count() }} terisi</span>
                 </div>
             </div>
             <div class="text-right shrink-0">
-                <p class="text-sm font-bold">{{ $report->gerai->kode_gerai }}</p>
+                <p class="text-sm font-bold">{{ $report->gerai->kode_gerai }}
+                    @if($report->is_pairing)
+                        <span style="background:rgba(255,255,255,0.25);color:#fff;font-size:10px;padding:1px 6px;border-radius:4px;margin-left:4px;vertical-align:middle;">Pairing</span>
+                    @endif
+                </p>
                 <p class="text-xs text-blue-200 mt-0.5">{{ $report->gerai->nama_gerai }}</p>
                 <p class="text-xs text-blue-200 mt-1">{{ $report->checkin_at->format('d-m-Y H:i') }}</p>
                 <p class="text-xs text-blue-200 mt-0.5">{{ str_starts_with($report->gerai->no_telepon ?? '', '62') ? '0' . substr($report->gerai->no_telepon, 2) : ($report->gerai->no_telepon ?? '-') }}</p>
@@ -119,7 +125,7 @@
                     @endif
                 </div>
                 <div>
-                    <h3 class="text-sm font-semibold text-gray-800">{{ $prefix === 'evaluasi' ? 'Temuan Evaluasi' : 'Temuan Monitoring' }}</h3>
+                    <h3 class="text-sm font-semibold text-gray-800">{{ $prefix === 'evaluasi' ? 'Temuan Evaluasi' : ($prefix === 'pra-monitoring' ? 'Temuan Pra-Monitoring' : ($prefix === 're-monitoring' ? 'Temuan Re-Monitoring' : 'Temuan Monitoring')) }}</h3>
                     <p class="text-xs {{ $findingComplete ? 'text-green-600' : ($findingPartial ? 'text-yellow-600' : 'text-gray-400') }}">{{ $findingComplete ? 'Sudah terisi semua' : ($findingPartial ? 'Ada yang belum terisi' : 'Major, Minor, Peringatan Awal, TTD') }}</p>
                 </div>
             </div>

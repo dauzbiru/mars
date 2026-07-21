@@ -182,6 +182,8 @@ Route::middleware('auth')->group(function () {
         Route::get('/daftar-nilai/excel', [\App\Http\Controllers\RankingController::class, 'excel']);
         Route::get('/daftar-nilai/performa', [\App\Http\Controllers\RankingController::class, 'performa']);
         Route::get('/gerai-pendampingan', [\App\Http\Controllers\RankingController::class, 'pendampingan']);
+        Route::get('/nilai-pairing', [\App\Http\Controllers\RankingController::class, 'nilaiPairing']);
+        Route::get('/nilai-pairing/excel', [\App\Http\Controllers\RankingController::class, 'nilaiPairingExcel']);
 
         // Report admin-only
         Route::get('/report/pdf', [ReportController::class, 'pdf']);
@@ -193,6 +195,21 @@ Route::middleware('auth')->group(function () {
         Route::get('/report/export-all-excel', [ReportController::class, 'exportAllExcel']);
         Route::get('/report/export-all-pdf', [ReportController::class, 'exportAllPdf']);
         Route::get('/report/excel-detail', [ReportController::class, 'excelDetail']);
+
+        // Evaluasi
+        Route::get('/report/evaluasi', [\App\Http\Controllers\ReportController::class, 'evaluasi']);
+        Route::get('/evaluasi', [\App\Http\Controllers\EvaluasiController::class, 'selectGerai']);
+        Route::get('/evaluasi/checkin/{gerai}', [\App\Http\Controllers\EvaluasiController::class, 'checkinForm']);
+        Route::get('/evaluasi/{report}/assessment', [\App\Http\Controllers\EvaluasiController::class, 'assessment']);
+        Route::post('/evaluasi/{report}/assessment', [\App\Http\Controllers\EvaluasiController::class, 'saveAssessmentForm']);
+        Route::post('/evaluasi/{report}/submit', [\App\Http\Controllers\EvaluasiController::class, 'submit']);
+        Route::post('/evaluasi/{report}/cancel', [\App\Http\Controllers\EvaluasiController::class, 'cancelAssessment']);
+        Route::get('/evaluasi/{report}/temuan', [\App\Http\Controllers\EvaluasiController::class, 'temuanForm']);
+        Route::post('/evaluasi/{report}/temuan', [\App\Http\Controllers\EvaluasiController::class, 'saveTemuan']);
+        Route::get('/evaluasi/{report}/pdf', [\App\Http\Controllers\EvaluasiController::class, 'pdf']);
+        Route::get('/evaluasi/{report}/excel', [\App\Http\Controllers\EvaluasiController::class, 'excel']);
+        Route::get('/evaluasi/{report}', [\App\Http\Controllers\EvaluasiController::class, 'show']);
+        Route::delete('/evaluasi/{report}', [\App\Http\Controllers\EvaluasiController::class, 'destroy']);
 
         // Excel template download (example)
         Route::get('/excel-template/example', [\App\Http\Controllers\MonitoringController::class, 'downloadExampleTemplate']);
@@ -206,7 +223,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/report/monitoring', [ReportController::class, 'index']);
         Route::get('/report/pra-monitoring', [ReportController::class, 'preMonitoring']);
         Route::get('/report/re-monitoring', [ReportController::class, 'reMonitoring']);
-        Route::get('/report/evaluasi', [ReportController::class, 'evaluasi']);
 
     // Monitoring (with authorizeReport ownership check)
     Route::get('/monitoring', [\App\Http\Controllers\MonitoringController::class, 'selectGerai']);
@@ -256,17 +272,4 @@ Route::middleware('auth')->group(function () {
     Route::get('/re-monitoring/{report}', [\App\Http\Controllers\ReMonitoringController::class, 'show']);
         Route::delete('/re-monitoring/{report}', [\App\Http\Controllers\ReMonitoringController::class, 'destroy']);
 
-        // Evaluasi
-        Route::get('/evaluasi', [\App\Http\Controllers\EvaluasiController::class, 'selectGerai']);
-        Route::get('/evaluasi/checkin/{gerai}', [\App\Http\Controllers\EvaluasiController::class, 'checkinForm']);
-        Route::get('/evaluasi/{report}/assessment', [\App\Http\Controllers\EvaluasiController::class, 'assessment']);
-        Route::post('/evaluasi/{report}/assessment', [\App\Http\Controllers\EvaluasiController::class, 'saveAssessmentForm']);
-        Route::post('/evaluasi/{report}/submit', [\App\Http\Controllers\EvaluasiController::class, 'submit']);
-        Route::post('/evaluasi/{report}/cancel', [\App\Http\Controllers\EvaluasiController::class, 'cancelAssessment']);
-        Route::get('/evaluasi/{report}/temuan', [\App\Http\Controllers\EvaluasiController::class, 'temuanForm']);
-        Route::post('/evaluasi/{report}/temuan', [\App\Http\Controllers\EvaluasiController::class, 'saveTemuan']);
-        Route::get('/evaluasi/{report}/pdf', [\App\Http\Controllers\EvaluasiController::class, 'pdf']);
-        Route::get('/evaluasi/{report}/excel', [\App\Http\Controllers\EvaluasiController::class, 'excel']);
-        Route::get('/evaluasi/{report}', [\App\Http\Controllers\EvaluasiController::class, 'show']);
-        Route::delete('/evaluasi/{report}', [\App\Http\Controllers\EvaluasiController::class, 'destroy']);
     });

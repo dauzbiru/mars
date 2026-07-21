@@ -46,9 +46,12 @@
             </thead>
             <tbody id="laporanTableBody" class="divide-y divide-gray-200">
                 @foreach ($reports as $r)
-                    <tr class="hover:bg-gray-50">
+                    <tr class="hover:bg-gray-50" @if($r->is_pairing) style="background:#F3F4F6;" @endif>
                         <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm text-gray-800">
                             <span class="font-medium">{{ $r->gerai->kode_gerai }}</span> - {{ $r->gerai->nama_gerai }}
+                            @if($r->is_pairing)
+                                <span style="background:#6B7280;color:#fff;font-size:10px;padding:1px 6px;border-radius:4px;margin-left:4px;vertical-align:middle;">Pairing</span>
+                            @endif
                         </td>
                         <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm text-gray-600">{{ $r->user?->name ?? '-' }}</td>
                         @if ($type === 'pra-monitoring' || $type === 're-monitoring')

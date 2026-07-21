@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
         $schedule->command('reports:cleanup')->hourly();
+        $schedule->command('app:cleanup-pairing-reports')->daily();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
