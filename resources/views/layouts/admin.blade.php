@@ -281,7 +281,7 @@
     <div class="flex-1 flex flex-col min-h-screen">
         {{-- Navbar --}}
         <header class="sticky top-0 z-30 bg-white shadow-sm border-b h-14 flex items-center px-4 gap-1 sm:gap-3 shrink-0">
-            <button onclick="toggleSidebar()" class="text-gray-600 hover:text-gray-800 shrink-0 relative w-6 h-6" id="burgerBtn">
+            <button onclick="toggleSidebar()" class="text-gray-600 hover:text-gray-800 shrink-0 relative w-6 h-6" id="burgerBtn" style="transition:opacity 0.3s">
                 <span class="absolute left-0 top-0 w-full h-[2px] bg-current rounded" id="burgerTop" style="transition:transform 0.3s"></span>
                 <span class="absolute left-0 top-1/2 -mt-[1px] w-full h-[2px] bg-current rounded" id="burgerMid" style="transition:opacity 0.3s"></span>
                 <span class="absolute left-0 bottom-0 w-full h-[2px] bg-current rounded" id="burgerBot" style="transition:transform 0.3s"></span>
@@ -406,6 +406,7 @@
     </div>
 @endif
 
+    <style>#fabMenu { transition: opacity 0.3s; }</style>
     <script>
         function toggleSearch(inputId, btn, submitOnCollapse) {
             var input = document.getElementById(inputId);
@@ -456,20 +457,23 @@
             var navbarMars = document.getElementById('navbarMars');
             var sidebarMars = document.getElementById('sidebarMars');
             var fabMenus = document.querySelectorAll('#fabMenu');
+            var burgerBtn = document.getElementById('burgerBtn');
             if (sidebar.classList.contains('-translate-x-full')) {
                 top.style.transform = 'none';
                 mid.style.opacity = '1';
                 bot.style.transform = 'none';
+                burgerBtn.style.opacity = '1';
                 navbarMars.style.opacity = '1';
                 navbarMars.style.transform = 'translateX(0)';
-                fabMenus.forEach(function(el) { el.classList.remove('pointer-events-none'); });
+                fabMenus.forEach(function(el) { el.style.opacity = '1'; el.classList.remove('pointer-events-none'); });
             } else {
                 top.style.transform = 'translateY(11px) rotate(45deg)';
                 mid.style.opacity = '0';
                 bot.style.transform = 'translateY(-11px) rotate(-45deg)';
+                burgerBtn.style.opacity = '0.4';
                 navbarMars.style.opacity = '0';
                 navbarMars.style.transform = 'translateX(20px)';
-                fabMenus.forEach(function(el) { el.classList.add('pointer-events-none'); });
+                fabMenus.forEach(function(el) { el.style.opacity = '0.4'; el.classList.add('pointer-events-none'); });
             }
         }
         function toggleBuatLaporan() {
