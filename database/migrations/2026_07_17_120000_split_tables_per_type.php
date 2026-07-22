@@ -9,6 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
         // 1. Create pra_monitoring_reports
         Schema::create('pra_monitoring_reports', function (Blueprint $table) {
             $table->id();
@@ -122,6 +123,8 @@ return new class extends Migration
             $table->dropUnique('results_item_id_user_id_monitoring_report_id_unique');
             $table->unique(['item_id', 'user_id', 'reportable_type', 'reportable_id']);
         });
+
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
     }
 
     private function copyData(string $type, string $table): void

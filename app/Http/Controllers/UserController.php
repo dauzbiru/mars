@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -37,7 +36,7 @@ class UserController extends Controller
         User::create([
             'name' => $request->name,
             'username' => $request->username,
-            'password' => Hash::make($request->password),
+            'password' => $request->password,
             'role' => $request->role,
         ]);
 
@@ -71,7 +70,7 @@ class UserController extends Controller
         $user->save();
 
         if ($request->filled('password')) {
-            $user->update(['password' => Hash::make($request->password)]);
+            $user->update(['password' => $request->password]);
         }
 
         return redirect('/user')->with('success', 'User berhasil diperbarui.');
@@ -106,7 +105,7 @@ class UserController extends Controller
         ]);
 
         if ($request->filled('password')) {
-            $user->update(['password' => Hash::make($request->password)]);
+            $user->update(['password' => $request->password]);
         }
 
         return back()->with('success', 'Profil berhasil diperbarui.');

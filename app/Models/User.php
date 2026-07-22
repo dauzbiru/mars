@@ -16,7 +16,7 @@ class User extends Authenticatable
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    protected $fillable = ['name', 'username', 'password'];
+    protected $fillable = ['name', 'username', 'password', 'role'];
 
     public function monitoringReports(): HasMany
     {

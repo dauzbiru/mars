@@ -104,6 +104,7 @@ class ReMonitoringController extends MonitoringController
         session()->forget('assessment_snapshot_' . $report->id);
 
         $report->results()->delete();
+        $report->finding?->delete();
         $report->delete();
 
         $redirect = $request->input('_from') === 'list'
