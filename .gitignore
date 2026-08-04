@@ -37,10 +37,6 @@ nodejs/
 # Cloudflare tunnel (contains credentials)
 .cloudflared/
 
-# Database
-database/database.sqlite
-database/*.sqlite
-
 # Uploaded assets (user-generated)
 storage/app/public/ttd/
 storage/app/private/*.xlsx
