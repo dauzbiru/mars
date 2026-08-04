@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Result;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 
 class CategoryController extends Controller
 {
@@ -39,6 +40,8 @@ class CategoryController extends Controller
         $data['sort'] = 0;
 
         Category::create($data);
+        Cache::forget('monitoring.all_items');
+        Cache::forget('monitoring.all_categories');
 
         $parentId = $data['parent_id'] ?? null;
         $redirect = $parentId
@@ -58,6 +61,8 @@ class CategoryController extends Controller
         $category->update($request->validate([
             'name' => 'required|string|max:255',
         ]));
+        Cache::forget('monitoring.all_items');
+        Cache::forget('monitoring.all_categories');
 
         return redirect("/categories/$category->id")->with('success', 'Tugas berhasil diperbarui.');
     }
@@ -68,6 +73,7 @@ class CategoryController extends Controller
         foreach ($ids as $i => $id) {
             Category::where('id', $id)->update(['sort' => $i + 1]);
         }
+        Cache::forget('monitoring.all_categories');
         return response()->json(['ok' => true]);
     }
 
@@ -75,6 +81,8 @@ class CategoryController extends Controller
     {
         $parentId = $category->parent_id;
         $category->delete();
+        Cache::forget('monitoring.all_items');
+        Cache::forget('monitoring.all_categories');
 
         $redirect = $parentId ? "/categories/$parentId" : '/categories';
 

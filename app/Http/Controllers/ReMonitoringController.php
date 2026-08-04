@@ -5,10 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Gerai;
 use App\Models\MonitoringReport;
 use App\Models\ReMonitoringReport;
-use App\Models\Result;
-use App\Models\Category;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class ReMonitoringController extends MonitoringController
 {
@@ -47,72 +43,12 @@ class ReMonitoringController extends MonitoringController
         return $this->buildExcel($report, $headerReplacements, $outputDir);
     }
 
-    public function checkinForm(Gerai $gerai)
-    {
-        $pending = $this->pendingReport();
-        if ($pending) {
-            return redirect("/{$this->prefix()}/{$pending->id}/assessment")
-                ->with('warning', 'Anda masih memiliki laporan yang belum diselesaikan. Selesaikan dulu.');
-        }
-
-        return view('monitoring.checkin', compact('gerai') + ['prefix' => $this->prefix(), 'periods' => collect()]);
-    }
-
-    public function doCheckin(Request $request, Gerai $gerai)
-    {
-        $pending = $this->pendingReport();
-        if ($pending) {
-            return redirect("/{$this->prefix()}/{$pending->id}/assessment")
-                ->with('warning', 'Anda masih memiliki laporan yang belum diselesaikan.');
-        }
-
-        $data = $request->validate([
-            'location' => 'required|string|max:255',
-            'checkin_at' => 'required|date',
-        ]);
-
-        $report = ReMonitoringReport::create([
-            'gerai_id' => $gerai->id,
-            'user_id' => Auth::id(),
-            'location' => $data['location'],
-            'checkin_at' => \Carbon\Carbon::parse($data['checkin_at'] . ' ' . now()->format('H:i:s')),
-        ]);
-
-        $categories = Category::whereNull('parent_id')->with('items.criteria')->get();
-        foreach ($categories as $cat) {
-            foreach ($cat->items as $item) {
-                if ($item->criteria->isNotEmpty()) {
-                    Result::create([
-                        'item_id' => $item->id,
-                        'user_id' => Auth::id(),
-                        'reportable_type' => ReMonitoringReport::class,
-                        'reportable_id' => $report->id,
-                        'criterion_id' => $item->criteria->first()->id,
-                    ]);
-                }
-            }
-        }
-
-        return redirect("/{$this->prefix()}/{$report->id}/assessment");
-    }
-
-    public function destroy(Request $request, $id)
-    {
-        $report = $this->modelClass()::withoutGlobalScope('no_pairing')->findOrFail($id);
-        $this->authorizeReport($report);
-
-        session()->forget('assessment_snapshot_' . $report->id);
-
-        $report->results()->delete();
-        $report->finding?->delete();
-        $report->delete();
-
-        $redirect = $request->input('_from') === 'list'
-            ? '/report/re-monitoring'
-            : "/{$this->prefix()}";
-
-        return redirect($redirect)->with('success', 'Laporan berhasil dihapus.');
-    }
+    protected function checkinFormPeriods(Gerai $gerai) { return collect(); }
+    protected function checkinFormHasPairingCheck(): bool { return false; }
+    protected function doCheckinExtraValidation(): array { return []; }
+    protected function shouldCheckDuplicate(): bool { return false; }
+    protected function doCheckinExtraData(array $validated): array { return []; }
+    protected function reportListRoute(): string { return '/report/re-monitoring'; }
 
     protected function getTemplateName(): string
     {
@@ -149,7 +85,7 @@ class ReMonitoringController extends MonitoringController
         $reScore = is_numeric($report->nilai) ? round((float) $report->nilai) : round($totalScore);
         $rePrevScore = $prevTotalScore !== null ? round($prevTotalScore) : null;
 
-        $reData = [1 => $reDate, 2 => (string) $reScore, 3 => '975'];
+        $reData = [1 => $reDate, 2 => (string) $reScore, 3 => (string) \App\Models\MonitoringReport::GRADE_B_THRESHOLD];
         if ($rePrevScore !== null) {
             $reData[4] = (string) $rePrevScore;
         }

@@ -10,7 +10,7 @@
         <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
             <p class="font-medium mb-1">Format file:</p>
             <p>Kolom A: Nama Tugas<br>Kolom B: Nama Checklist</p>
-            <a href="/import/template" class="mt-2 inline-block text-blue-600 hover:underline font-medium">Download template &rarr;</a>
+            <a href="/import/template" target="_blank" class="mt-2 inline-block text-blue-600 hover:underline font-medium">Download template &rarr;</a>
         </div>
 
         <form method="POST" action="/import" enctype="multipart/form-data">

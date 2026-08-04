@@ -10,7 +10,7 @@
         <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
             <p class="font-medium mb-1">Format file:</p>
             <p>Kolom A: Kode Gerai<br>Kolom B: Nama Gerai<br>Kolom C: Franchisee<br>Kolom D: Alamat<br>Kolom E: Email<br>Kolom F: No Telepon<br>Kolom G: Opening (format dd-mm-yyyy, opsional)<br>Kolom H: Nama Kota (opsional, auto dari kode)<br>Kolom I: Area (opsional, auto dari kode)</p>
-            <a href="/gerais/template" class="mt-2 inline-block text-blue-600 hover:underline font-medium">Download template &rarr;</a>
+            <a href="/gerais/template" target="_blank" class="mt-2 inline-block text-blue-600 hover:underline font-medium">Download template &rarr;</a>
         </div>
 
         <form method="POST" action="/gerais/import" enctype="multipart/form-data">

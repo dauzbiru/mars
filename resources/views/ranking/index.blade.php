@@ -50,7 +50,7 @@
                                 <td class="px-3 sm:px-5 py-3 text-right font-semibold text-blue-600 whitespace-nowrap">{{ $r['skor'] }}</td>
                                 <td class="px-3 sm:px-5 py-3 text-center font-semibold whitespace-nowrap {{ $grade === 'A' ? 'text-green-600' : ($grade === 'B' ? 'text-blue-600' : ($grade === 'C' ? 'text-yellow-600' : ($grade === 'D' ? 'text-orange-500' : 'text-red-600'))) }}">{{ $grade }}</td>
                                 <td class="px-3 sm:px-5 py-3 text-center whitespace-nowrap">
-                                    <button onclick="openEditModal('{{ $r['id'] }}', '{{ str_replace("'", "\\'", $r['gerai']->nama_gerai) }}', '{{ $r['skor'] }}', '{{ $r['tanggal']->format('Y-m-d') }}', '{{ str_replace("'", "\\'", $r['petugas']) }}')"
+                                    <button onclick="openEditModal(@js($r['id']), @js($r['gerai']->nama_gerai), @js($r['skor']), @js($r['tanggal']->format('Y-m-d')), @js($r['petugas']))"
                                         class="inline-block px-2 py-1 text-xs font-medium rounded-lg hover:opacity-80" style="background:#FEF3C7;color:#D97706">Edit</button>
                                     <form method="POST" action="/daftar-nilai/{{ $r['id'] }}" onsubmit="if(!confirm('Hapus nilai {{ $r['gerai']->nama_gerai }}?'))return false;" class="inline">
                                         @csrf @method('DELETE')
@@ -223,7 +223,7 @@
         <div class="absolute inset-0 bg-black/50" onclick="closeDownloadModal()"></div>
         <div class="relative bg-white rounded-xl shadow-lg w-full max-w-sm mx-4 p-6">
             <h3 class="text-lg font-bold text-gray-800 mb-4">Download Excel</h3>
-            <form method="GET" action="/daftar-nilai/excel">
+            <form method="GET" action="/daftar-nilai/excel" target="_blank">
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Periode</label>
                     <select name="periode_label" {{ count($periodeLabels) > 10 ? 'size="10"' : '' }}

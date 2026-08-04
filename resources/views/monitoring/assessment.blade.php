@@ -102,8 +102,9 @@
 
     {{-- Temuan Monitoring --}}
     @php
-        $findingComplete = $report->finding && count($incomplete) === 0;
-        $findingPartial = $report->finding && count($incomplete) > 0;
+        $hasFinding = $report->major || $report->minor || $report->peringatan_awal || $report->ttd_petugas || $report->ttd_pimpinan;
+        $findingComplete = $hasFinding && count($incomplete) === 0;
+        $findingPartial = $hasFinding && count($incomplete) > 0;
     @endphp
     <a href="/{{ $prefix }}/{{ $report->id }}/temuan"
        class="block bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-3.5 mb-6 active:bg-gray-50 transition">

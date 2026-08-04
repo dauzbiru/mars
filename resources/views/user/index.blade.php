@@ -55,7 +55,7 @@
                                 </td>
                                 <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm text-gray-500 hidden sm:table-cell">{{ $u->created_at->format('d-m-Y') }}</td>
                                 <td class="px-4 sm:px-6 py-3 text-right whitespace-nowrap">
-                                    <button onclick="openEditModal({{ $u->id }}, '{{ str_replace("'", "\\'", $u->name) }}', '{{ $u->username }}', '{{ $u->role }}')"
+                                    <button onclick="openEditModal(@js($u->id), @js($u->name), @js($u->username), @js($u->role))"
                                         class="inline-block px-3 py-1 text-xs font-medium rounded-lg hover:opacity-80" style="background:#FEF3C7;color:#D97706">Edit</button>
                                     @if ($u->id !== $user->id)
                                         <form method="POST" action="/user/{{ $u->id }}" onsubmit="showConfirm('Hapus user {{ $u->name }}?', function(){ this.submit(); }.bind(this)); return false;" class="inline">

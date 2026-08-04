@@ -5,10 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Gerai;
 use App\Models\MonitoringReport;
 use App\Models\PraMonitoringReport;
-use App\Models\Result;
-use App\Models\Category;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use DOMDocument;
 use DOMElement;
 use DOMXPath;
@@ -54,9 +50,8 @@ class PraMonitoringController extends MonitoringController
 
     protected function fillSheet1Custom(DOMDocument $dom1, DOMXPath $xpath1, string $ns, float $totalScore, string $grade, string $kesimpulanText, int $wrapStyleIdx = 0): void
     {
-        // E32 = total score, E33 = 975, E34 = grade letter
         static::xmlSetNumber($xpath1, $dom1, $ns, 'E32', round($totalScore));
-        static::xmlSetNumber($xpath1, $dom1, $ns, 'E33', 975);
+        static::xmlSetNumber($xpath1, $dom1, $ns, 'E33', \App\Models\MonitoringReport::GRADE_B_THRESHOLD);
         static::xmlSetInlineStr($xpath1, $dom1, $ns, 'E34', $grade);
 
         // A38: "Gerai masuk dalam Grade [X] dengan kategori:" (Grade bold)
@@ -128,10 +123,9 @@ class PraMonitoringController extends MonitoringController
 
     protected function fillSheet3Custom(DOMDocument $dom3, DOMXPath $xpath3, string $ns3, float $totalScore, string $tanggalLengkap): void
     {
-        // Fill datachart: Row1= tanggal lengkap, Row2= score, Row3= 975
         static::xmlSetInlineStr($xpath3, $dom3, $ns3, 'B1', $tanggalLengkap);
         static::xmlSetNumber($xpath3, $dom3, $ns3, 'B2', round($totalScore));
-        static::xmlSetNumber($xpath3, $dom3, $ns3, 'B3', 975);
+        static::xmlSetNumber($xpath3, $dom3, $ns3, 'B3', \App\Models\MonitoringReport::GRADE_B_THRESHOLD);
     }
 
     protected function onPhase3Cell(string $sheetName, int $ssIndex, array $ssIndexText, array $ssIndexScore, DOMElement $cell, DOMDocument $dom, array $items): void
@@ -180,7 +174,7 @@ class PraMonitoringController extends MonitoringController
         $mCell->appendChild($is);
     }
 
-    protected function fillSheet2Custom(DOMDocument $dom2, DOMXPath $xpath2, string $ns2, array $findingLines, $finding, array $lowItems, array $sheet3ZeroItems, array $items, $zip): bool
+    protected function fillSheet2Custom(DOMDocument $dom2, DOMXPath $xpath2, string $ns2, array $findingLines, $report, array $lowItems, array $sheet3ZeroItems, array $items, $zip): bool
     {
         $sheetData = $xpath2->query('//s:sheetData')->item(0);
         if (!$sheetData) return false;
@@ -241,7 +235,7 @@ class PraMonitoringController extends MonitoringController
         }
 
         // --- Info block PA→NOTE (match monitoring Sheet3 line 1834-1941) ---
-        if ($paRow && $noteRow && $finding) {
+        if ($paRow && $noteRow) {
             $rowsToRemove = [];
             foreach ($xpath2->query('//s:sheetData/s:row[@r > ' . $paRn . ' and @r < ' . $noteRn . ']') as $row) {
                 $rowsToRemove[] = $row;
@@ -254,17 +248,17 @@ class PraMonitoringController extends MonitoringController
             // (makeBRow via ExcelXmlHelpers trait)
 
             $infoRows = [];
-            $pengawas = $finding->pengawas ?? '';
+            $pengawas = $report->pengawas ?? '';
             if ($pengawas !== '') {
                 foreach (preg_split('/\r?\n/', $pengawas) as $line) {
                     if (trim($line) !== '') $infoRows[] = static::xmlMakeBRow($dom2, $ns2, trim($line), $infoRn);
                 }
             }
-            $aj = $finding->rata_rata_aj ?? '';
+            $aj = $report->rata_rata_aj ?? '';
             if ($aj !== '') {
                 $infoRows[] = static::xmlMakeBRow($dom2, $ns2, 'Rerata AJ ± ' . $aj . ' gln/hr', $infoRn);
             }
-            $mo = $finding->mesin_ozon ?? '';
+            $mo = $report->mesin_ozon ?? '';
             if ($mo !== '') {
                 $infoRows[] = static::xmlMakeBRow($dom2, $ns2, 'MO: ' . $mo, $infoRn);
             }
@@ -273,7 +267,7 @@ class PraMonitoringController extends MonitoringController
             foreach ($paLines as $line) {
                 if (trim($line) !== '') $infoRows[] = static::xmlMakeBRow($dom2, $ns2, $line, $infoRn);
             }
-            $noteContent = $finding->note ?? '';
+            $noteContent = $report->note ?? '';
             if ($noteContent !== '') {
                 $infoRows[] = static::xmlMakeBRow($dom2, $ns2, '', $infoRn);
                 $infoRows[] = static::xmlMakeBRow($dom2, $ns2, 'Note:', $infoRn);
@@ -283,10 +277,10 @@ class PraMonitoringController extends MonitoringController
             }
             $infoRows[] = static::xmlMakeBRow($dom2, $ns2, '', $infoRn);
             $infoRows[] = static::xmlMakeBRow($dom2, $ns2, 'Checklist tampilan gerai:', $infoRn);
-            $infoRows[] = static::xmlMakeBRow($dom2, $ns2, 'Kondisi cat: ' . ($finding->kondisi_cat ?: 'Baik'), $infoRn);
-            $infoRows[] = static::xmlMakeBRow($dom2, $ns2, 'Kondisi awning: ' . ($finding->kondisi_awning ?: 'Baik'), $infoRn);
-            $infoRows[] = static::xmlMakeBRow($dom2, $ns2, 'Kondisi vinyl reklame dinding/jalan: ' . ($finding->kondisi_vinyl ?: 'Baik'), $infoRn);
-            $infoRows[] = static::xmlMakeBRow($dom2, $ns2, 'Kondisi stiker kaca: ' . ($finding->kondisi_stiker_kaca ?: 'Baik'), $infoRn);
+            $infoRows[] = static::xmlMakeBRow($dom2, $ns2, 'Kondisi cat: ' . ($report->kondisi_cat ?: 'Baik'), $infoRn);
+            $infoRows[] = static::xmlMakeBRow($dom2, $ns2, 'Kondisi awning: ' . ($report->kondisi_awning ?: 'Baik'), $infoRn);
+            $infoRows[] = static::xmlMakeBRow($dom2, $ns2, 'Kondisi vinyl reklame dinding/jalan: ' . ($report->kondisi_vinyl ?: 'Baik'), $infoRn);
+            $infoRows[] = static::xmlMakeBRow($dom2, $ns2, 'Kondisi stiker kaca: ' . ($report->kondisi_stiker_kaca ?: 'Baik'), $infoRn);
             $infoRows[] = static::xmlMakeBRow($dom2, $ns2, '', $infoRn);
 
             foreach ($infoRows as $row) {
@@ -520,7 +514,7 @@ class PraMonitoringController extends MonitoringController
         }
 
         // --- Penjelasan Formulir 3 (match monitoring Sheet3 line 2296-2410) ---
-        $penjelasanIsi3 = $finding ? ($finding->penjelasan_isi_3 ?? []) : [];
+        $penjelasanIsi3 = $report->penjelasan_isi_3 ?? [];
 
         // Filter: only keep entries whose key (item ID) matches a current zero-score item
         $zeroScoreIds = [];
@@ -656,75 +650,12 @@ class PraMonitoringController extends MonitoringController
         return true;
     }
 
-    public function checkinForm(Gerai $gerai)
-    {
-        $pending = $this->pendingReport();
-        if ($pending && request('pairing') !== '1') {
-            return redirect("/{$this->prefix()}/{$pending->id}/assessment")
-                ->with('warning', 'Anda masih memiliki laporan yang belum diselesaikan. Selesaikan dulu.');
-        }
-
-        return view('monitoring.checkin', compact('gerai') + ['prefix' => $this->prefix(), 'periods' => collect()]);
-    }
-
-    public function doCheckin(Request $request, Gerai $gerai)
-    {
-        $pending = $this->pendingReport();
-        if ($pending && $request->input('pairing') !== '1') {
-            return redirect("/{$this->prefix()}/{$pending->id}/assessment")
-                ->with('warning', 'Anda masih memiliki laporan yang belum diselesaikan.');
-        }
-
-        $data = $request->validate([
-            'location' => 'required|string|max:255',
-            'checkin_at' => 'required|date',
-        ]);
-
-        $pairing = $request->input('pairing') === '1';
-
-        $report = PraMonitoringReport::create([
-            'gerai_id' => $gerai->id,
-            'user_id' => Auth::id(),
-            'location' => $data['location'],
-            'checkin_at' => \Carbon\Carbon::parse($data['checkin_at'] . ' ' . now()->format('H:i:s')),
-            'is_pairing' => $pairing,
-        ]);
-
-        $categories = Category::whereNull('parent_id')->with('items.criteria')->get();
-        foreach ($categories as $cat) {
-            foreach ($cat->items as $item) {
-                if ($item->criteria->isNotEmpty()) {
-                    Result::create([
-                        'item_id' => $item->id,
-                        'user_id' => Auth::id(),
-                        'reportable_type' => PraMonitoringReport::class,
-                        'reportable_id' => $report->id,
-                        'criterion_id' => $item->criteria->first()->id,
-                    ]);
-                }
-            }
-        }
-
-        return redirect("/{$this->prefix()}/{$report->id}/assessment");
-    }
-
-    public function destroy(Request $request, $id)
-    {
-        $report = $this->modelClass()::withoutGlobalScope('no_pairing')->findOrFail($id);
-        $this->authorizeReport($report);
-
-        session()->forget('assessment_snapshot_' . $report->id);
-
-        $report->results()->delete();
-        $report->finding?->delete();
-        $report->delete();
-
-        $redirect = $request->input('_from') === 'list'
-            ? '/report/pra-monitoring'
-            : "/{$this->prefix()}";
-
-        return redirect($redirect)->with('success', 'Laporan berhasil dihapus.');
-    }
+    protected function checkinFormPeriods(Gerai $gerai) { return collect(); }
+    protected function checkinFormExistingPeriods(Gerai $gerai): array { return []; }
+    protected function doCheckinExtraValidation(): array { return []; }
+    protected function shouldCheckDuplicate(): bool { return false; }
+    protected function doCheckinExtraData(array $validated): array { return ['is_pairing' => request()->input('pairing') === '1']; }
+    protected function reportListRoute(): string { return '/report/pra-monitoring'; }
 
     protected function requiredFindingFields(): array
     {
@@ -766,7 +697,207 @@ class PraMonitoringController extends MonitoringController
         } elseif ($allPeriods->count() === 1) {
             return $allPeriods[0];
         }
-        return $report->periode_label;
+        return null;
+    }
+
+    public static function uploadWordTemplate(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'template' => 'required|file|mimes:doc,docx',
+        ]);
+
+        $file = $request->file('template');
+
+        // Detect real format from magic bytes (filename extension may be wrong)
+        $head = '';
+        $fh = @fopen($file->getRealPath(), 'rb');
+        if ($fh) {
+            $head = fread($fh, 4);
+            fclose($fh);
+        }
+        $isLegacyDoc = $head === "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1";
+
+        $ext = strtolower($file->getClientOriginalExtension());
+        if (!in_array($ext, ['doc', 'docx'])) {
+            $ext = $isLegacyDoc ? 'doc' : 'docx';
+        }
+
+        $tmpInput = sys_get_temp_dir() . '/' . uniqid('mars_word_') . '.' . $ext;
+        $tmpOutput = sys_get_temp_dir() . '/' . uniqid('mars_word_') . '.docx';
+
+        try {
+            $file->move(sys_get_temp_dir(), basename($tmpInput));
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal memproses file template. Silakan coba lagi.');
+        }
+
+        $script = base_path('scripts/prepare_word_template.py');
+        $cmd = 'python ' . escapeshellarg($script) . ' ' . escapeshellarg($tmpInput) . ' ' . escapeshellarg($tmpOutput) . ' 2>&1';
+        exec($cmd, $out, $code);
+
+        if ($code === 0 && file_exists($tmpOutput)) {
+            \Illuminate\Support\Facades\Storage::put('word-template-pra-monitoring.docx', file_get_contents($tmpOutput));
+            \Illuminate\Support\Facades\Storage::delete('word-template-pra-monitoring.doc');
+            @unlink($tmpInput);
+            @unlink($tmpOutput);
+            return back()->with('success', 'Template Surat Word Pra-Monitoring berhasil diupload.');
+        }
+
+        @unlink($tmpInput);
+        @unlink($tmpOutput);
+        return back()->with('error', 'Gagal memproses Template Surat Word (pastikan Microsoft Word terinstal dan file valid). Template lama tetap dipakai.');
+    }
+
+    public function pdf($id)
+    {
+        // PDF di halaman detail (tanpa ?excel=1) disamakan dengan monitoring/re-monitoring,
+        // yaitu render DomPDF. Excel→PDF + cover letter Word hanya dari tombol PDF di Data
+        // Laporan (param excel=1).
+        if (!request()->boolean('excel')) {
+            return parent::pdf($id);
+        }
+
+        $report = $this->modelClass()::withoutGlobalScope('no_pairing')->with('gerai', 'user')->findOrFail($id);
+        $this->authorizeReport($report);
+
+        $revisi = request()->boolean('revisi');
+        $typeName = $this->getTypeName();
+        $periode = $report->periode_label ?? $report->checkin_at?->setTimezone('Asia/Jakarta')->locale('id')->isoFormat('MMMM YYYY') ?? '';
+        $filename = "{$typeName} - {$report->gerai->kode_gerai} - {$periode}";
+
+        $tempDir = storage_path('app/temp-pdf');
+        if (!is_dir($tempDir)) mkdir($tempDir, 0755, true);
+
+        // 1. Generate laporan PDF — utamakan hasil Excel→PDF (xlwings), fallback DomPDF
+        $reportPdf = null;
+        if (!request()->has('dompdf')) {
+            $excelPath = $this->excel($report->id, $tempDir);
+            if ($excelPath && file_exists($excelPath)) {
+                $pdfPath = $tempDir . '/' . uniqid('report_') . '.pdf';
+                $pyScript = base_path('storage/app/xlwings-to-pdf.py');
+                $cmd = 'python ' . escapeshellarg($pyScript) . ' ' . escapeshellarg($excelPath) . ' ' . escapeshellarg($pdfPath) . ' 2>&1';
+                exec($cmd, $output, $returnCode);
+                @unlink($excelPath);
+                if ($returnCode === 0 && file_exists($pdfPath)) {
+                    $reportPdf = $pdfPath;
+                }
+            }
+        }
+        if (!$reportPdf) {
+            $reportPdf = $this->pdfDompdf($report, $revisi, $filename, $tempDir . '/' . uniqid('report_') . '.pdf');
+        }
+
+        // 2. Cover letter + merge
+        $coverPdf = $this->generateCoverLetter($report, $reportPdf, $tempDir);
+        if ($coverPdf && file_exists($coverPdf)) {
+            $merged = $tempDir . '/' . uniqid('merged_') . '.pdf';
+            $mergeScript = base_path('scripts/merge_pdfs.py');
+            $cmd = 'python ' . escapeshellarg($mergeScript) . ' ' . escapeshellarg($merged) . ' ' . escapeshellarg($coverPdf) . ' ' . escapeshellarg($reportPdf) . ' 2>&1';
+            exec($cmd, $output, $returnCode);
+            if ($returnCode === 0 && file_exists($merged)) {
+                @unlink($coverPdf);
+                @unlink($reportPdf);
+                return response()->download($merged, $filename . '.pdf')->deleteFileAfterSend(true);
+            }
+            @unlink($coverPdf);
+        }
+
+        return response()->download($reportPdf, $filename . '.pdf')->deleteFileAfterSend(true);
+    }
+
+    private function generateCoverLetter($report, $reportPdfPath, $tempDir)
+    {
+        $templatePath = \Illuminate\Support\Facades\Storage::path('word-template-pra-monitoring.docx');
+        if (!file_exists($templatePath)) {
+            \Log::info('word cover: template tidak ditemukan', ['path' => $templatePath]);
+            return null;
+        }
+
+        $pages = (int) $this->pdfPageCount($reportPdfPath);
+        if ($pages <= 0) {
+            $pages = 5;
+        }
+        $pagesWord = static::angkaToHuruf($pages);
+
+        $replacements = [
+            '{nomor_surat}' => request()->input('nomor', ''),
+            '{nama_gerai}' => $report->gerai->nama_gerai ?? '',
+            '{kode_gerai}' => $report->gerai->kode_gerai ?? '',
+            '{alamat}' => request()->input('alamat', $report->gerai->alamat ?? ''),
+            '{kota}' => request()->input('kota', $report->gerai->nama_kota ?? ''),
+            '{franchisee}' => request()->input('franchisee', $report->gerai->franchisee ?? ''),
+            '{lampiran}' => $pagesWord . ' Lembar',
+            '{lembar_huruf}' => strtolower($pagesWord) . ' lembar',
+        ];
+
+        $replFile = $tempDir . '/' . uniqid('repl_') . '.json';
+        file_put_contents($replFile, json_encode($replacements, JSON_UNESCAPED_UNICODE));
+
+        $coverPdf = $tempDir . '/' . uniqid('cover_') . '.pdf';
+        $script = base_path('scripts/word_fill_export.py');
+        $cmd = 'python ' . escapeshellarg($script) . ' ' . escapeshellarg($templatePath) . ' ' . escapeshellarg($coverPdf) . ' ' . escapeshellarg($replFile) . ' 2>&1';
+        exec($cmd, $out, $code);
+        @unlink($replFile);
+
+        if ($code === 0 && file_exists($coverPdf)) {
+            return $coverPdf;
+        }
+
+        @unlink($coverPdf);
+        \Log::info('word cover: generate gagal', ['output' => $out, 'exit' => $code]);
+        return null;
+    }
+
+    private function pdfPageCount($path)
+    {
+        $script = base_path('scripts/pdf_pages.py');
+        $cmd = 'python ' . escapeshellarg($script) . ' ' . escapeshellarg($path) . ' 2>&1';
+        exec($cmd, $out, $code);
+        return (int) trim(implode('', $out));
+    }
+
+    protected static function angkaToHuruf($n)
+    {
+        $n = (int) $n;
+        if ($n <= 0) {
+            return '';
+        }
+        $satuan = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
+        if ($n < 12) {
+            return $satuan[$n];
+        }
+        if ($n < 20) {
+            return static::angkaToHuruf($n - 10) . ' Belas';
+        }
+        if ($n < 100) {
+            $puluhan = intdiv($n, 10);
+            $sisa = $n % 10;
+            $res = $satuan[$puluhan] . ' Puluh';
+            return $sisa ? $res . ' ' . $satuan[$sisa] : $res;
+        }
+        return (string) $n;
+    }
+
+    public static function deleteWordTemplate(\Illuminate\Http\Request $request)
+    {
+        $candidates = ['word-template-pra-monitoring.docx', 'word-template-pra-monitoring.doc'];
+        $existing = null;
+        foreach ($candidates as $candidate) {
+            if (\Illuminate\Support\Facades\Storage::exists($candidate)) {
+                $existing = $candidate;
+                break;
+            }
+        }
+
+        if (!$existing) {
+            return back()->with('error', 'Template Surat Word tidak ditemukan.');
+        }
+
+        if (!\Illuminate\Support\Facades\Storage::delete($existing)) {
+            return back()->with('error', 'Gagal menghapus Template Surat Word: file mungkin sedang dibuka di program lain. Tutup file tersebut lalu coba lagi.');
+        }
+
+        return back()->with('success', 'Template Surat Word Pra-Monitoring berhasil dihapus.');
     }
 }
 

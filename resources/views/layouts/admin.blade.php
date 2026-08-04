@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,55 +8,17 @@
     <link rel="icon" type="image/png" href="/images/biru-favicon.png?v=5">
     <link rel="shortcut icon" href="/favicon.ico?v=5">
     <link rel="stylesheet" href="/build/app.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.26.25/dist/sweetalert2.min.css">
+    <style>
+        .swal-small { font-size: 0.8rem !important; }
+        .swal-small-btn { font-size: 0.75rem !important; padding: 0.4em 1em !important; }
+    </style>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" integrity="sha256-GzSkJVLJbxDk36qko2cnawOGiqz/Y8GsQv/jMTUrx1Q=" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/themes/airbnb.css" integrity="sha256-LmZ7wnicF1GBpKNxhhOURrtTXXl7vgjlNtFyVcjZsHk=" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js" integrity="sha256-Huqxy3eUcaCwqqk92RwusapTfWlvAasF6p2rxV6FJaE=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/id.js" integrity="sha256-cvHCpHmt9EqKfsBeDHOujIlR5wZ8Wy3s90da1L3sGkc=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        button[type="submit"], button:not([type]) {
-            transition: all 0.15s ease;
-            cursor: pointer;
-        }
-        button[type="submit"]:hover, button:not([type]):hover {
-            filter: brightness(0.85);
-        }
-        button[type="submit"]:active, button:not([type]):active {
-            transform: scale(0.97);
-            filter: brightness(0.75);
-        }
-        .swal2-popup.swal2-toast {
-            font-size: 13px;
-        }
-        .swal2-popup:not(.swal2-toast) {
-            max-width: 360px !important;
-            padding: 24px !important;
-            border-radius: 12px !important;
-        }
-        .swal2-popup:not(.swal2-toast) .swal2-icon {
-            margin: 0 auto 14px !important;
-            width: 48px !important;
-            height: 48px !important;
-        }
-        .swal2-popup:not(.swal2-toast) .swal2-title {
-            font-size: 16px !important;
-            padding: 0 !important;
-            margin-bottom: 8px !important;
-        }
-        .swal2-popup:not(.swal2-toast) .swal2-html-container {
-            font-size: 14px !important;
-            margin: 0 !important;
-        }
-        .swal2-popup:not(.swal2-toast) .swal2-actions {
-            margin-top: 14px !important;
-            gap: 8px !important;
-        }
-        .swal2-popup:not(.swal2-toast) .swal2-styled {
-            padding: 8px 20px !important;
-            font-size: 14px !important;
-            border-radius: 8px !important;
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.26.25/dist/sweetalert2.min.js"></script>
+
     @stack('head')
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -174,6 +136,13 @@
                     </svg>
                     Data Komplain
                 </a>
+                <a href="/tampilan-gerai"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->is('tampilan-gerai*') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700' }}">
+                    <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    Data Tampilan Gerai
+                </a>
                 <hr class="border-gray-200 my-1">
                 {{-- Monitoring Dropdown --}}
                 @php
@@ -249,7 +218,7 @@
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                     </svg>
-                    Template Excel
+                    Template
                 </a>
                 <a href="/settings"
                     class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->is('settings') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700' }}">
@@ -267,7 +236,7 @@
                 <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                 Logout
             </button>
-            <form id="sidebarLogoutForm" method="POST" action="/logout" class="hidden">
+            <form id="sidebarLogoutForm" method="POST" action="{{ route('logout') }}" class="hidden">
                 @csrf
             </form>
         </div>
@@ -281,60 +250,58 @@
     <div class="flex-1 flex flex-col min-h-screen">
         {{-- Navbar --}}
         <header class="sticky top-0 z-30 bg-white shadow-sm border-b h-14 flex items-center px-4 gap-1 sm:gap-3 shrink-0">
-            <button onclick="toggleSidebar()" class="text-gray-600 hover:text-gray-800 shrink-0 relative w-6 h-6" id="burgerBtn" style="transition:opacity 0.3s">
-                <span class="absolute left-0 top-0 w-full h-[2px] bg-current rounded" id="burgerTop" style="transition:transform 0.3s"></span>
-                <span class="absolute left-0 top-1/2 -mt-[1px] w-full h-[2px] bg-current rounded" id="burgerMid" style="transition:opacity 0.3s"></span>
-                <span class="absolute left-0 bottom-0 w-full h-[2px] bg-current rounded" id="burgerBot" style="transition:transform 0.3s"></span>
+            <button onclick="toggleSidebar()" class="text-gray-600 hover:text-gray-800 shrink-0 relative w-6 h-6 transition-opacity duration-300" id="burgerBtn">
+                <span class="absolute left-0 top-0 w-full h-[2px] bg-current rounded transition-transform duration-300" id="burgerTop"></span>
+                <span class="absolute left-0 top-1/2 -mt-[1px] w-full h-[2px] bg-current rounded transition-opacity duration-300" id="burgerMid"></span>
+                <span class="absolute left-0 bottom-0 w-full h-[2px] bg-current rounded transition-transform duration-300" id="burgerBot"></span>
             </button>
             <h1 class="text-lg font-bold text-gray-800 truncate transition-all duration-300" id="navbarMars">MARS <small class="text-xs font-normal text-gray-400 hidden sm:inline">(Monitoring Assessment and Reporting System)</small></h1>
             <div class="ml-auto flex items-center gap-2 shrink-0">
-                @php
-                    $pendingReports = collect();
-                    $isAssessmentPage = request()->is('*/assessment') || request()->is('*/assessment/*') || request()->is('*/temuan');
-                    if (!$isAssessmentPage) {
-                        $userId = auth()->id();
-                        $rows = \DB::select("
-                            SELECT 'monitoring' AS report_type, id FROM monitoring_reports
-                            WHERE user_id = ? AND submit_at IS NULL AND checkin_at IS NOT NULL
-                            UNION ALL
-                            SELECT 'pra_monitoring' AS report_type, id FROM pra_monitoring_reports
-                            WHERE user_id = ? AND submit_at IS NULL AND checkin_at IS NOT NULL
-                            UNION ALL
-                            SELECT 're_monitoring' AS report_type, id FROM re_monitoring_reports
-                            WHERE user_id = ? AND submit_at IS NULL AND checkin_at IS NOT NULL
-                            UNION ALL
-                            SELECT 'evaluasi' AS report_type, id FROM evaluasi_reports
-                            WHERE user_id = ? AND tanggal IS NULL
-                        ", [$userId, $userId, $userId, $userId]);
-                        $grouped = collect($rows)->groupBy('report_type');
-                        $typeModelMap = [
-                            'monitoring'    => \App\Models\MonitoringReport::class,
-                            'pra_monitoring' => \App\Models\PraMonitoringReport::class,
-                            're_monitoring'  => \App\Models\ReMonitoringReport::class,
-                            'evaluasi'       => \App\Models\EvaluasiReport::class,
-                        ];
-                        foreach ($typeModelMap as $type => $modelClass) {
-                            if ($grouped->has($type)) {
-                                $pendingReports = $pendingReports->concat(
-                                    $modelClass::whereIn('id', $grouped[$type]->pluck('id'))->with('gerai')->get()
-                                );
-                            }
-                        }
-                        $pendingReports = $pendingReports->sortByDesc(function ($r) {
-                            return $r->checkin_at ?? $r->created_at;
-                        })->values();
-                    }
-                @endphp
+                @if ($isAssessmentPage && $assessmentId && $assessmentType)
+                <button type="button" onclick="openTampilanGeraiModal()" class="text-gray-500 hover:text-blue-700 bg-transparent border-none cursor-pointer relative p-1.5" aria-label="Foto Tampilan Gerai" title="Foto Tampilan Gerai">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                </button>
+                @endif
                 @if (!$isAssessmentPage)
                 <div class="relative" id="notifWrapper">
-                    <button onclick="document.getElementById('notifDropdown').classList.toggle('hidden')" class="text-gray-500 hover:text-gray-700" style="background:none;border:none;cursor:pointer;position:relative;padding:6px;">
+                    <button onclick="document.getElementById('notifDropdown').classList.toggle('hidden')" class="text-gray-500 hover:text-gray-700 bg-transparent border-none cursor-pointer relative p-1.5" aria-label="Notifikasi">
                         <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                        @if ($pendingReports->isNotEmpty())
-                        <span style="position:absolute;top:0;right:0;background:#EF4444;color:#fff;font-size:10px;font-weight:700;min-width:16px;height:16px;border-radius:8px;display:flex;align-items:center;justify-content:center;line-height:1;border:2px solid #fff;">{{ $pendingReports->count() }}</span>
+                        @if ($pendingReports->isNotEmpty() || $editingReports->isNotEmpty())
+                        <span class="absolute top-0 right-0 bg-red-500 text-white text-[10px] font-bold min-w-[16px] h-4 rounded-full flex items-center justify-center leading-none border-2 border-white">{{ $pendingReports->count() + $editingReports->count() }}</span>
                         @endif
                     </button>
-                    @if ($pendingReports->isNotEmpty())
+                    @if ($pendingReports->isNotEmpty() || $editingReports->isNotEmpty())
                     <div id="notifDropdown" class="hidden absolute right-0 top-full mt-1 w-72 bg-white rounded-lg shadow-lg border py-2 z-50 max-h-80 overflow-y-auto">
+                        @if ($editingReports->isNotEmpty())
+                        <div class="px-4 py-2 border-b border-gray-100">
+                            <p class="text-xs font-semibold text-orange-500 uppercase">Edit Belum Selesai</p>
+                        </div>
+                        @foreach ($editingReports as $r)
+                        @php
+                            $prefix = match(class_basename($r)) {
+                                'PraMonitoringReport' => 'pra-monitoring',
+                                'ReMonitoringReport' => 're-monitoring',
+                                default => 'monitoring',
+                            };
+                        @endphp
+                        <a href="/{{ $prefix }}/{{ $r->id }}/assessment"
+                           class="flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 transition-colors">
+                            <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center shrink-0">
+                                <svg class="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm font-medium text-gray-800 truncate">{{ $r->gerai->kode_gerai ?? '-' }} - {{ $r->gerai->nama_gerai ?? '-' }}</p>
+                                <p class="text-xs text-gray-500">{{ str_replace('-', ' ', ucfirst($prefix)) }} • {{ ($r->editing_at ?? $r->updated_at)?->format('d M Y H:i') }}</p>
+                            </div>
+                            <svg class="w-4 h-4 text-gray-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </a>
+                        @endforeach
+                        @endif
+                        @if ($pendingReports->isNotEmpty())
                         <div class="px-4 py-2 border-b border-gray-100">
                             <p class="text-xs font-semibold text-gray-500 uppercase">Laporan Belum Submit</p>
                         </div>
@@ -363,12 +330,13 @@
                             </svg>
                         </a>
                         @endforeach
+                        @endif
                     </div>
                     @endif
                 </div>
                 @endif
                 <div class="relative" id="buatLaporanWrapper" @if (auth()->user()->role === 'guest' && request()->is('guest')) style="display:none" @endif>
-                <button onclick="toggleBuatLaporan()" style="background:#3B82F6;color:#FFFFFF" class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg hover:opacity-80 transition-colors">
+                <button onclick="toggleBuatLaporan()" class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg hover:opacity-80 transition-colors bg-blue-500 text-white">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                     </svg>
@@ -406,140 +374,20 @@
     </div>
 @endif
 
-    <style>#fabMenu { transition: opacity 0.3s; }</style>
-    <script>
-        function toggleSearch(inputId, btn, submitOnCollapse) {
-            var input = document.getElementById(inputId);
-            if (input.classList.contains('w-0')) {
-                input.classList.remove('w-0', 'px-0', 'border-0', 'opacity-0', 'pointer-events-none');
-                input.classList.add('w-48', 'sm:w-64', 'px-3', 'border', 'border-gray-300', 'rounded-lg', 'opacity-100', 'pointer-events-auto');
-                input.focus();
-            } else {
-                input.classList.add('w-0', 'px-0', 'border-0', 'opacity-0', 'pointer-events-none');
-                input.classList.remove('w-48', 'sm:w-64', 'px-3', 'border', 'border-gray-300', 'rounded-lg', 'opacity-100', 'pointer-events-auto');
-                input.value = '';
-                input.dispatchEvent(new Event('input'));
-                if (submitOnCollapse) input.closest('form').submit();
-            }
-        }
+@if ($isAssessmentPage && $assessmentId && $assessmentType)
+    @include('tampilan-gerai.modal', ['tgType' => $assessmentType, 'tgReportId' => $assessmentId])
+@endif
 
-        function positionSuggest(btn, listId) {
-            var list = document.getElementById(listId);
-            if (!list) return;
-            if (list.parentElement !== document.body) {
-                document.body.appendChild(list);
-            }
-            var rect = btn.getBoundingClientRect();
-            list.style.position = 'fixed';
-            list.style.top = (rect.bottom + 4) + 'px';
-            list.style.right = (window.innerWidth - rect.right) + 'px';
-        }
-
-        document.addEventListener('click', function(e) {
-            document.querySelectorAll('[id^="searchGerai"], [id="searchLaporan"], [id="searchRanking"], [id="searchPraMonitoring"], [id="searchKomplain"], [id="searchUser"], [id="searchPg"], [id="searchPeriode"], [id="geraiSearch"]').forEach(function(input) {
-                var container = input.closest('.relative');
-                if (container && !container.contains(e.target) && !input.classList.contains('w-0') && input.value === '') {
-                    input.classList.add('w-0', 'px-0', 'border-0', 'opacity-0', 'pointer-events-none');
-                    input.classList.remove('w-48', 'sm:w-64', 'px-3', 'border', 'border-gray-300', 'rounded-lg', 'opacity-100', 'pointer-events-auto');
-                }
-            });
-        });
-
-        function toggleSidebar() {
-            var sidebar = document.getElementById('sidebar');
-            var overlay = document.getElementById('sidebarOverlay');
-            sidebar.classList.toggle('-translate-x-full');
-            overlay.classList.toggle('hidden');
-
-            var top = document.getElementById('burgerTop');
-            var mid = document.getElementById('burgerMid');
-            var bot = document.getElementById('burgerBot');
-            var navbarMars = document.getElementById('navbarMars');
-            var sidebarMars = document.getElementById('sidebarMars');
-            var fabMenus = document.querySelectorAll('#fabMenu');
-            var burgerBtn = document.getElementById('burgerBtn');
-            if (sidebar.classList.contains('-translate-x-full')) {
-                top.style.transform = 'none';
-                mid.style.opacity = '1';
-                bot.style.transform = 'none';
-                burgerBtn.style.opacity = '1';
-                navbarMars.style.opacity = '1';
-                navbarMars.style.transform = 'translateX(0)';
-                fabMenus.forEach(function(el) { el.style.opacity = '1'; el.classList.remove('pointer-events-none'); });
-            } else {
-                top.style.transform = 'translateY(11px) rotate(45deg)';
-                mid.style.opacity = '0';
-                bot.style.transform = 'translateY(-11px) rotate(-45deg)';
-                burgerBtn.style.opacity = '0.4';
-                navbarMars.style.opacity = '0';
-                navbarMars.style.transform = 'translateX(20px)';
-                fabMenus.forEach(function(el) { el.style.opacity = '0.4'; el.classList.add('pointer-events-none'); });
-            }
-        }
-        function toggleBuatLaporan() {
-            var dd = document.getElementById('buatLaporanDropdown');
-            dd.classList.toggle('hidden');
-        }
-        document.addEventListener('click', function(e) {
-            var wrapper = document.getElementById('buatLaporanWrapper');
-            if (wrapper && !wrapper.contains(e.target)) {
-                document.getElementById('buatLaporanDropdown').classList.add('hidden');
-            }
-            var notifWrapper = document.getElementById('notifWrapper');
-            if (notifWrapper && !notifWrapper.contains(e.target)) {
-                document.getElementById('notifDropdown').classList.add('hidden');
-            }
-        });
-        function toggleTugas() {
-            document.getElementById('tugasSubmenu').classList.toggle('hidden');
-            document.getElementById('tugasArrow').classList.toggle('rotate-180');
-        }
-        function toggleMonitoring() {
-            document.getElementById('monitoringSubmenu').classList.toggle('hidden');
-            document.getElementById('monitoringArrow').classList.toggle('rotate-180');
-        }
-
-        function closeModal() {
-            Swal.close();
-        }
-
-        function showAlert(msg) {
-            Swal.fire({ icon: 'info', title: msg, confirmButtonText: 'OK', confirmButtonColor: '#3B82F6' });
-        }
-
-        function showConfirm(msg, onConfirm) {
-            Swal.fire({
-                title: msg,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3B82F6',
-                cancelButtonColor: '#9CA3AF',
-                confirmButtonText: 'Ya',
-                cancelButtonText: 'Tidak'
-            }).then(function(result) {
-                if (result.isConfirmed) onConfirm();
-            });
-        }
-
-        document.addEventListener('submit', function(e) {
-            var form = e.target;
-            if (form.method && form.method.toUpperCase() === 'GET') return;
-            var submitBtn = e.submitter;
-            if (submitBtn && submitBtn.type === 'submit') {
-                submitBtn.disabled = true;
-                setTimeout(function() { submitBtn.disabled = false; }, 3000);
-            }
-        });
-    </script>
+    <script src="/js/app.js"></script>
     <script>
         @if (session('success'))
-        Swal.fire({ toast: true, position: 'top', icon: 'success', title: @json(session('success')), showConfirmButton: false, timer: 3000, timerProgressBar: true, confirmButtonColor: '#3B82F6' });
+        try { Swal.fire({ toast: true, position: 'top', icon: 'success', title: @json(session('success')), showConfirmButton: false, timer: 3000, timerProgressBar: true, confirmButtonColor: '#3B82F6' }); } catch(e) {}
         @endif
         @if (session('warning'))
-        Swal.fire({ toast: true, position: 'top', icon: 'warning', title: @json(session('warning')), showConfirmButton: false, timer: 3000, timerProgressBar: true, confirmButtonColor: '#3B82F6' });
+        try { Swal.fire({ toast: true, position: 'top', icon: 'warning', title: @json(session('warning')), showConfirmButton: false, timer: 3000, timerProgressBar: true, confirmButtonColor: '#3B82F6' }); } catch(e) {}
         @endif
         @if (session('error'))
-        Swal.fire({ toast: true, position: 'top', icon: 'error', title: @json(session('error')), showConfirmButton: false, timer: 3000, timerProgressBar: true, confirmButtonColor: '#3B82F6' });
+        try { Swal.fire({ toast: true, position: 'top', icon: 'error', title: @json(session('error')), showConfirmButton: false, timer: 3000, timerProgressBar: true, confirmButtonColor: '#3B82F6' }); } catch(e) {}
         @endif
     </script>
 @stack('scripts')

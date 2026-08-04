@@ -79,9 +79,25 @@
                                     default => $type,
                                 };
                             @endphp
-                            @if (in_array($type, ['monitoring', 'pra-monitoring', 're-monitoring']))
-                            <a href="/{{ $rPrefix }}/{{ $r->id }}/pdf?excel=1"
+                            @if ($r->editing_user_id === auth()->id())
+                            <a href="/{{ $rPrefix }}/{{ $r->id }}/assessment"
+                                style="background:#FFF7ED;color:#EA580C" class="inline-block px-3 py-1 text-xs font-medium rounded-lg hover:opacity-80">Selesaikan Edit</a>
+                            @elseif ($r->isLocked())
+                            <span style="background:#FEF3C7;color:#D97706" class="inline-block px-3 py-1 text-xs font-medium rounded-lg" title="Sedang diedit oleh {{ $r->editingUser?->name ?? 'User lain' }}">
+                                {{ $r->editingUser?->name ?? 'User lain' }}
+                            </span>
+                            @else
+                            @if (in_array($type, ['monitoring', 'pra-monitoring', 're-monitoring', 'evaluasi']))
+                            @if ($type === 'pra-monitoring')
+                            <button onclick="showPdfModal({{ $r->id }}, this)"
+                                data-alamat="{{ $r->gerai->alamat ?? '' }}"
+                                data-kota="{{ $r->gerai->nama_kota ?? '' }}"
+                                data-franchisee="{{ $r->gerai->franchisee ?? '' }}"
+                                style="background:#F3E8FF;color:#7C3AED" class="inline-block px-3 py-1 text-xs font-medium rounded-lg hover:opacity-80 cursor-pointer">PDF</button>
+                            @else
+                            <a href="/{{ $rPrefix }}/{{ $r->id }}/pdf?excel=1" target="_blank"
                                 style="background:#F3E8FF;color:#7C3AED" class="inline-block px-3 py-1 text-xs font-medium rounded-lg hover:opacity-80">PDF</a>
+                            @endif
                             @endif
                             <a href="/{{ $rPrefix }}/{{ $r->id }}"
                                 style="background:#DBEAFE;color:#2563EB" class="inline-block px-3 py-1 text-xs font-medium rounded-lg hover:opacity-80">Detail</a>
@@ -89,6 +105,7 @@
                                 @csrf @method('DELETE')<input type="hidden" name="_from" value="list">
                                 <button style="background:#FEE2E2;color:#DC2626" class="inline-block px-3 py-1 text-xs font-medium rounded-lg hover:opacity-80">Hapus</button>
                             </form>
+                            @endif
                         </td>
                     </tr>
                 @endforeach
@@ -230,7 +247,7 @@ document.addEventListener('click', function(e) {
     <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm mx-4">
         <h3 class="text-base font-semibold text-gray-800 mb-4">Export Semua Laporan Excel</h3>
         <p class="text-xs text-gray-500 mb-4">Pilih {{ $type === 'pra-monitoring' || $type === 're-monitoring' ? 'bulan' : 'periode' }} untuk mendownload semua laporan Excel dalam satu file ZIP.</p>
-        <form method="GET" action="/report/export-all-excel">
+        <form method="GET" action="/report/export-all-excel" target="_blank">
             <input type="hidden" name="type" value="{{ $type }}">
             <div class="mb-4">
                 @if ($type === 'pra-monitoring' || $type === 're-monitoring')
@@ -257,7 +274,7 @@ document.addEventListener('click', function(e) {
     <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm mx-4">
         <h3 class="text-base font-semibold text-gray-800 mb-4">Export Semua Laporan PDF</h3>
         <p class="text-xs text-gray-500 mb-4">Pilih {{ in_array($type, ['pra-monitoring', 're-monitoring']) ? 'bulan' : 'periode' }} untuk mendownload semua laporan PDF (konversi dari Excel) dalam satu file ZIP.</p>
-        <form method="GET" action="/report/export-all-pdf">
+        <form method="GET" action="/report/export-all-pdf" target="_blank">
             <input type="hidden" name="type" value="{{ $type }}">
             <div class="mb-4">
                 @if (in_array($type, ['pra-monitoring', 're-monitoring']))
@@ -284,7 +301,7 @@ document.addEventListener('click', function(e) {
     <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-sm mx-4">
         <h3 class="text-base font-semibold text-gray-800 mb-4">Download Detail Excel</h3>
         <p class="text-xs text-gray-500 mb-4">Pilih {{ $type === 'pra-monitoring' ? 'bulan' : 'periode' }} untuk mendownload detail laporan per sheet Excel.</p>
-        <form method="GET" action="/report/excel-detail">
+        <form method="GET" action="/report/excel-detail" target="_blank">
             <input type="hidden" name="type" value="{{ $type }}">
             <div class="mb-4">
                 @if ($type === 'pra-monitoring')
@@ -304,6 +321,42 @@ document.addEventListener('click', function(e) {
                 <button type="submit" onclick="this.closest('[id^=modal]').classList.add('hidden')" class="px-4 py-2 text-sm font-medium text-white bg-teal-600 rounded-lg hover:bg-teal-700">Download</button>
             </div>
         </form>
+    </div>
+</div>
+@endif
+
+@if ($type === 'pra-monitoring')
+<div id="pdfModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+    <div class="fixed inset-0 bg-black/50" onclick="closePdfModal()"></div>
+    <div class="relative bg-white rounded-xl shadow-xl max-w-sm w-full mx-4 p-6">
+        <h3 class="text-base font-semibold text-gray-800 mb-1">Download PDF</h3>
+        <p class="text-xs text-gray-500 mb-4">Isi data untuk cover letter, lalu download laporan PDF.</p>
+        <div class="space-y-3">
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">Nomor Surat</label>
+                <input type="text" id="pdfNomor" placeholder="320/OPR/BSA/VI.2026" autocomplete="off"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">Alamat</label>
+                <input type="text" id="pdfAlamat" autocomplete="off"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">Kota</label>
+                <input type="text" id="pdfKota" autocomplete="off"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            <div>
+                <label class="block text-xs text-gray-500 mb-1">Franchisee</label>
+                <input type="text" id="pdfFranchisee" autocomplete="off"
+                    class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+        </div>
+        <div class="mt-4 flex justify-end gap-3">
+            <button onclick="closePdfModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Batal</button>
+            <button onclick="downloadPdf()" style="background:#800000;color:#fff" class="px-4 py-2 text-sm font-medium rounded-lg hover:opacity-90">Download PDF</button>
+        </div>
     </div>
 </div>
 @endif
@@ -344,6 +397,52 @@ function filterLaporan(q) {
 document.getElementById('searchLaporan').addEventListener('blur', function() {
     setTimeout(function() { document.getElementById('laporanSuggest').classList.add('hidden'); }, 200);
 });
+
+@if ($type === 'pra-monitoring')
+var pdfReportId = null;
+var romanMonths = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
+
+function buildDefaultNomor() {
+    var now = new Date();
+    var tail = romanMonths[now.getMonth()] + '.' + now.getFullYear();
+    var saved = localStorage.getItem('mars_nomor_last');
+    if (saved) {
+        var m = saved.match(/^(.*?)([IVXLCDM]+\.\d{4})$/);
+        return m ? m[1] + tail : saved;
+    }
+    return '320/OPR/BSA/' + tail;
+}
+
+function showPdfModal(id, btn) {
+    pdfReportId = id;
+    var data = btn ? btn.dataset : {};
+    document.getElementById('pdfNomor').value = buildDefaultNomor();
+    document.getElementById('pdfAlamat').value = data.alamat || '';
+    document.getElementById('pdfKota').value = data.kota || '';
+    document.getElementById('pdfFranchisee').value = data.franchisee || '';
+    document.getElementById('pdfModal').classList.remove('hidden');
+}
+
+function closePdfModal() {
+    document.getElementById('pdfModal').classList.add('hidden');
+}
+
+function downloadPdf() {
+    closePdfModal();
+    if (!pdfReportId) return;
+    var url = '/pra-monitoring/' + pdfReportId + '/pdf?excel=1';
+    var params = new URLSearchParams();
+    params.set('nomor', document.getElementById('pdfNomor').value.trim());
+    params.set('alamat', document.getElementById('pdfAlamat').value.trim());
+    params.set('kota', document.getElementById('pdfKota').value.trim());
+    params.set('franchisee', document.getElementById('pdfFranchisee').value.trim());
+    window.open(url + '&' + params.toString(), '_blank');
+}
+
+document.getElementById('pdfNomor').addEventListener('input', function() {
+    localStorage.setItem('mars_nomor_last', this.value);
+});
+@endif
 </script>
 
 @endsection

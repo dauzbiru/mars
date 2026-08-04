@@ -140,7 +140,8 @@
             </select>
         </div>
         <div class="relative" style="height: 300px;">
-            <canvas id="gradeChart"></canvas>
+            <p id="chartLoading" class="text-center text-gray-400 text-sm pt-20">Memuat data grafik...</p>
+            <canvas id="gradeChart" class="hidden"></canvas>
         </div>
     </div>
     @endif
@@ -149,8 +150,12 @@
 var chart = null;
 
 function buildChart(labels, data) {
-    var ctx = document.getElementById('gradeChart').getContext('2d');
+    var canvas = document.getElementById('gradeChart');
+    var loading = document.getElementById('chartLoading');
+    canvas.classList.remove('hidden');
+    loading.classList.add('hidden');
 
+    var ctx = canvas.getContext('2d');
     if (chart) {
         chart.destroy();
     }
@@ -200,6 +205,8 @@ function loadChart(period) {
         .then(function(r) { return r.json(); })
         .then(function(res) {
             buildChart(res.labels, res.data);
+        }).catch(function(err) {
+            console.error('Gagal memuat chart:', err);
         });
 }
 

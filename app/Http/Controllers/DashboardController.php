@@ -12,13 +12,11 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        if (!Auth::check() || Auth::user()->role !== 'admin') {
-            return redirect('/guest');
-        }
-
         $totalGerai = Gerai::active()->count();
 
-        $latestPeriod = SemesterPeriod::orderBy('year', 'desc')->orderBy('start_month', 'desc')->first();
+        $periods = SemesterPeriod::orderBy('year', 'desc')->orderBy('start_month', 'desc')->get();
+
+        $latestPeriod = $periods->first();
 
         $monitoringPeriode = 0;
         $periodeLabel = '';
@@ -48,24 +46,24 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
-        $periods = SemesterPeriod::orderBy('year', 'desc')->orderBy('start_month', 'desc')->get();
-
         $chartPeriods = $periods->take(3);
-        $chartData = [];
-        $chartLabels = [];
-        foreach ($chartPeriods as $p) {
-            $chartLabels[] = $p->label;
-            $nilaiList = MonitoringReport::whereIn('type', ['monitoring', 'import'])
-                ->where('periode_label', $p->label)
-                ->whereNotNull('nilai')
-                ->pluck('nilai');
+        $chartLabels = $chartPeriods->pluck('label')->toArray();
 
+        $allNilai = MonitoringReport::whereIn('type', ['monitoring', 'import'])
+            ->whereIn('periode_label', $chartLabels)
+            ->whereNotNull('nilai')
+            ->selectRaw('periode_label, nilai')
+            ->get()
+            ->groupBy('periode_label');
+
+        $chartData = [];
+        foreach ($chartLabels as $label) {
+            $nilaiList = $allNilai->get($label, collect())->pluck('nilai');
             $counts = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'E' => 0];
             foreach ($nilaiList as $nilai) {
                 $grade = MonitoringReport::gradeFromScore((float) $nilai);
                 $counts[$grade]++;
             }
-
             $chartData[] = $counts;
         }
 
@@ -104,21 +102,23 @@ class DashboardController extends Controller
             $takePeriods = $periods->take(3);
         }
 
-        $labels = [];
-        $data = [];
-        foreach ($takePeriods as $p) {
-            $labels[] = $p->label;
-            $nilaiList = MonitoringReport::whereIn('type', ['monitoring', 'import'])
-                ->where('periode_label', $p->label)
-                ->whereNotNull('nilai')
-                ->pluck('nilai');
+        $labels = $takePeriods->pluck('label')->toArray();
 
+        $allNilai = MonitoringReport::whereIn('type', ['monitoring', 'import'])
+            ->whereIn('periode_label', $labels)
+            ->whereNotNull('nilai')
+            ->selectRaw('periode_label, nilai')
+            ->get()
+            ->groupBy('periode_label');
+
+        $data = [];
+        foreach ($labels as $label) {
+            $nilaiList = $allNilai->get($label, collect())->pluck('nilai');
             $counts = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'E' => 0];
             foreach ($nilaiList as $nilai) {
                 $grade = MonitoringReport::gradeFromScore((float) $nilai);
                 $counts[$grade]++;
             }
-
             $data[] = $counts;
         }
 

@@ -53,7 +53,7 @@
                         </tr>
                     @else
                         @if ($prefix === 'evaluasi')
-                        <tr class="hover:bg-blue-50 active:bg-blue-200 cursor-pointer transition-colors {{ $g->is_active ? '' : 'opacity-50' }}" data-active="{{ $g->is_active ? '1' : '0' }}" onclick="showConfirm('Buat laporan evaluasi untuk {{ $g->kode_gerai }} - {{ $g->nama_gerai }}?', function(){ window.location='/{{ $prefix }}/checkin/{{ $g->id }}'; })">
+                        <tr class="hover:bg-blue-50 active:bg-blue-200 cursor-pointer transition-colors {{ $g->is_active ? '' : 'opacity-50' }}" data-active="{{ $g->is_active ? '1' : '0' }}" onclick="showConfirm(@js('Buat laporan evaluasi untuk ' . $g->kode_gerai . ' - ' . $g->nama_gerai . '?'), function(){ window.location=@js('/' . $prefix . '/checkin/' . $g->id); })">
                         @else
                         <tr class="hover:bg-blue-50 active:bg-blue-200 cursor-pointer transition-colors {{ $g->is_active ? '' : 'opacity-50' }}" data-active="{{ $g->is_active ? '1' : '0' }}" onclick="window.location='/{{ $prefix }}/checkin/{{ $g->id }}'">
                         @endif

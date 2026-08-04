@@ -15,10 +15,6 @@ class SettingsController extends Controller
 
     public function update(Request $request)
     {
-        if (auth()->user()->role !== 'admin') {
-            abort(403);
-        }
-
         $data = $request->validate([
             'ai_typo_prompt' => 'required|string|max:10000',
         ]);

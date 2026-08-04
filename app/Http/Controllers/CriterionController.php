@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Item;
 use App\Models\Criterion;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class CriterionController extends Controller
 {
@@ -28,6 +29,8 @@ class CriterionController extends Controller
             'sort' => $sort,
         ]);
 
+        Cache::forget('monitoring.all_items');
+
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json(['success' => true, 'criterion' => ['id' => $criterion->id, 'description' => $criterion->description]]);
         }
@@ -44,6 +47,7 @@ class CriterionController extends Controller
     {
         $request->validate(['description' => 'required|string|max:255']);
         $criterion->update(['description' => $request->description]);
+        Cache::forget('monitoring.all_items');
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json(['success' => true, 'criterion' => ['id' => $criterion->id, 'description' => $criterion->description]]);
@@ -55,6 +59,7 @@ class CriterionController extends Controller
     public function destroy(Request $request, Item $item, Criterion $criterion)
     {
         $criterion->delete();
+        Cache::forget('monitoring.all_items');
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json(['success' => true]);
@@ -77,6 +82,7 @@ class CriterionController extends Controller
             ]);
             $count++;
         }
+        Cache::forget('monitoring.all_items');
         $actualCount = $count ?? 0;
         return redirect("/categories/{$item->category_id}")->with('success', $actualCount . ' opsi berhasil ditambahkan.');
     }
@@ -87,6 +93,7 @@ class CriterionController extends Controller
         foreach ($ids as $i => $id) {
             Criterion::where('id', $id)->where('item_id', $item->id)->update(['sort' => $i + 1]);
         }
+        Cache::forget('monitoring.all_items');
         return response()->json(['ok' => true]);
     }
 }

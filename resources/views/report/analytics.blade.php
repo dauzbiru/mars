@@ -10,7 +10,7 @@
     </div>
 
     <div class="px-4 sm:px-6 py-4">
-        <form method="GET" action="/report/analytics/excel">
+        <form method="GET" action="/report/analytics/excel" target="_blank">
             @csrf
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Periode Semester</label>

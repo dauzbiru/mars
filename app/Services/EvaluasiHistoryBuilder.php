@@ -25,7 +25,7 @@ class EvaluasiHistoryBuilder
     {
         $remonReport = \App\Models\ReMonitoringReport::where('gerai_id', $this->geraiId)
             ->whereNotNull('submit_at')->whereNotNull('nilai')
-            ->with('finding')->orderByDesc('checkin_at')->first();
+            ->orderByDesc('checkin_at')->first();
 
         $latestMonReport = \App\Models\MonitoringReport::where('gerai_id', $this->geraiId)
             ->whereIn('type', ['monitoring', 'import'])
@@ -37,7 +37,7 @@ class EvaluasiHistoryBuilder
         $monReports = \App\Models\MonitoringReport::where('gerai_id', $this->geraiId)
             ->whereIn('type', ['monitoring', 'import'])
             ->whereNotNull('submit_at')->whereNotNull('nilai')
-            ->with('finding')->orderBy('checkin_at')
+            ->orderBy('checkin_at')
             ->limit($useRemon ? 9 : 10)
             ->get();
 
@@ -45,17 +45,13 @@ class EvaluasiHistoryBuilder
 
         $periodeLabels = $this->history->pluck('periode_label')->filter()->unique()->values()->toArray();
 
-        $this->rankingsMap = Ranking::where('gerai_id', $this->geraiId)
+        $rankings = Ranking::where('gerai_id', $this->geraiId)
             ->whereIn('periode_label', $periodeLabels)
-            ->pluck('rank', 'periode_label');
+            ->get();
+        $this->rankingsMap = $rankings->pluck('rank', 'periode_label');
+        $this->totalMap = $rankings->groupBy('periode_label')->map(fn($g) => $g->max('total'));
 
-        $this->totalMap = Ranking::whereIn('periode_label', $periodeLabels)
-            ->selectRaw('periode_label, MAX(`total`) as total')
-            ->groupBy('periode_label')
-            ->pluck('total', 'periode_label');
-
-        $this->periodsMap = SemesterPeriod::whereIn('label', $periodeLabels)
-            ->get()->keyBy('label');
+        $this->periodsMap = SemesterPeriod::get()->filter(fn($p) => in_array($p->label, $periodeLabels))->keyBy('label');
     }
 
     public function getHistory(): Collection
@@ -109,7 +105,12 @@ class EvaluasiHistoryBuilder
                 'grade' => $r->grade,
                 'rank' => $rank,
                 'total' => $total,
-                'finding' => $r->finding ?? null,
+                'finding' => $r->only([
+                    'major', 'minor', 'peringatan_awal', 'note',
+                    'kondisi_cat', 'kondisi_awning', 'kondisi_vinyl', 'kondisi_stiker_kaca',
+                    'pengawas', 'rata_rata_aj', 'tds', 'mesin_ozon',
+                    'penjelasan_isi', 'penjelasan_isi_3',
+                ]),
             ];
 
             if ($customizer) {

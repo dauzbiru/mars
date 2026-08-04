@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Item;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 class ItemController extends Controller
 {
@@ -22,6 +23,8 @@ class ItemController extends Controller
 
         $maxSort = $category->items()->max('sort') ?? 0;
         $item = $category->items()->create(array_merge($request->only('name', 'bobot'), ['sort' => $maxSort + 1]));
+        Cache::forget('monitoring.all_items');
+        Cache::forget('monitoring.all_categories');
 
         $criteria = array_filter(array_map('trim', $request->input('criteria', [])));
         foreach ($criteria as $i => $desc) {
@@ -45,6 +48,8 @@ class ItemController extends Controller
             'name' => 'required|string|max:255',
             'bobot' => 'nullable|numeric|min:0',
         ]));
+        Cache::forget('monitoring.all_items');
+        Cache::forget('monitoring.all_categories');
 
         return redirect("/categories/{$item->category_id}")->with('success', 'Checklist berhasil diperbarui.');
     }
@@ -53,6 +58,8 @@ class ItemController extends Controller
     {
         $categoryId = $item->category_id;
         $item->delete();
+        Cache::forget('monitoring.all_items');
+        Cache::forget('monitoring.all_categories');
         return redirect("/categories/$categoryId")->with('success', 'Checklist berhasil dihapus.');
     }
 
@@ -68,6 +75,8 @@ class ItemController extends Controller
             $item->update(['sort' => $prev->sort]);
             $prev->update(['sort' => $temp]);
         }
+        Cache::forget('monitoring.all_items');
+        Cache::forget('monitoring.all_categories');
 
         return redirect("/categories/{$item->category_id}");
     }
@@ -84,6 +93,8 @@ class ItemController extends Controller
             $item->update(['sort' => $next->sort]);
             $next->update(['sort' => $temp]);
         }
+        Cache::forget('monitoring.all_items');
+        Cache::forget('monitoring.all_categories');
 
         return redirect("/categories/{$item->category_id}");
     }
@@ -94,6 +105,8 @@ class ItemController extends Controller
         foreach ($ids as $i => $id) {
             Item::where('id', $id)->where('category_id', $category->id)->update(['sort' => $i + 1]);
         }
+        Cache::forget('monitoring.all_items');
+        Cache::forget('monitoring.all_categories');
         return response()->json(['ok' => true]);
     }
 
@@ -104,6 +117,8 @@ class ItemController extends Controller
             Item::where('id', (int) $itemId)->where('category_id', $category->id)
                 ->update(['bobot' => is_numeric($bobot) && $bobot !== '' ? (float) $bobot : null]);
         }
+        Cache::forget('monitoring.all_items');
+        Cache::forget('monitoring.all_categories');
         return redirect("/categories/{$category->id}")->with('success', 'Bobot berhasil disimpan.');
     }
 }

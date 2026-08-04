@@ -3,7 +3,7 @@
 @section('title', 'Checkin - ' . $gerai->nama_gerai)
 
 @push('head')
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.25.0/maps/maps.css" />
 @endpush
 
 @section('content')
@@ -99,19 +99,65 @@
 @endsection
 
 @push('scripts')
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.25.0/maps/maps-web.min.js"></script>
+<script src="https://api.tomtom.com/maps-sdk-for-web/cdn/6.x/6.25.0/services/services-web.min.js"></script>
 <script>
 (function() {
     var input = document.getElementById('location');
     var status = document.getElementById('locationStatus');
     var timedOut = false;
 
-    var map = L.map('map').setView([-2.5, 118], 5);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
-    L.marker([-2.5, 118]).addTo(map);
-    setTimeout(function() { map.invalidateSize(); }, 200);
+    var map = tt.map({ key: 'NGS8boaT3CH45v33wXWzwWO5FUSeI2Zl', container: 'map', center: [118, -2.5], zoom: 5 });
+    tt.setProductInfo('MARS', '1.0');
+    var marker = null;
+    setTimeout(function() { map.resize(); }, 200);
+
+    function setMarker(lat, lng, geocode) {
+        if (marker) marker.remove();
+        marker = new tt.Marker({ draggable: true }).setLngLat([lng, lat]).addTo(map);
+        map.flyTo({ center: [lng, lat], zoom: 15 });
+        lastPos = lng.toFixed(6) + ',' + lat.toFixed(6);
+        if (geocode !== false) geoCode(lat, lng);
+    }
+
+    var lastPos = '';
+
+    setInterval(function () {
+        if (!marker) return;
+        var p = marker.getLngLat();
+        var key = p.lng.toFixed(6) + ',' + p.lat.toFixed(6);
+        if (key !== lastPos) {
+            lastPos = key;
+            input.value = p.lat.toFixed(6) + ', ' + p.lng.toFixed(6);
+            status.textContent = 'Mendapatkan alamat...';
+            geoCode(p.lat, p.lng);
+        }
+    }, 800);
+
+    map.on('click', function (e) {
+        setMarker(e.lngLat.lat, e.lngLat.lng);
+    });
+
+    function geoCode(lat, lng) {
+        status.textContent = 'Mengonversi ke alamat...';
+        tt.services.reverseGeocode({
+            key: 'NGS8boaT3CH45v33wXWzwWO5FUSeI2Zl',
+            position: { lat: lat, lng: lng }
+        })
+        .then(function(res) {
+            var a = res.addresses[0].address;
+            input.value = a.freeformAddress + ', ' + a.country || (lat.toFixed(6) + ', ' + lng.toFixed(6));
+            status.textContent = 'Lokasi terdeteksi otomatis.';
+            input.readOnly = false;
+            input.classList.remove('bg-gray-50');
+        })
+        .catch(function() {
+            input.value = lat.toFixed(6) + ', ' + lng.toFixed(6);
+            status.textContent = 'Lokasi (koordinat) terdeteksi.';
+            input.readOnly = false;
+            input.classList.remove('bg-gray-50');
+        });
+    }
 
     if (!navigator.geolocation) {
         status.textContent = 'Geolocation tidak didukung. Isi manual.';
@@ -141,33 +187,7 @@
         navigator.geolocation.getCurrentPosition(
             function(pos) {
                 if (timedOut) return;
-                var lat = pos.coords.latitude;
-                var lng = pos.coords.longitude;
-                status.textContent = 'Mengonversi ke alamat...';
-
-                fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&accept-language=id', {
-                    headers: { 'User-Agent': 'MARS/1.0' }
-                })
-                    .then(function(res) { return res.json(); })
-                    .then(function(data) {
-                        var address = data.display_name || (lat.toFixed(6) + ', ' + lng.toFixed(6));
-                        input.value = address;
-                        status.textContent = 'Lokasi terdeteksi otomatis.';
-                        input.readOnly = false;
-                        input.classList.remove('bg-gray-50');
-                        map.eachLayer(function(l) { if (l instanceof L.Marker) map.removeLayer(l); });
-                        L.marker([lat, lng]).addTo(map);
-                        map.setView([lat, lng], 15);
-                    })
-                    .catch(function() {
-                        input.value = lat.toFixed(6) + ', ' + lng.toFixed(6);
-                        status.textContent = 'Lokasi (koordinat) terdeteksi.';
-                        input.readOnly = false;
-                        input.classList.remove('bg-gray-50');
-                        map.eachLayer(function(l) { if (l instanceof L.Marker) map.removeLayer(l); });
-                        L.marker([lat, lng]).addTo(map);
-                        map.setView([lat, lng], 15);
-                    });
+                setMarker(pos.coords.latitude, pos.coords.longitude);
             },
             function(err) {
                 var msg = 'Gagal mengambil lokasi';

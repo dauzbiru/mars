@@ -107,8 +107,7 @@ class ReportController extends Controller
         $user = $userId ? User::find($userId) : null;
 
         $categories = Category::whereNull('parent_id')->with('items.criteria')->get();
-        $results = Result::with('criterion')->when($userId, fn($q) => $q->where('user_id', $userId))
-            ->get()->keyBy('item_id');
+        $results = $this->getFilteredResults($userId);
 
         $pdf = Pdf::loadView('report.pdf', compact('categories', 'results', 'user'));
         return $pdf->download('laporan-audit.pdf');
@@ -120,8 +119,7 @@ class ReportController extends Controller
         $user = $userId ? User::find($userId) : null;
 
         $categories = Category::whereNull('parent_id')->with('items.criteria')->get();
-        $results = Result::with('criterion')->when($userId, fn($q) => $q->where('user_id', $userId))
-            ->get()->keyBy('item_id');
+        $results = $this->getFilteredResults($userId);
 
         $writer = new Writer();
         $filename = storage_path('app/laporan-audit.xlsx');
@@ -142,6 +140,28 @@ class ReportController extends Controller
 
         $writer->close();
         return response()->download($filename)->deleteFileAfterSend(true);
+    }
+
+    private function getFilteredResults($userId): \Illuminate\Support\Collection
+    {
+        $query = MonitoringReport::where('type', 'monitoring')
+            ->whereNotNull('submit_at');
+
+        if ($userId) {
+            $query->where('user_id', $userId);
+        }
+
+        $reportIds = $query->pluck('id');
+
+        if ($reportIds->isEmpty()) {
+            return collect();
+        }
+
+        return Result::where('reportable_type', MonitoringReport::class)
+            ->whereIn('reportable_id', $reportIds)
+            ->with('criterion')
+            ->get()
+            ->keyBy('item_id');
     }
 
     public function analytics()
@@ -183,16 +203,9 @@ class ReportController extends Controller
                 $itemId = $result->item_id;
                 if (!isset($itemScores[$itemId])) continue;
                 $item = $result->item;
-                if (!$item || !$item->bobot) continue;
-                $criteriaCount = $item->criteria->count();
-                if ($criteriaCount <= 1) {
-                    $itemScores[$itemId]['scores'][$geraiKode] = round((float) $item->bobot, 2);
-                } else {
-                    $interval = $item->bobot / ($criteriaCount - 1);
-                    $idx = $item->criteria->search(fn($c) => $c->id === $result->criterion_id);
-                    if ($idx !== false) {
-                        $itemScores[$itemId]['scores'][$geraiKode] = round($item->bobot - ($interval * $idx), 2);
-                    }
+                $score = \App\Services\ScoreCalculator::calculateItemScore($item, $result);
+                if ($score > 0) {
+                    $itemScores[$itemId]['scores'][$geraiKode] = round($score, 2);
                 }
             }
         }
@@ -232,85 +245,58 @@ class ReportController extends Controller
         $header[] = 'Max';
         $writer->addRow(Row::fromValues($header));
 
-        $helper = new class($allCategories, $itemScores, $geraiKodes, $writer) {
-            public function __construct(
-                private $categories,
-                private $itemScores,
-                private $geraiKodes,
-                private $writer,
-            ) {}
-
-            public function aggregate(array $catIds): array
-            {
-                $geraiScores = [];
-                $geraiPcts = [];
-                foreach ($this->geraiKodes as $kode) {
-                    $totalScore = 0;
-                    $totalBobot = 0;
-                    foreach ($catIds as $catId) {
-                        $cat = $this->categories->get($catId);
-                        if (!$cat) continue;
-                        foreach ($cat->items as $item) {
-                            if (!isset($this->itemScores[$item->id])) continue;
-                            if (isset($this->itemScores[$item->id]['scores'][$kode])) {
-                                $totalScore += $this->itemScores[$item->id]['scores'][$kode];
-                                $totalBobot += $this->itemScores[$item->id]['bobot'];
-                            }
-                        }
-                    }
-                    $geraiScores[$kode] = $totalScore;
-                    if ($totalBobot > 0) {
-                        $geraiPcts[$kode] = ($totalScore / $totalBobot) * 100;
+        // Pre-compute aggregates per category (1 pass instead of N)
+        $catAggregates = [];
+        foreach ($allCategories as $cat) {
+            $catAggregates[$cat->id] = [];
+            foreach ($geraiKodes as $kode) {
+                $totalScore = 0;
+                $totalBobot = 0;
+                foreach ($cat->items as $item) {
+                    if (!isset($itemScores[$item->id])) continue;
+                    if (isset($itemScores[$item->id]['scores'][$kode])) {
+                        $totalScore += $itemScores[$item->id]['scores'][$kode];
+                        $totalBobot += $itemScores[$item->id]['bobot'];
                     }
                 }
-                return ['scores' => $geraiScores, 'pcts' => $geraiPcts];
+                $catAggregates[$cat->id][$kode] = [
+                    'score' => $totalScore,
+                    'bobot' => $totalBobot,
+                ];
             }
+        }
 
-            public function writeRow(string $name, array $catIds, int $depth): void
-            {
-                $data = $this->aggregate($catIds);
-                $pctValues = array_values($data['pcts']);
-                $scores = $data['scores'];
-                $prefix = str_repeat('  ', $depth);
-                $row = [$prefix . $name];
-                foreach ($this->geraiKodes as $kode) {
-                    $val = $scores[$kode] ?? 0;
-                    $row[] = $val > 0 ? (string) $val : '-';
-                }
-                $row[] = !empty($pctValues) ? round(array_sum($pctValues) / count($pctValues)) : '-';
-                $row[] = !empty($pctValues) ? round(min($pctValues)) : '-';
-                $row[] = !empty($pctValues) ? round(max($pctValues)) : '-';
-                $this->writer->addRow(Row::fromValues($row));
-            }
-
-            public function writeCategoryAndItems(array $catIds, int $depth): void
-            {
+        $aggregateCatIds = function (array $catIds) use ($catAggregates, $geraiKodes): array {
+            $geraiScores = [];
+            $geraiPcts = [];
+            foreach ($geraiKodes as $kode) {
+                $totalScore = 0;
+                $totalBobot = 0;
                 foreach ($catIds as $catId) {
-                    $cat = $this->categories->get($catId);
-                    if (!$cat) continue;
-                    $this->writeRow($cat->name, [$catId], $depth);
-                    foreach ($cat->items as $item) {
-                        if (!isset($this->itemScores[$item->id])) continue;
-                        $itemPrefix = str_repeat('  ', $depth + 1);
-                        $itemRow = [$itemPrefix . $item->name];
-                        $scoreValues = [];
-                        foreach ($this->geraiKodes as $kode) {
-                            $val = $this->itemScores[$item->id]['scores'][$kode] ?? null;
-                            if ($val !== null) {
-                                $itemRow[] = (string) $val;
-                                $pct = ($val / $this->itemScores[$item->id]['bobot']) * 100;
-                                $scoreValues[] = $pct;
-                            } else {
-                                $itemRow[] = '-';
-                            }
-                        }
-                        $itemRow[] = !empty($scoreValues) ? round(array_sum($scoreValues) / count($scoreValues)) : '-';
-                        $itemRow[] = !empty($scoreValues) ? round(min($scoreValues)) : '-';
-                        $itemRow[] = !empty($scoreValues) ? round(max($scoreValues)) : '-';
-                        $this->writer->addRow(Row::fromValues($itemRow));
+                    if (isset($catAggregates[$catId][$kode])) {
+                        $totalScore += $catAggregates[$catId][$kode]['score'];
+                        $totalBobot += $catAggregates[$catId][$kode]['bobot'];
                     }
                 }
+                $geraiScores[$kode] = $totalScore;
+                $geraiPcts[$kode] = $totalBobot > 0 ? ($totalScore / $totalBobot) * 100 : 0;
             }
+            return ['scores' => $geraiScores, 'pcts' => $geraiPcts];
+        };
+
+        $writeRow = function (string $name, array $data, int $depth) use ($writer, $geraiKodes): void {
+            $pctValues = array_values($data['pcts']);
+            $scores = $data['scores'];
+            $prefix = str_repeat('  ', $depth);
+            $row = [$prefix . $name];
+            foreach ($geraiKodes as $kode) {
+                $val = $scores[$kode] ?? 0;
+                $row[] = $val > 0 ? (string) $val : '-';
+            }
+            $row[] = !empty($pctValues) ? round(array_sum($pctValues) / count($pctValues)) : '-';
+            $row[] = !empty($pctValues) ? round(min($pctValues)) : '-';
+            $row[] = !empty($pctValues) ? round(max($pctValues)) : '-';
+            $writer->addRow(Row::fromValues($row));
         };
 
         $allCategoryIds = [];
@@ -323,19 +309,75 @@ class ReportController extends Controller
 
             $allCategoryIds = array_merge($allCategoryIds, $allCatIds);
 
-            $helper->writeRow($section['name'], $allCatIds, 0);
+            $data = $aggregateCatIds($allCatIds);
+            $writeRow($section['name'], $data, 0);
 
             foreach ($section['groups'] ?? [] as $group) {
-                $helper->writeRow($group['name'], $group['category_ids'], 1);
-                $helper->writeCategoryAndItems($group['category_ids'], 2);
+                $data = $aggregateCatIds($group['category_ids']);
+                $writeRow($group['name'], $data, 1);
+
+                foreach ($group['category_ids'] as $catId) {
+                    $cat = $allCategories->get($catId);
+                    if (!$cat) continue;
+                    $data = $aggregateCatIds([$catId]);
+                    $writeRow($cat->name, $data, 2);
+
+                    foreach ($cat->items as $item) {
+                        if (!isset($itemScores[$item->id])) continue;
+                        $itemPrefix = str_repeat('  ', 3);
+                        $itemRow = [$itemPrefix . $item->name];
+                        $scoreValues = [];
+                        foreach ($geraiKodes as $kode) {
+                            $val = $itemScores[$item->id]['scores'][$kode] ?? null;
+                            if ($val !== null) {
+                                $itemRow[] = (string) $val;
+                                $pct = ($val / $itemScores[$item->id]['bobot']) * 100;
+                                $scoreValues[] = $pct;
+                            } else {
+                                $itemRow[] = '-';
+                            }
+                        }
+                        $itemRow[] = !empty($scoreValues) ? round(array_sum($scoreValues) / count($scoreValues)) : '-';
+                        $itemRow[] = !empty($scoreValues) ? round(min($scoreValues)) : '-';
+                        $itemRow[] = !empty($scoreValues) ? round(max($scoreValues)) : '-';
+                        $writer->addRow(Row::fromValues($itemRow));
+                    }
+                }
             }
 
             if (!empty($section['category_ids'])) {
-                $helper->writeCategoryAndItems($section['category_ids'], 1);
+                foreach ($section['category_ids'] as $catId) {
+                    $cat = $allCategories->get($catId);
+                    if (!$cat) continue;
+                    $data = $aggregateCatIds([$catId]);
+                    $writeRow($cat->name, $data, 1);
+
+                    foreach ($cat->items as $item) {
+                        if (!isset($itemScores[$item->id])) continue;
+                        $itemPrefix = str_repeat('  ', 2);
+                        $itemRow = [$itemPrefix . $item->name];
+                        $scoreValues = [];
+                        foreach ($geraiKodes as $kode) {
+                            $val = $itemScores[$item->id]['scores'][$kode] ?? null;
+                            if ($val !== null) {
+                                $itemRow[] = (string) $val;
+                                $pct = ($val / $itemScores[$item->id]['bobot']) * 100;
+                                $scoreValues[] = $pct;
+                            } else {
+                                $itemRow[] = '-';
+                            }
+                        }
+                        $itemRow[] = !empty($scoreValues) ? round(array_sum($scoreValues) / count($scoreValues)) : '-';
+                        $itemRow[] = !empty($scoreValues) ? round(min($scoreValues)) : '-';
+                        $itemRow[] = !empty($scoreValues) ? round(max($scoreValues)) : '-';
+                        $writer->addRow(Row::fromValues($itemRow));
+                    }
+                }
             }
         }
 
-        $helper->writeRow('Total', $allCategoryIds, 0);
+        $data = $aggregateCatIds($allCategoryIds);
+        $writeRow('Total', $data, 0);
 
         $writer->close();
         return response()->download($filename)->deleteFileAfterSend(true);
@@ -424,6 +466,15 @@ class ReportController extends Controller
             }
         }
 
+        $writer = new Writer();
+        $filename = storage_path('app/checklist-tidak-sempurna-' . now()->format('Y-m-d_H-i') . '.xlsx');
+        $writer->openToFile($filename);
+
+        $writer->addRow(Row::fromValues(['Checklist Tidak Sempurna - ' . $request->periode_label]));
+        $writer->addRow(Row::fromValues([]));
+        $writer->addRow(Row::fromValues(['Gerai', 'Checklist']));
+
+        $hasAny = false;
         foreach ($reports as $report) {
             $geraiKode = $report->gerai->kode_gerai;
             foreach ($report->results as $result) {
@@ -437,48 +488,23 @@ class ReportController extends Controller
                 $item = $result->item;
                 if ($item && $item->criteria->isNotEmpty()) {
                     $firstCriterion = $item->criteria->first();
-                    if ($result->criterion_id !== $firstCriterion->id) {
+                    $isNotFirst = $result->criterion_id !== $firstCriterion->id;
+                    if ($isNotFirst) {
                         $itemData[$itemId]['hasImperfect'] = true;
+                        $writer->addRow(Row::fromValues([
+                            $geraiKode,
+                            $item->name ?? '-',
+                        ]));
+                        $hasAny = true;
                     }
                 }
             }
         }
 
-        $itemData = array_filter($itemData, fn($d) => $d['hasImperfect']);
-
-        if (empty($itemData)) {
+        if (!$hasAny) {
+            $writer->close();
+            @unlink($filename);
             return back()->with('error', 'Semua checklist sudah sempurna untuk periode ini.');
-        }
-
-        $writer = new Writer();
-        $filename = storage_path('app/checklist-tidak-sempurna-' . now()->format('Y-m-d_H-i') . '.xlsx');
-        $writer->openToFile($filename);
-
-        $writer->addRow(Row::fromValues(['Checklist Tidak Sempurna - ' . $periodeLabel]));
-        $writer->addRow(Row::fromValues([]));
-        $writer->addRow(Row::fromValues(['Gerai', 'Checklist']));
-
-        foreach ($reports as $report) {
-            $geraiKode = $report->gerai->kode_gerai;
-            foreach ($report->results as $result) {
-                $itemId = $result->item_id;
-                if (!isset($itemData[$itemId])) continue;
-                if (!$itemData[$itemId]['hasImperfect']) continue;
-
-                $item = $result->item;
-                $isPerfect = false;
-                if ($item && $item->criteria->isNotEmpty()) {
-                    $firstCriterion = $item->criteria->first();
-                    $isPerfect = $result->criterion_id === $firstCriterion->id;
-                }
-
-                if (!$isPerfect) {
-                    $writer->addRow(Row::fromValues([
-                        $geraiKode,
-                        $item->name ?? '-',
-                    ]));
-                }
-            }
         }
 
         $writer->close();
@@ -495,8 +521,12 @@ class ReportController extends Controller
         }
         $request->validate($rules);
 
-        $query = MonitoringReport::with('gerai', 'finding')
-            ->where('type', $request->type)
+        $modelClass = match ($request->type) {
+            'pra-monitoring' => \App\Models\PraMonitoringReport::class,
+            default => MonitoringReport::class,
+        };
+
+        $query = $modelClass::with('gerai')
             ->whereNotNull('submit_at');
 
         if ($request->type === 'pra-monitoring') {
@@ -504,7 +534,8 @@ class ReportController extends Controller
             $query->whereYear('checkin_at', substr($month, 0, 4))
                   ->whereMonth('checkin_at', substr($month, 5, 2));
         } else {
-            $query->where('periode_label', $request->periode_label);
+            $query->where('type', $request->type)
+                  ->where('periode_label', $request->periode_label);
         }
 
         $reports = $query->orderBy('checkin_at')->get();
@@ -548,14 +579,11 @@ class ReportController extends Controller
             $writer->addRow(Row::fromValues($sheetDef['header']));
 
             foreach ($reports as $report) {
-                $finding = $report->finding;
-                if (!$finding) continue;
-
                 if (!$report->gerai) continue;
                 $kode = $report->gerai->kode_gerai;
 
                 if ($sheetDef['name'] === 'Temuan') {
-                    $paLines = explode("\n", str_replace("\r\n", "\n", $finding->peringatan_awal ?? ''));
+                    $paLines = explode("\n", str_replace("\r\n", "\n", $report->peringatan_awal ?? ''));
                     foreach ($paLines as $line) {
                         $trimmed = trim($line);
                         if ($trimmed === '') continue;
@@ -565,7 +593,7 @@ class ReportController extends Controller
                         ]));
                     }
                 } else {
-                    $value = $finding->{$sheetDef['field']} ?? '';
+                    $value = $report->{$sheetDef['field']} ?? '';
                     if ($sheetDef['field'] === 'rata_rata_aj') {
                         $lines = explode("\n", str_replace("\r\n", "\n", $value));
                         foreach ($lines as $line) {

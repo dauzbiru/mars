@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Gerai;
 use App\Models\KotaMap;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use OpenSpout\Writer\XLSX\Writer;
 use OpenSpout\Reader\XLSX\Reader as XLSXReader;
@@ -15,12 +16,9 @@ class GeraiController extends Controller
     private static function resolveKotaArea(string $kodeGerai, ?string $namaKota, ?string $area): array
     {
         $prefix = strtoupper(substr($kodeGerai, 0, 3));
-        if ((!$namaKota || !$area)) {
-            $map = KotaMap::where('kode', $prefix)->first();
-            if ($map) {
-                $namaKota = $namaKota ?: $map->nama_kota;
-                $area = $area ?: $map->area;
-            }
+        $map = KotaMap::where('kode', $prefix)->first();
+        if ($map) {
+            return [$map->nama_kota, $map->area];
         }
         return [$namaKota, $area];
     }
@@ -59,6 +57,7 @@ class GeraiController extends Controller
         }
 
         Gerai::create(['is_active' => true] + $data);
+        Cache::forget('gerais.active');
 
         return redirect('/gerais')->with('success', 'Gerai berhasil ditambahkan.');
     }
@@ -90,6 +89,7 @@ class GeraiController extends Controller
         [$data['nama_kota'], $data['area']] = self::resolveKotaArea($data['kode_gerai'], $data['nama_kota'] ?? null, $data['area'] ?? null);
 
         $gerai->update($data);
+        Cache::forget('gerais.active');
 
         return redirect('/gerais')->with('success', 'Gerai berhasil diperbarui.');
     }
@@ -97,6 +97,7 @@ class GeraiController extends Controller
     public function destroy(Gerai $gerai)
     {
         $gerai->delete();
+        Cache::forget('gerais.active');
 
         return redirect('/gerais')->with('success', 'Gerai berhasil dihapus.');
     }
@@ -107,6 +108,7 @@ class GeraiController extends Controller
             'is_active' => false,
             'closed_at' => now(),
         ]);
+        Cache::forget('gerais.active');
 
         return redirect('/gerais')->with('success', 'Gerai berhasil ditutup.');
     }
@@ -123,6 +125,7 @@ class GeraiController extends Controller
             'is_active' => true,
             'closed_at' => null,
         ]);
+        Cache::forget('gerais.active');
 
         return redirect('/gerais')->with('success', 'Gerai berhasil dibuka kembali.');
     }
@@ -130,11 +133,12 @@ class GeraiController extends Controller
     public function syncKota()
     {
         $gerais = Gerai::active()->get();
+        $kotaMaps = KotaMap::all()->keyBy('kode');
         $updated = 0;
 
         foreach ($gerais as $g) {
             $prefix = strtoupper(substr($g->kode_gerai, 0, 3));
-            $map = KotaMap::where('kode', $prefix)->first();
+            $map = $kotaMaps->get($prefix);
             if ($map && (!$g->nama_kota || !$g->area)) {
                 $g->update([
                     'nama_kota' => $map->nama_kota,
@@ -250,6 +254,7 @@ class GeraiController extends Controller
         });
 
         $reader->close();
+        Cache::forget('gerais.active');
 
         return redirect('/gerais')->with('success', "Berhasil import $count data gerai.");
     }

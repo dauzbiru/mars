@@ -48,7 +48,7 @@
                         @foreach ($reports as $r)
                             @php
                                 $grade = \App\Models\MonitoringReport::gradeFromScore((float) $r->nilai);
-                                $f = $r->finding;
+                                $hasF = $r->major || $r->minor;
                                 $phone = $r->gerai->no_telepon;
                                 $waNumber = '';
                                 if ($phone) {
@@ -81,7 +81,7 @@
                                         data-franchisee="{{ $r->gerai->franchisee }}"
                                         data-grade="{{ $grade }}"
                                         data-nilai="{{ $r->nilai ? round((float) $r->nilai) : '-' }}"
-                                        data-finding="{{ base64_encode(json_encode($f?->toArray() ?: [])) }}"
+                                        data-finding="{{ base64_encode(json_encode($hasF ? $r->only(['major', 'minor', 'pengawas', 'rata_rata_aj', 'tds', 'mesin_ozon', 'peringatan_awal', 'note', 'kondisi_cat', 'kondisi_awning', 'kondisi_vinyl', 'kondisi_stiker_kaca', 'penjelasan_isi', 'penjelasan_isi_3', 'ttd_petugas', 'ttd_pimpinan']) : [])) }}"
                                         data-phone="{{ $waNumber }}"
                                         data-report-id="{{ $r->id }}"
                                         class="btn-wa inline-flex items-center justify-center w-8 h-8 rounded-full hover:opacity-80 wa-btn"

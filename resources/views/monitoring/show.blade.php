@@ -75,58 +75,58 @@
     </div>
 </div>
 
-@if ($report->finding)
+@if ($report->major || $report->minor)
     <div class="bg-white rounded-xl shadow-md overflow-hidden mb-4">
         <div class="px-4 sm:px-6 py-3 border-b border-gray-200 bg-gray-50">
                 <h3 class="text-sm font-semibold text-gray-700">{{ $prefix === 'evaluasi' ? 'Temuan Evaluasi' : ($prefix === 'pra-monitoring' ? 'Temuan Pra-Monitoring' : ($prefix === 're-monitoring' ? 'Temuan Re-Monitoring' : 'Temuan Monitoring')) }}</h3>
         </div>
         <div class="p-4 sm:p-5 space-y-3">
-            @if ($report->finding->major)
+            @if ($report->major)
                 <div>
                     <p class="text-xs font-medium text-gray-500">Major</p>
-                    <p class="text-sm text-gray-800 whitespace-pre-wrap" style="overflow-wrap: break-word; word-break: break-word;">{{ e($report->finding->major) }}</p>
+                    <p class="text-sm text-gray-800 whitespace-pre-wrap" style="overflow-wrap: break-word; word-break: break-word;">{{ e($report->major) }}</p>
                 </div>
             @endif
-            @if ($report->finding->minor)
+            @if ($report->minor)
                 <div>
                     <p class="text-xs font-medium text-gray-500">Minor</p>
-                    <p class="text-sm text-gray-800 whitespace-pre-wrap" style="overflow-wrap: break-word; word-break: break-word;">{{ e($report->finding->minor) }}</p>
+                    <p class="text-sm text-gray-800 whitespace-pre-wrap" style="overflow-wrap: break-word; word-break: break-word;">{{ e($report->minor) }}</p>
                 </div>
             @endif
-            @if ($report->finding->pengawas || $report->finding->rata_rata_aj || ($report->finding->tds && $prefix !== 'pra-monitoring') || $report->finding->mesin_ozon || $report->finding->peringatan_awal || $report->finding->note || $report->finding->kondisi_cat || $report->finding->kondisi_awning || $report->finding->kondisi_vinyl || $report->finding->kondisi_stiker_kaca)
+            @if ($report->pengawas || $report->rata_rata_aj || ($report->tds && $prefix !== 'pra-monitoring') || $report->mesin_ozon || $report->peringatan_awal || $report->note || $report->kondisi_cat || $report->kondisi_awning || $report->kondisi_vinyl || $report->kondisi_stiker_kaca)
                 <div class="text-sm text-gray-800">
                     <p class="text-xs font-medium text-gray-500 mb-1">Peringatan Awal:</p>
-                    @if ($report->finding->pengawas)
-                        <div class="my-0 whitespace-pre-wrap" style="overflow-wrap: break-word; word-break: break-word;">{{ e($report->finding->pengawas) }}</div>
+                    @if ($report->pengawas)
+                        <div class="my-0 whitespace-pre-wrap" style="overflow-wrap: break-word; word-break: break-word;">{{ e($report->pengawas) }}</div>
                     @endif
-                    @if ($report->finding->rata_rata_aj)
-                        <p class="my-0">Rerata AJ ± {{ $report->finding->rata_rata_aj }} gln/hr</p>
+                    @if ($report->rata_rata_aj)
+                        <p class="my-0">Rerata AJ ± {{ $report->rata_rata_aj }} gln/hr</p>
                     @endif
-                    @if ($report->finding->tds && $prefix !== 'pra-monitoring')
-                        @php $tdsDisplay = str_replace('/', ' ppm/', $report->finding->tds) . (str_contains($report->finding->tds, '/') ? '°C' : ''); @endphp
+                    @if ($report->tds && $prefix !== 'pra-monitoring')
+                        @php $tdsDisplay = str_replace('/', ' ppm/', $report->tds) . (str_contains($report->tds, '/') ? '°C' : ''); @endphp
                         <p class="my-0">TDS: {{ $tdsDisplay }}</p>
                     @endif
-                    @if ($report->finding->mesin_ozon)
-                        <p class="my-0">MO: {{ $report->finding->mesin_ozon }}</p>
+                    @if ($report->mesin_ozon)
+                        <p class="my-0">MO: {{ $report->mesin_ozon }}</p>
                     @endif
-                    @if ($report->finding->peringatan_awal)
-                        <div class="mt-4 mb-0 whitespace-pre-wrap" style="overflow-wrap: break-word; word-break: break-word;">{{ e($report->finding->peringatan_awal) }}</div>
+                    @if ($report->peringatan_awal)
+                        <div class="mt-4 mb-0 whitespace-pre-wrap" style="overflow-wrap: break-word; word-break: break-word;">{{ e($report->peringatan_awal) }}</div>
                     @endif
-                    @if ($report->finding->note)
+                    @if ($report->note)
                         <p class="mt-4 mb-0">Note:</p>
-                        <div class="my-0 whitespace-pre-wrap" style="overflow-wrap: break-word; word-break: break-word;">{{ e($report->finding->note) }}</div>
+                        <div class="my-0 whitespace-pre-wrap" style="overflow-wrap: break-word; word-break: break-word;">{{ e($report->note) }}</div>
                     @endif
-                    @if ($report->finding->kondisi_cat || $report->finding->kondisi_awning || $report->finding->kondisi_vinyl || $report->finding->kondisi_stiker_kaca)
+                    @if ($report->kondisi_cat || $report->kondisi_awning || $report->kondisi_vinyl || $report->kondisi_stiker_kaca)
                         <p class="mt-4 mb-0">Checklist tampilan gerai:</p>
-                        <p class="my-0">Kondisi cat: {{ $report->finding->kondisi_cat ?: 'Baik' }}</p>
-                        <p class="my-0">Kondisi awning: {{ $report->finding->kondisi_awning ?: 'Baik' }}</p>
-                        <p class="my-0">Kondisi vinyl reklame dinding/jalan: {{ $report->finding->kondisi_vinyl ?: 'Baik' }}</p>
-                        <p class="my-0">Kondisi stiker kaca: {{ $report->finding->kondisi_stiker_kaca ?: 'Baik' }}</p>
+                        <p class="my-0">Kondisi cat: {{ $report->kondisi_cat ?: 'Baik' }}</p>
+                        <p class="my-0">Kondisi awning: {{ $report->kondisi_awning ?: 'Baik' }}</p>
+                        <p class="my-0">Kondisi vinyl reklame dinding/jalan: {{ $report->kondisi_vinyl ?: 'Baik' }}</p>
+                        <p class="my-0">Kondisi stiker kaca: {{ $report->kondisi_stiker_kaca ?: 'Baik' }}</p>
                     @endif
                 </div>
             @endif
             @php
-                $penjelasanIsi = $report->finding->penjelasan_isi ?? [];
+                $penjelasanIsi = $report->penjelasan_isi ?? [];
             @endphp
             @if ($prefix !== 'pra-monitoring' && !empty(array_filter($penjelasanIsi)))
                 <div class="space-y-2 mb-4">
@@ -139,7 +139,7 @@
                 </div>
             @endif
             @php
-                $penjelasanIsi3 = $report->finding->penjelasan_isi_3 ?? [];
+                $penjelasanIsi3 = $report->penjelasan_isi_3 ?? [];
                 $showF3 = false;
                 if (!empty($penjelasanIsi3) && is_array($penjelasanIsi3)) {
                     foreach ($filteredCategories as $cat) {
@@ -169,16 +169,16 @@
             <div class="grid grid-cols-2 gap-6">
                 <div>
                     <p class="text-xs font-medium mb-1">TTD Petugas</p>
-                    @if ($report->finding->ttd_petugas)
-                        <img src="{{ asset('storage/' . $report->finding->ttd_petugas) }}" class="h-16 w-auto rounded border">
+                    @if ($report->ttd_petugas)
+                        <img src="{{ asset('storage/' . $report->ttd_petugas) }}" class="h-16 w-auto rounded border">
                     @else
                         <p class="text-sm italic">Belum ada</p>
                     @endif
                 </div>
                 <div class="text-right">
                     <p class="text-xs font-medium mb-1">TTD Pimpinan</p>
-                    @if ($report->finding->ttd_pimpinan)
-                        <img src="{{ asset('storage/' . $report->finding->ttd_pimpinan) }}" class="h-16 w-auto rounded border ml-auto">
+                    @if ($report->ttd_pimpinan)
+                        <img src="{{ asset('storage/' . $report->ttd_pimpinan) }}" class="h-16 w-auto rounded border ml-auto">
                     @else
                         <p class="text-sm italic">Belum ada</p>
                     @endif
@@ -238,7 +238,7 @@
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
             <span class="absolute right-full mr-3 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">PDF</span>
         </button>
-        <a href="/{{ $prefix }}/{{ $report->id }}/excel" onclick="closeFab()"
+        <a href="/{{ $prefix }}/{{ $report->id }}/excel" target="_blank" onclick="closeFab()"
             class="w-12 h-12 bg-orange-600 text-white rounded-full shadow-lg hover:bg-orange-700 flex items-center justify-center text-xs font-medium relative">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             <span class="absolute right-full mr-3 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">Excel</span>
@@ -249,11 +249,24 @@
             <span class="absolute right-full mr-3 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">WhatsApp</span>
         </button>
         @if ($report->user_id === auth()->id())
+        @if ($report->isLocked())
+        <span class="w-12 h-12 bg-gray-400 text-white rounded-full shadow-lg flex items-center justify-center text-xs font-medium relative cursor-not-allowed" title="Sedang diedit oleh {{ $report->editingUser?->name ?? 'User lain' }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            <span class="absolute right-full mr-3 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">Diedit oleh {{ $report->editingUser?->name ?? 'User lain' }}</span>
+        </span>
+        @elseif ($report->editing_user_id === auth()->id())
+        <a href="/{{ $prefix }}/{{ $report->id }}/assessment" onclick="closeFab()"
+            class="w-12 h-12 bg-yellow-500 text-white rounded-full shadow-lg hover:bg-yellow-600 flex items-center justify-center text-xs font-medium relative">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            <span class="absolute right-full mr-3 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">Lanjutkan Edit</span>
+        </a>
+        @else
         <a href="/{{ $prefix }}/{{ $report->id }}/assessment" onclick="closeFab()"
             class="w-12 h-12 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 flex items-center justify-center text-xs font-medium relative">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
             <span class="absolute right-full mr-3 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">Edit</span>
         </a>
+        @endif
         @endif
     </div>
     <button id="fabToggle"
@@ -376,7 +389,7 @@ function closePdfModal() {
 
 function downloadPdf(revisi) {
     closePdfModal();
-    window.location.href = pdfUrl + (revisi ? '?revisi=1' : '');
+    window.open(pdfUrl + (revisi ? '?revisi=1' : ''), '_blank');
 }
 
 function showWaModal() {

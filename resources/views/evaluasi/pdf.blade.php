@@ -301,7 +301,7 @@
     @endif
 
     {{-- Page 2 --}}
-    @if ($lastReport && $lastReport->finding)
+    @if ($lastReport && ($lastReport->major || $lastReport->minor))
     <div class="page-break"></div>
 
     <h1>Temuan Kategori Peringatan Awal</h1>
@@ -321,7 +321,7 @@
         </tr>
     </table>
 
-    @php $f = $lastReport->finding; @endphp
+    @php $f = $lastReport; @endphp
     <div class="box">
         <div class="box-label">Peringatan Awal</div>
         <div class="box-content">

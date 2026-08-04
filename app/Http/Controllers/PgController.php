@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Pg;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use OpenSpout\Writer\XLSX\Writer;
 use OpenSpout\Reader\XLSX\Reader as XLSXReader;
 use OpenSpout\Common\Entity\Row;
@@ -25,6 +26,7 @@ class PgController extends Controller
         ]);
 
         Pg::create($data);
+        Cache::forget('pgs.all');
 
         return redirect('/pgs')->with('success', 'Data PG berhasil ditambahkan.');
     }
@@ -38,6 +40,7 @@ class PgController extends Controller
         ]);
 
         $pg->update($data);
+        Cache::forget('pgs.all');
 
         return redirect('/pgs')->with('success', 'Data PG berhasil diperbarui.');
     }
@@ -45,6 +48,7 @@ class PgController extends Controller
     public function destroy(Pg $pg)
     {
         $pg->delete();
+        Cache::forget('pgs.all');
 
         return redirect('/pgs')->with('success', 'Data PG berhasil dihapus.');
     }
@@ -86,6 +90,7 @@ class PgController extends Controller
         }
 
         $reader->close();
+        Cache::forget('pgs.all');
 
         return redirect('/pgs')->with('success', "Berhasil import $count data PG.");
     }

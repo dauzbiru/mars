@@ -10,7 +10,7 @@
     </div>
 
     <div class="px-4 sm:px-6 py-4 space-y-4">
-        <a href="/tugas/penjelasan-formulir/{{ $formulir }}/template"
+        <a href="/tugas/penjelasan-formulir/{{ $formulir }}/template" target="_blank"
             class="inline-block px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100">
             Download Template Excel
         </a>

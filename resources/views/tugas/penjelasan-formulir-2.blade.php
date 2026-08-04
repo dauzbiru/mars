@@ -35,7 +35,7 @@
                         <td class="px-4 sm:px-6 py-3 text-sm text-gray-800">{{ $item->kondisi }}</td>
                         <td class="px-4 sm:px-6 py-3 text-sm text-gray-600">{{ $item->penjelasan ?? '-' }}</td>
                         <td class="px-4 sm:px-6 py-3 text-right whitespace-nowrap">
-                            <button type="button" onclick="editItem({{ $item->id }}, '{{ addslashes($item->kondisi) }}', '{{ addslashes($item->penjelasan ?? '') }}')"
+                            <button type="button" onclick="editItem(@js($item->id), @js($item->kondisi), @js($item->penjelasan ?? ''))"
                                 class="inline-block px-2 py-1 text-xs font-medium rounded-lg hover:opacity-80" style="background:#FEF3C7;color:#D97706">Edit</button>
                             <form method="POST" action="/tugas/penjelasan-formulir/{{ $item->id }}" onsubmit="showConfirm('Hapus item ini?', function(){ this.submit(); }.bind(this)); return false;" class="inline">
                                 @csrf @method('DELETE')
@@ -59,7 +59,7 @@
         <h3 class="text-base font-semibold text-gray-800 mb-1">Import Excel</h3>
         <p class="text-xs text-gray-500 mb-4">Upload file Excel dengan kolom <strong>Kondisi</strong> dan <strong>Penjelasan</strong>.</p>
         <div class="space-y-4">
-            <a href="/tugas/penjelasan-formulir/{{ $formulir }}/template"
+            <a href="/tugas/penjelasan-formulir/{{ $formulir }}/template" target="_blank"
                 class="inline-block px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100">
                 Download Template Excel
             </a>

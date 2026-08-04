@@ -33,57 +33,57 @@
         </tr>
     </table>
 
-    @if ($finding && ($finding->minor || $finding->major))
+    @if ($report->minor || $report->major)
     <div class="box">
         <div class="box-content">
-            @if ($finding->minor)
+            @if ($report->minor)
             <div style="margin-bottom: 8px;">
                 <div class="box-label">Minor</div>
-                {!! nl2br(e(wordwrap($finding->minor, 200, "\n", true))) !!}
+                {!! nl2br(e(wordwrap($report->minor, 200, "\n", true))) !!}
             </div>
             @endif
-            @if ($finding->major)
+            @if ($report->major)
             <div>
                 <div class="box-label">Major</div>
-                {!! nl2br(e(wordwrap($finding->major, 200, "\n", true))) !!}
+                {!! nl2br(e(wordwrap($report->major, 200, "\n", true))) !!}
             </div>
             @endif
         </div>
     </div>
     @endif
 
-    @if ($finding && ($finding->pengawas || $finding->rata_rata_aj || ($finding->tds && $prefix !== 'pra-monitoring') || $finding->mesin_ozon || $finding->peringatan_awal || $finding->note || $finding->kondisi_cat || $finding->kondisi_awning || $finding->kondisi_vinyl || $finding->kondisi_stiker_kaca))
+    @if ($report->pengawas || $report->rata_rata_aj || ($report->tds && $prefix !== 'pra-monitoring') || $report->mesin_ozon || $report->peringatan_awal || $report->note || $report->kondisi_cat || $report->kondisi_awning || $report->kondisi_vinyl || $report->kondisi_stiker_kaca)
     <div class="box">
         <div class="box-label">Peringatan Awal</div>
         <div class="box-content">
-            @if ($finding->pengawas)<div>{!! nl2br(e(wordwrap($finding->pengawas, 200, "\n", true))) !!}</div>@endif
-            @if ($finding->rata_rata_aj)<div>Rerata AJ ± {{ $finding->rata_rata_aj }} gln/hr</div>@endif
-            @if ($finding->tds && $prefix !== 'pra-monitoring')<div>TDS: {{ str_replace('/', ' ppm/', $finding->tds) }}{{ str_contains($finding->tds, '/') ? '°C' : '' }}</div>@endif
-            @if ($finding->mesin_ozon)<div>MO: {{ $finding->mesin_ozon }}</div>@endif
-            @if ($finding->peringatan_awal)
+            @if ($report->pengawas)<div>{!! nl2br(e(wordwrap($report->pengawas, 200, "\n", true))) !!}</div>@endif
+            @if ($report->rata_rata_aj)<div>Rerata AJ ± {{ $report->rata_rata_aj }} gln/hr</div>@endif
+            @if ($report->tds && $prefix !== 'pra-monitoring')<div>TDS: {{ str_replace('/', ' ppm/', $report->tds) }}{{ str_contains($report->tds, '/') ? '°C' : '' }}</div>@endif
+            @if ($report->mesin_ozon)<div>MO: {{ $report->mesin_ozon }}</div>@endif
+            @if ($report->peringatan_awal)
                 <div style="margin-top:8px; max-width:170mm;">
-                    @foreach(explode("\n", $finding->peringatan_awal) as $line)
+                    @foreach(explode("\n", $report->peringatan_awal) as $line)
                         @if(trim($line) !== '')
                             <div>{!! nl2br(e(wordwrap($line, 200, "\n", true))) !!}</div>
                         @endif
                     @endforeach
                 </div>
             @endif
-            @if ($finding->note)<div style="margin-top: 12px;">Note: {!! nl2br(e(wordwrap($finding->note, 200, "\n", true))) !!}</div>@endif
-            @if ($finding->kondisi_cat || $finding->kondisi_awning || $finding->kondisi_vinyl || $finding->kondisi_stiker_kaca)
+            @if ($report->note)<div style="margin-top: 12px;">Note: {!! nl2br(e(wordwrap($report->note, 200, "\n", true))) !!}</div>@endif
+            @if ($report->kondisi_cat || $report->kondisi_awning || $report->kondisi_vinyl || $report->kondisi_stiker_kaca)
                 <div style="margin-top: 12px;">
                     Checklist tampilan gerai:<br>
-                    Kondisi cat: {{ $finding->kondisi_cat ?: 'Baik' }}<br>
-                    Kondisi awning: {{ $finding->kondisi_awning ?: 'Baik' }}<br>
-                    Kondisi vinyl reklame dinding/jalan: {{ $finding->kondisi_vinyl ?: 'Baik' }}<br>
-                    Kondisi stiker kaca: {{ $finding->kondisi_stiker_kaca ?: 'Baik' }}
+                    Kondisi cat: {{ $report->kondisi_cat ?: 'Baik' }}<br>
+                    Kondisi awning: {{ $report->kondisi_awning ?: 'Baik' }}<br>
+                    Kondisi vinyl reklame dinding/jalan: {{ $report->kondisi_vinyl ?: 'Baik' }}<br>
+                    Kondisi stiker kaca: {{ $report->kondisi_stiker_kaca ?: 'Baik' }}
                 </div>
             @endif
         </div>
     </div>
     @endif
 
-    @if ($finding)
+    @if ($report->major || $report->minor || $report->peringatan_awal)
     <table style="width:100%; margin-bottom: 12px;">
         <tr>
             <td style="width:50%; padding: 10px; vertical-align: top;">

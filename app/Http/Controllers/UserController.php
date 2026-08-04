@@ -43,20 +43,17 @@ class UserController extends Controller
         return redirect('/user')->with('success', 'Petugas berhasil ditambahkan.');
     }
 
-    public function edit($id)
+    public function edit(User $user)
     {
-        $user = User::findOrFail($id);
-
         return view('user.edit', ['user' => $user]);
     }
 
-    public function updateUser(Request $request, $id)
+    public function updateUser(Request $request, User $user)
     {
-        $user = User::findOrFail($id);
 
         $request->validate([
             'name' => 'required|string|max:255',
-            'username' => 'required|string|max:255|alpha_dash|unique:users,username,' . intval($id),
+            'username' => 'required|string|max:255|alpha_dash|unique:users,username,' . $user->id,
             'password' => 'nullable|string|min:6|confirmed',
             'role' => 'required|in:admin,guest',
         ]);
@@ -76,10 +73,8 @@ class UserController extends Controller
         return redirect('/user')->with('success', 'User berhasil diperbarui.');
     }
 
-    public function destroy($id)
+    public function destroy(User $user)
     {
-        $user = User::findOrFail($id);
-
         if ($user->id === Auth::id()) {
             return back()->with('warning', 'Tidak bisa menghapus akun sendiri.');
         }

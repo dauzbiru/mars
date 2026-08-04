@@ -99,37 +99,37 @@
         <h3 class="text-sm font-semibold text-gray-700">Laporan Terakhir</h3>
     </div>
     <div class="p-4 sm:p-5 space-y-3">
-        @if ($lastFinding->major)
+        @if (!empty($lastFinding['major']))
             <div>
                 <p class="text-xs font-medium text-gray-500">Major</p>
-                <p class="text-sm text-gray-800 whitespace-pre-wrap" style="overflow-wrap: break-word; word-break: break-word;">{{ $lastFinding->major }}</p>
+                <p class="text-sm text-gray-800 whitespace-pre-wrap" style="overflow-wrap: break-word; word-break: break-word;">{{ $lastFinding['major'] }}</p>
             </div>
         @endif
-        @if ($lastFinding->minor)
+        @if (!empty($lastFinding['minor']))
             <div>
                 <p class="text-xs font-medium text-gray-500">Minor</p>
-                <p class="text-sm text-gray-800 whitespace-pre-wrap" style="overflow-wrap: break-word; word-break: break-word;">{{ $lastFinding->minor }}</p>
+                <p class="text-sm text-gray-800 whitespace-pre-wrap" style="overflow-wrap: break-word; word-break: break-word;">{{ $lastFinding['minor'] }}</p>
             </div>
         @endif
-        @if ($lastFinding->peringatan_awal)
+        @if (!empty($lastFinding['peringatan_awal']))
             <div>
                 <p class="text-xs font-medium text-gray-500">Peringatan Awal</p>
-                <p class="text-sm text-gray-800 whitespace-pre-wrap" style="overflow-wrap: break-word; word-break: break-word;">{{ $lastFinding->peringatan_awal }}</p>
+                <p class="text-sm text-gray-800 whitespace-pre-wrap" style="overflow-wrap: break-word; word-break: break-word;">{{ $lastFinding['peringatan_awal'] }}</p>
             </div>
         @endif
-        @if ($lastFinding->note)
+        @if (!empty($lastFinding['note']))
             <div>
                 <p class="text-xs font-medium text-gray-500">Note</p>
-                <p class="text-sm text-gray-800 whitespace-pre-wrap" style="overflow-wrap: break-word; word-break: break-word;">{{ $lastFinding->note }}</p>
+                <p class="text-sm text-gray-800 whitespace-pre-wrap" style="overflow-wrap: break-word; word-break: break-word;">{{ $lastFinding['note'] }}</p>
             </div>
         @endif
-        @if ($lastFinding->kondisi_cat || $lastFinding->kondisi_awning || $lastFinding->kondisi_vinyl || $lastFinding->kondisi_stiker_kaca)
+        @if (!empty($lastFinding['kondisi_cat']) || !empty($lastFinding['kondisi_awning']) || !empty($lastFinding['kondisi_vinyl']) || !empty($lastFinding['kondisi_stiker_kaca']))
             <div>
                 <p class="text-xs font-medium text-gray-500">Checklist Kondisi Gerai</p>
-                <p class="text-sm text-gray-800">Kondisi cat: {{ $lastFinding->kondisi_cat ?: 'Baik' }}</p>
-                <p class="text-sm text-gray-800">Kondisi awning: {{ $lastFinding->kondisi_awning ?: 'Baik' }}</p>
-                <p class="text-sm text-gray-800">Kondisi vinyl reklame dinding/jalan: {{ $lastFinding->kondisi_vinyl ?: 'Baik' }}</p>
-                <p class="text-sm text-gray-800">Kondisi stiker kaca: {{ $lastFinding->kondisi_stiker_kaca ?: 'Baik' }}</p>
+                <p class="text-sm text-gray-800">Kondisi cat: {{ !empty($lastFinding['kondisi_cat']) ? $lastFinding['kondisi_cat'] : 'Baik' }}</p>
+                <p class="text-sm text-gray-800">Kondisi awning: {{ !empty($lastFinding['kondisi_awning']) ? $lastFinding['kondisi_awning'] : 'Baik' }}</p>
+                <p class="text-sm text-gray-800">Kondisi vinyl reklame dinding/jalan: {{ !empty($lastFinding['kondisi_vinyl']) ? $lastFinding['kondisi_vinyl'] : 'Baik' }}</p>
+                <p class="text-sm text-gray-800">Kondisi stiker kaca: {{ !empty($lastFinding['kondisi_stiker_kaca']) ? $lastFinding['kondisi_stiker_kaca'] : 'Baik' }}</p>
             </div>
         @endif
     </div>
@@ -159,6 +159,7 @@
     <div class="p-4 sm:p-5 hidden" id="evaluasiEdit">
         <form id="editEvaluasiForm">
             @csrf
+            @method('PUT')
             <div class="mb-3">
                 <label class="block text-xs font-medium text-gray-500 mb-1">Catatan</label>
                 <textarea name="catatan" rows="5" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ $report->catatan }}</textarea>
@@ -182,8 +183,9 @@
         <h3 class="text-sm font-semibold text-gray-700">Catatan & Keterangan</h3>
     </div>
     <div class="p-4 sm:p-5">
-        <form id="assessment-form" method="POST" action="/{{ $prefix }}/{{ $report->id }}/assessment">
+        <form id="assessment-form" method="POST" action="/{{ $prefix }}/{{ $report->id }}">
             @csrf
+            @method('PUT')
             <div class="mb-3">
                 <label class="block text-xs font-medium text-gray-500 mb-1">Catatan</label>
                 <textarea name="catatan" id="catatan" rows="5" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" placeholder="Tulis catatan evaluasi...">{{ old('catatan', $report->catatan ?? '') }}</textarea>
@@ -205,12 +207,7 @@
 {{-- FAB --}}
 <div id="fabMenu" class="fixed bottom-6 right-6 z-40 flex flex-col items-center gap-3">
     <div id="fabActions" class="flex flex-col items-center gap-3 transition-all duration-200 ease-in-out opacity-0 scale-0 pointer-events-none">
-        <a href="/{{ $prefix }}/{{ $report->id }}/pdf" onclick="closeFab()"
-            class="w-12 h-12 bg-red-600 text-white rounded-full shadow-lg hover:bg-red-700 flex items-center justify-center text-xs font-medium relative">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
-            <span class="absolute right-full mr-3 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">PDF</span>
-        </a>
-        <a href="/{{ $prefix }}/{{ $report->id }}/excel" onclick="closeFab()"
+        <a href="/{{ $prefix }}/{{ $report->id }}/excel" target="_blank" onclick="closeFab()"
             class="w-12 h-12 bg-orange-600 text-white rounded-full shadow-lg hover:bg-orange-700 flex items-center justify-center text-xs font-medium relative">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             <span class="absolute right-full mr-3 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">Excel</span>
@@ -249,12 +246,9 @@ var lastReportMonth = @json($lastReportMonth);
 var periodeLabel1 = lastReportType === 're-monitoring'
     ? 'Re-Monitoring ' + (lastReportMonth || 'terbaru')
     : 'monitoring periode terbaru';
-var poin1 = '1. Poin kinerja di gerai ' + kodeGerai + ' berada di atas Standar Kinerja pada ' + periodeLabel1;
-if (belowAvgCount > 0) {
-    poin1 += ' dan pernah ' + belowAvgCount + 'x berada di bawah Standar Kinerja pada monitoring periode sebelumnya.';
-} else {
-    poin1 += '.';
-}
+var poin1 = '1. Poin kinerja di gerai ' + kodeGerai + ' berada di atas Standar Kinerja pada ' + periodeLabel1 + ' dan ' + (belowAvgCount > 0
+    ? 'pernah ' + belowAvgCount + 'x berada di bawah Standar Kinerja pada monitoring periode sebelumnya.'
+    : 'belum pernah berada di bawah Standar Kinerja pada monitoring periode sebelumnya.');
 var posisiText = ['C','D','E'].includes(lastGrade)
     ? '2. Gerai ' + kodeGerai + ' belum mampu menempatkan posisi kinerja gerainya untuk berada di atas Standar Kinerja monitoring semua gerai BIRU.'
     : '2. Gerai ' + kodeGerai + ' mampu menempatkan posisi kinerja gerainya untuk berada di atas Standar Kinerja monitoring semua gerai BIRU.';
@@ -296,8 +290,8 @@ document.querySelectorAll('#assessment-form textarea').forEach(function(el) {
         autoSaveTimer = setTimeout(function() {
             var fd = new FormData(document.getElementById('assessment-form'));
             fd.append('_token', '{{ csrf_token() }}');
-            fetch('/{{ $prefix }}/{{ $report->id }}/assessment', {
-                method: 'POST',
+            fetch('/{{ $prefix }}/{{ $report->id }}', {
+                method: 'PUT',
                 body: fd,
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
@@ -354,8 +348,8 @@ function saveEvaluasi() {
     var f = document.getElementById('editEvaluasiForm');
     var fd = new FormData(f);
     fd.append('_token', '{{ csrf_token() }}');
-    fetch('/{{ $prefix }}/{{ $report->id }}/assessment', {
-        method: 'POST',
+    fetch('/{{ $prefix }}/{{ $report->id }}', {
+        method: 'PUT',
         body: fd,
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
     }).then(function() { window.location.reload(); });

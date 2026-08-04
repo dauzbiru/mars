@@ -5,7 +5,6 @@ use App\Models\MonitoringReport;
 use App\Models\PraMonitoringReport;
 use App\Models\ReMonitoringReport;
 use App\Models\Result;
-use App\Models\MonitoringFinding;
 use Carbon\Carbon;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
@@ -20,53 +19,50 @@ Artisan::command('reports:cleanup', function () {
 
     // Monitoring: pending > 3 jam
     $cutoffMon = $now->copy()->subHours(3);
-    $reports = MonitoringReport::whereNull('submit_at')
+    $monIds = MonitoringReport::whereNull('submit_at')
         ->where('checkin_at', '<', $cutoffMon)
-        ->get();
-    foreach ($reports as $r) {
-        Result::where('reportable_type', MonitoringReport::class)->where('reportable_id', $r->id)->delete();
-        MonitoringFinding::where('reportable_type', MonitoringReport::class)->where('reportable_id', $r->id)->delete();
-        $r->delete();
-        $total++;
+        ->pluck('id');
+    $monCount = $monIds->count();
+    if ($monCount > 0) {
+        Result::where('reportable_type', MonitoringReport::class)->whereIn('reportable_id', $monIds)->delete();
+        MonitoringReport::whereIn('id', $monIds)->delete();
+        $total += $monCount;
     }
-    $this->info("Monitoring: deleted {$reports->count()} report(s).");
+    $this->info("Monitoring: deleted {$monCount} report(s).");
 
     // Pra-Monitoring: pending > 24 jam
     $cutoffPra = $now->copy()->subHours(24);
-    $reports = PraMonitoringReport::whereNull('submit_at')
+    $praIds = PraMonitoringReport::whereNull('submit_at')
         ->where('checkin_at', '<', $cutoffPra)
-        ->get();
-    foreach ($reports as $r) {
-        Result::where('reportable_type', PraMonitoringReport::class)->where('reportable_id', $r->id)->delete();
-        MonitoringFinding::where('reportable_type', PraMonitoringReport::class)->where('reportable_id', $r->id)->delete();
-        $r->delete();
-        $total++;
+        ->pluck('id');
+    $praCount = $praIds->count();
+    if ($praCount > 0) {
+        Result::where('reportable_type', PraMonitoringReport::class)->whereIn('reportable_id', $praIds)->delete();
+        PraMonitoringReport::whereIn('id', $praIds)->delete();
+        $total += $praCount;
     }
-    $this->info("Pra-Monitoring: deleted {$reports->count()} report(s).");
+    $this->info("Pra-Monitoring: deleted {$praCount} report(s).");
 
     // Re-Monitoring: pending > 3 jam
     $cutoffRe = $now->copy()->subHours(3);
-    $reports = ReMonitoringReport::whereNull('submit_at')
+    $reIds = ReMonitoringReport::whereNull('submit_at')
         ->where('checkin_at', '<', $cutoffRe)
-        ->get();
-    foreach ($reports as $r) {
-        Result::where('reportable_type', ReMonitoringReport::class)->where('reportable_id', $r->id)->delete();
-        MonitoringFinding::where('reportable_type', ReMonitoringReport::class)->where('reportable_id', $r->id)->delete();
-        $r->delete();
-        $total++;
+        ->pluck('id');
+    $reCount = $reIds->count();
+    if ($reCount > 0) {
+        Result::where('reportable_type', ReMonitoringReport::class)->whereIn('reportable_id', $reIds)->delete();
+        ReMonitoringReport::whereIn('id', $reIds)->delete();
+        $total += $reCount;
     }
-    $this->info("Re-Monitoring: deleted {$reports->count()} report(s).");
+    $this->info("Re-Monitoring: deleted {$reCount} report(s).");
 
     // Evaluasi: pending > 1 jam
     $cutoffEval = $now->copy()->subHours(1);
-    $reports = EvaluasiReport::whereNull('tanggal')
+    $evalCount = EvaluasiReport::whereNull('tanggal')
         ->where('created_at', '<', $cutoffEval)
-        ->get();
-    foreach ($reports as $r) {
-        $r->delete();
-        $total++;
-    }
-    $this->info("Evaluasi: deleted {$reports->count()} report(s).");
+        ->delete();
+    $total += $evalCount;
+    $this->info("Evaluasi: deleted {$evalCount} report(s).");
 
     $this->info("Total deleted: {$total} report(s).");
 })->purpose('Delete unsubmitted pending reports based on timeout rules');

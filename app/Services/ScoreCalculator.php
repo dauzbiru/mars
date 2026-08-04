@@ -6,35 +6,48 @@ use App\Models\Result;
 
 class ScoreCalculator
 {
-    /**
-     * Calculate total score from results collection.
-     * Each result's score = item.bobot - (interval * index_of_criterion).
-     */
+    private static array $criteriaIndexCache = [];
+
     public static function calculateFromResults($results): float
     {
         $total = 0;
+        $criteriaCache = [];
 
         foreach ($results as $result) {
             $item = $result->item;
             if (!$item || !$item->bobot) continue;
 
-            $criteriaCount = $item->criteria->count();
-            if ($criteriaCount <= 1) continue;
-
-            $interval = $item->bobot / ($criteriaCount - 1);
-            $idx = $item->criteria->search(fn($c) => $c->id === $result->criterion_id);
-
-            if ($idx !== false) {
-                $total += $item->bobot - ($interval * $idx);
-            }
+            $total += self::calculateItemScore($item, $result);
         }
 
         return $total;
     }
 
-    /**
-     * Calculate score for a report, using cached nilai if available.
-     */
+    public static function calculateItemScore($item, $result): float
+    {
+        if (!$item || !$item->bobot || !$result || !$result->criterion_id) {
+            return 0;
+        }
+        $criteria = $item->criteria;
+        $criteriaCount = $criteria->count();
+        if ($criteriaCount <= 1) {
+            return (float) $item->bobot;
+        }
+        $interval = $item->bobot / ($criteriaCount - 1);
+
+        $itemId = $item->id;
+        if (!isset(self::$criteriaIndexCache[$itemId])) {
+            self::$criteriaIndexCache[$itemId] = array_flip($criteria->pluck('id')->toArray());
+        }
+        $idToIndex = self::$criteriaIndexCache[$itemId];
+        $idx = $idToIndex[$result->criterion_id] ?? false;
+
+        if ($idx === false) {
+            return 0;
+        }
+        return $item->bobot - ($interval * $idx);
+    }
+
     public static function calculateForReport($report): float
     {
         if ($report->nilai !== null) {
@@ -42,5 +55,10 @@ class ScoreCalculator
         }
 
         return self::calculateFromResults($report->results);
+    }
+
+    public static function clearCache(): void
+    {
+        self::$criteriaIndexCache = [];
     }
 }

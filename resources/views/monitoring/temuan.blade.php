@@ -43,11 +43,11 @@
             <div class="dropdown-body px-4 pb-4 space-y-3" style="display:none">
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Major</label>
-                    <textarea name="major" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('major', $finding?->major ?: '-') }}</textarea>
+                    <textarea name="major" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('major', $report->major ?? '-') }}</textarea>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Minor</label>
-                    <textarea name="minor" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('minor', $finding?->minor ?: '-') }}</textarea>
+                    <textarea name="minor" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('minor', $report->minor ?? '-') }}</textarea>
                 </div>
             </div>
         </div>
@@ -64,35 +64,35 @@
                 @if ($prefix === 'pra-monitoring')
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Pengawas</label>
-                    <textarea name="pengawas" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="PS&#10;PS" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('pengawas', $finding?->pengawas ?? '') }}</textarea>
+                    <textarea name="pengawas" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="PS&#10;PS" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('pengawas', $report->pengawas ?? '') }}</textarea>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Rata-rata AJ</label>
-                        <textarea name="rata_rata_aj" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="250" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('rata_rata_aj', $finding?->rata_rata_aj ?? '') }}</textarea>
+                        <textarea name="rata_rata_aj" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="250" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('rata_rata_aj', $report->rata_rata_aj ?? '') }}</textarea>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Mesin Ozon</label>
-                        <textarea name="mesin_ozon" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="D 123" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('mesin_ozon', $finding?->mesin_ozon ?? '') }}</textarea>
+                        <textarea name="mesin_ozon" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="D 123" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('mesin_ozon', $report->mesin_ozon ?? '') }}</textarea>
                     </div>
                 </div>
                 @else
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Pengawas</label>
-                    <textarea name="pengawas" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="PS&#10;PS" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('pengawas', $finding?->pengawas ?? '') }}</textarea>
+                    <textarea name="pengawas" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="PS&#10;PS" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('pengawas', $report->pengawas ?? '') }}</textarea>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Rata-rata AJ</label>
-                        <textarea name="rata_rata_aj" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="250" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('rata_rata_aj', $finding?->rata_rata_aj ?? '') }}</textarea>
+                        <textarea name="rata_rata_aj" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="250" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('rata_rata_aj', $report->rata_rata_aj ?? '') }}</textarea>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">TDS</label>
-                        <textarea name="tds" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="90/30" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('tds', $finding?->tds ?? '') }}</textarea>
+                        <textarea name="tds" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="90/30" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('tds', $report->tds ?? '') }}</textarea>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Mesin Ozon</label>
-                        <textarea name="mesin_ozon" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="D 123" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('mesin_ozon', $finding?->mesin_ozon ?? '') }}</textarea>
+                        <textarea name="mesin_ozon" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="D 123" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('mesin_ozon', $report->mesin_ozon ?? '') }}</textarea>
                     </div>
                 </div>
                 @endif
@@ -102,11 +102,11 @@
                         <button type="button" id="btnCekTypo" onclick="cekTypo()" class="text-[10px] font-medium text-purple-600 bg-purple-50 border border-purple-200 rounded px-1.5 py-0.5 hover:bg-purple-100 cursor-pointer transition-colors">Cek Typo</button>
                         <span id="typoSpinner" class="hidden text-[10px] text-purple-500">Loading...</span>
                     </div>
-                    <textarea name="peringatan_awal" id="peringatanAwal" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('peringatan_awal', $finding?->peringatan_awal ?? '') }}</textarea>
+                    <textarea name="peringatan_awal" id="peringatanAwal" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('peringatan_awal', $report->peringatan_awal ?? '') }}</textarea>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Note</label>
-                    <textarea name="note" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('note', $finding?->note ?? '') }}</textarea>
+                    <textarea name="note" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('note', $report->note ?? '') }}</textarea>
                 </div>
             </div>
         </div>
@@ -122,19 +122,19 @@
             <div class="dropdown-body px-4 pb-4 space-y-3" style="display:none">
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Kondisi Cat</label>
-                    <textarea name="kondisi_cat" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('kondisi_cat', $finding?->kondisi_cat ?? 'Baik') }}</textarea>
+                    <textarea name="kondisi_cat" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('kondisi_cat', $report->kondisi_cat ?? 'Baik') }}</textarea>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Kondisi Awning</label>
-                    <textarea name="kondisi_awning" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('kondisi_awning', $finding?->kondisi_awning ?? 'Baik') }}</textarea>
+                    <textarea name="kondisi_awning" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('kondisi_awning', $report->kondisi_awning ?? 'Baik') }}</textarea>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Kondisi Vinyl Reklame Dinding/Jalan</label>
-                    <textarea name="kondisi_vinyl" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('kondisi_vinyl', $finding?->kondisi_vinyl ?? 'Baik') }}</textarea>
+                    <textarea name="kondisi_vinyl" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('kondisi_vinyl', $report->kondisi_vinyl ?? 'Baik') }}</textarea>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Kondisi Stiker Kaca</label>
-                    <textarea name="kondisi_stiker_kaca" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('kondisi_stiker_kaca', $finding?->kondisi_stiker_kaca ?? 'Baik') }}</textarea>
+                    <textarea name="kondisi_stiker_kaca" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('kondisi_stiker_kaca', $report->kondisi_stiker_kaca ?? 'Baik') }}</textarea>
                 </div>
             </div>
         </div>
@@ -152,7 +152,7 @@
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">{{ $label }}</label>
                         <div class="relative">
-                            <textarea name="penjelasan_isi[]" rows="1" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden" placeholder="Ketik atau pilih penjelasan..." oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ isset($finding->penjelasan_isi[$i]) ? $finding->penjelasan_isi[$i] : '' }}</textarea>
+                            <textarea name="penjelasan_isi[]" rows="1" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden" placeholder="Ketik atau pilih penjelasan..." oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ $report->penjelasan_isi[$i] ?? '' }}</textarea>
                             <ul class="suggest-list hidden absolute z-10 left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto list-none p-0 m-0 mt-1" style="max-height:200px"></ul>
                         </div>
                     </div>
@@ -174,7 +174,7 @@
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">{{ $item['name'] }}</label>
                     <div class="relative" data-formulir="3">
-                        <textarea name="penjelasan_isi_3[{{ $item['id'] }}]" rows="1" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden" placeholder="Ketik atau pilih penjelasan..." oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ isset($finding->penjelasan_isi_3[$item['id']]) ? $finding->penjelasan_isi_3[$item['id']] : '' }}</textarea>
+                        <textarea name="penjelasan_isi_3[{{ $item['id'] }}]" rows="1" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden" placeholder="Ketik atau pilih penjelasan..." oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ $report->penjelasan_isi_3[$item['id']] ?? '' }}</textarea>
                         <ul class="suggest-list hidden absolute z-10 left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto list-none p-0 m-0 mt-1" style="max-height:200px"></ul>
                     </div>
                 </div>
@@ -194,8 +194,8 @@
                         <input type="file" name="ttd_petugas" accept="image/jpeg,image/png" class="hidden" onchange="compressImage(this)">
                         <span class="inline-block px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100">Pilih File</span>
                     </label>
-                    <div class="mt-2 flex justify-center preview-container" style="{{ $finding && $finding->ttd_petugas ? '' : 'display:none' }}">
-                        <img src="{{ $finding && $finding->ttd_petugas ? asset('storage/' . $finding->ttd_petugas) : '' }}" class="h-16 rounded-lg border preview-img">
+                    <div class="mt-2 flex justify-center preview-container" style="{{ $report->ttd_petugas ? '' : 'display:none' }}">
+                        <img src="{{ $report->ttd_petugas ? asset('storage/' . $report->ttd_petugas) : '' }}" class="h-16 rounded-lg border preview-img">
                     </div>
                 </div>
             </div>
@@ -208,8 +208,8 @@
                         <input type="file" name="ttd_pimpinan" accept="image/jpeg,image/png" class="hidden" onchange="compressImage(this)">
                         <span class="inline-block px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-50 text-blue-700 hover:bg-blue-100">Pilih File</span>
                     </label>
-                    <div class="mt-2 flex justify-center preview-container" style="{{ $finding && $finding->ttd_pimpinan ? '' : 'display:none' }}">
-                        <img src="{{ $finding && $finding->ttd_pimpinan ? asset('storage/' . $finding->ttd_pimpinan) : '' }}" class="h-16 rounded-lg border preview-img">
+                    <div class="mt-2 flex justify-center preview-container" style="{{ $report->ttd_pimpinan ? '' : 'display:none' }}">
+                        <img src="{{ $report->ttd_pimpinan ? asset('storage/' . $report->ttd_pimpinan) : '' }}" class="h-16 rounded-lg border preview-img">
                     </div>
                 </div>
             </div>
@@ -378,6 +378,7 @@ function cekTypo() {
 
     fetch('/ai/check-typo', {
         method: 'POST',
+        credentials: 'same-origin',
         headers: {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
@@ -413,37 +414,97 @@ function showTypoModal(original, corrected) {
     var existing = document.getElementById('typoModal');
     if (existing) existing.remove();
 
+    var markedText = markFixed(corrected, original);
+
     var modal = document.createElement('div');
     modal.id = 'typoModal';
     modal.className = 'fixed inset-0 z-50 flex items-center justify-center';
+    window._typoCorrected = corrected;
     modal.innerHTML =
         '<div class="fixed inset-0 bg-black/50" onclick="closeTypoModal()"></div>' +
-        '<div class="relative bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">' +
-            '<h3 class="text-base font-semibold text-gray-800 mb-1">Hasil Koreksi Typo</h3>' +
-            '<p class="text-xs text-gray-500 mb-4">AI menemukan perbaikan untuk teks Anda.</p>' +
-            '<div class="mb-3">' +
-                '<label class="block text-xs text-gray-400 mb-1">Sebelum</label>' +
-                '<div class="px-3 py-2.5 bg-red-50 border border-red-200 rounded-xl text-sm text-gray-700 whitespace-pre-wrap max-h-40 overflow-y-auto">' + escapeHtml(original) + '</div>' +
-            '</div>' +
-            '<div class="mb-4">' +
-                '<label class="block text-xs text-gray-400 mb-1">Sesudah</label>' +
-                '<div class="px-3 py-2.5 bg-green-50 border border-green-200 rounded-xl text-sm text-gray-700 whitespace-pre-wrap max-h-40 overflow-y-auto">' + escapeHtml(corrected) + '</div>' +
-            '</div>' +
-            '<div class="flex justify-end gap-3">' +
-                '<button onclick="closeTypoModal()" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300">Batal</button>' +
-                '<button onclick="applyTypoFix()" class="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700">Terapkan</button>' +
+        '<div class="relative bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6">' +
+            '<h3 class="text-base font-semibold text-gray-800 mb-1">Kata yang Diperbaiki</h3>' +
+            '<p class="text-xs text-gray-500 mb-4">Kata yang diperbaiki ditandai <span class="text-green-600 font-medium">hijau</span>.</p>' +
+            '<div class="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 whitespace-pre-wrap max-h-60 overflow-y-auto">' + markedText + '</div>' +
+            '<div class="flex gap-3 mt-4">' +
+                '<button onclick="applyTypoFix()" class="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700">Gunakan hasil perbaikan</button>' +
+                '<button onclick="closeTypoModal()" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300">Tutup</button>' +
             '</div>' +
         '</div>';
     document.body.appendChild(modal);
-    window._typoCorrected = corrected;
+}
+
+function markFixed(corrected, original) {
+    if (!corrected || !original) return escapeHtml(corrected || original || '');
+
+    var corrWords = tokenize(corrected);
+    var origWords = tokenize(original);
+
+    var result = [];
+    var i = 0, j = 0;
+    while (i < corrWords.length || j < origWords.length) {
+        if (i < corrWords.length && j < origWords.length && corrWords[i].clean === origWords[j].clean) {
+            result.push(escapeHtml(corrWords[i].raw));
+            i++; j++;
+        } else {
+            var found = false;
+            for (var k = 1; k <= 3 && (i + k) < corrWords.length && (j + k) < origWords.length; k++) {
+                if (corrWords[i + k].clean === origWords[j + k].clean) {
+                    found = true;
+                    for (var m = 0; m < k; m++) {
+                        if (i + m < corrWords.length) {
+                            result.push('<span class="text-green-600 font-medium bg-green-50 rounded px-0.5">' + escapeHtml(corrWords[i + m].raw) + '</span>');
+                        }
+                    }
+                    i += k; j += k;
+                    break;
+                }
+            }
+            if (!found) {
+                if (i < corrWords.length) {
+                    if (j < origWords.length && corrWords[i].clean !== origWords[j].clean) {
+                        result.push('<span class="text-green-600 font-medium bg-green-50 rounded px-0.5">' + escapeHtml(corrWords[i].raw) + '</span>');
+                    } else {
+                        result.push(escapeHtml(corrWords[i].raw));
+                    }
+                    i++;
+                }
+                if (j < origWords.length) j++;
+            }
+        }
+    }
+    return result.join('');
 }
 
 function applyTypoFix() {
     var ta = document.getElementById('peringatanAwal');
-    ta.value = window._typoCorrected;
+    ta.value = window._typoCorrected || '';
     ta.style.height = 'auto';
     ta.style.height = ta.scrollHeight + 'px';
     closeTypoModal();
+}
+
+function tokenize(text) {
+    var tokens = [];
+    var regex = /(\s+)(\S*)/g;
+    var lastIndex = 0;
+    var match;
+    while ((match = regex.exec(text)) !== null) {
+        if (match.index > lastIndex) {
+            var word = text.substring(lastIndex, match.index);
+            tokens.push({ raw: word, clean: word.toLowerCase() });
+        }
+        tokens.push({ raw: match[1], clean: match[1] });
+        if (match[2]) {
+            tokens.push({ raw: match[2], clean: match[2].toLowerCase() });
+        }
+        lastIndex = regex.lastIndex;
+    }
+    if (lastIndex < text.length) {
+        var word = text.substring(lastIndex);
+        tokens.push({ raw: word, clean: word.toLowerCase() });
+    }
+    return tokens.length ? tokens : [{ raw: text, clean: text.toLowerCase() }];
 }
 
 function closeTypoModal() {
@@ -476,6 +537,8 @@ temuanFields.forEach(function(el) {
                 method: 'POST',
                 body: fd,
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).catch(function(err) {
+                console.error('Auto-save gagal:', err);
             });
         }, 1000);
     });

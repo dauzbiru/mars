@@ -35,23 +35,25 @@ Route::get('/guest', function () {
 })->middleware('auth');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
-Route::post('/logout', [AuthController::class, 'logout']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1')->name('login.post');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+
 
 Route::middleware('auth')->group(function () {
 
     // === Admin-only routes ===
     Route::middleware('admin')->group(function () {
         // User management
-        Route::get('/user', [UserController::class, 'index']);
+        Route::get('/user', [UserController::class, 'index'])->name('user.index');
         Route::get('/user/create', [UserController::class, 'create']);
         Route::post('/user', [UserController::class, 'store']);
-        Route::get('/user/{id}/edit', [UserController::class, 'edit']);
-        Route::put('/user/{id}', [UserController::class, 'updateUser']);
-        Route::delete('/user/{id}', [UserController::class, 'destroy']);
+        Route::get('/user/{user}/edit', [UserController::class, 'edit']);
+        Route::put('/user/{user}', [UserController::class, 'updateUser']);
+        Route::delete('/user/{user}', [UserController::class, 'destroy']);
 
         // Categories
-        Route::get('/categories', [CategoryController::class, 'index']);
+        Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
         Route::get('/categories/create', [CategoryController::class, 'create']);
         Route::post('/categories', [CategoryController::class, 'store']);
         Route::put('/categories/reorder', [CategoryController::class, 'reorder']);
@@ -91,7 +93,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/items/{item}/criteria/{criterion}', [CriterionController::class, 'destroy']);
 
         // Gerai
-        Route::get('/gerais', [GeraiController::class, 'index']);
+        Route::get('/gerais', [GeraiController::class, 'index'])->name('gerai.index');
         Route::get('/gerais/create', [GeraiController::class, 'create']);
         Route::get('/gerais/import', [GeraiController::class, 'importForm']);
         Route::post('/gerais/import', [GeraiController::class, 'importExcel']);
@@ -110,7 +112,7 @@ Route::middleware('auth')->group(function () {
         Route::delete('/gerais/kota-maps/{kotaMap}', [GeraiController::class, 'destroyKotaMap']);
 
         // Komplain
-        Route::get('/komplain', [KomplainController::class, 'index']);
+        Route::get('/komplain', [KomplainController::class, 'index'])->name('komplain.index');
         Route::get('/komplain/pdf/all', [KomplainController::class, 'pdfAll']);
         Route::get('/komplain/excel/all', [KomplainController::class, 'excelAll']);
         Route::get('/komplain/{komplain}/pdf', [KomplainController::class, 'pdf']);
@@ -121,10 +123,21 @@ Route::middleware('auth')->group(function () {
         Route::post('/komplain/{komplain}/template', [KomplainController::class, 'saveTemplate']);
         Route::delete('/komplain/{komplain}', [KomplainController::class, 'destroy']);
 
+        // Tampilan Gerai
+        Route::get('/tampilan-gerai', [\App\Http\Controllers\TampilanGeraiController::class, 'index'])->name('tampilan-gerai.index');
+        Route::get('/tampilan-gerai/foto/{photo}', [\App\Http\Controllers\TampilanGeraiController::class, 'foto'])->name('tampilan-gerai.foto');
+        Route::get('/tampilan-gerai/{type}/{report}/detail', [\App\Http\Controllers\TampilanGeraiController::class, 'detail']);
+        Route::get('/tampilan-gerai/{type}/{report}', [\App\Http\Controllers\TampilanGeraiController::class, 'list']);
+        Route::post('/tampilan-gerai/{type}/{report}/block', [\App\Http\Controllers\TampilanGeraiController::class, 'storeBlock']);
+        Route::post('/tampilan-gerai/{type}/{report}/photo', [\App\Http\Controllers\TampilanGeraiController::class, 'storePhoto']);
+        Route::patch('/tampilan-gerai/block/{block}', [\App\Http\Controllers\TampilanGeraiController::class, 'updateBlock']);
+        Route::delete('/tampilan-gerai/photo/{photo}', [\App\Http\Controllers\TampilanGeraiController::class, 'destroyPhoto']);
+        Route::delete('/tampilan-gerai/block/{block}', [\App\Http\Controllers\TampilanGeraiController::class, 'destroyBlock']);
+
         // AI
         Route::post('/ai/check-typo', [\App\Http\Controllers\AiController::class, 'checkTypo']);
 
-        Route::get('/pgs', [\App\Http\Controllers\PgController::class, 'index']);
+        Route::get('/pgs', [\App\Http\Controllers\PgController::class, 'index'])->name('pgs.index');
         Route::post('/pgs', [\App\Http\Controllers\PgController::class, 'store']);
         Route::put('/pgs/{pg}', [\App\Http\Controllers\PgController::class, 'update']);
         Route::delete('/pgs/{pg}', [\App\Http\Controllers\PgController::class, 'destroy']);
@@ -133,7 +146,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/pgs/template', [\App\Http\Controllers\PgController::class, 'template']);
 
         // Semester Periods
-        Route::get('/semester-periods', [\App\Http\Controllers\SemesterPeriodController::class, 'index']);
+        Route::get('/semester-periods', [\App\Http\Controllers\SemesterPeriodController::class, 'index'])->name('semester-periods.index');
         Route::get('/semester-periods/create', [\App\Http\Controllers\SemesterPeriodController::class, 'create']);
         Route::post('/semester-periods', [\App\Http\Controllers\SemesterPeriodController::class, 'store']);
         Route::get('/semester-periods/{semesterPeriod}/edit', [\App\Http\Controllers\SemesterPeriodController::class, 'edit']);
@@ -148,16 +161,13 @@ Route::middleware('auth')->group(function () {
         // Daftar Nilai write operations
         Route::post('/gerai-pendampingan/{report}/mark-sent', [\App\Http\Controllers\RankingController::class, 'markWaSent']);
         Route::post('/daftar-nilai/hapus-periode', [\App\Http\Controllers\RankingController::class, 'hapusPeriode']);
-        Route::delete('/daftar-nilai/{id}', [\App\Http\Controllers\RankingController::class, 'destroy']);
-        Route::put('/daftar-nilai/{id}', [\App\Http\Controllers\RankingController::class, 'update']);
-        Route::get('/daftar-nilai/import', [\App\Http\Controllers\RankingController::class, 'importForm']);
+        Route::delete('/daftar-nilai/{report}', [\App\Http\Controllers\RankingController::class, 'destroy']);
+        Route::put('/daftar-nilai/{report}', [\App\Http\Controllers\RankingController::class, 'update']);
+        Route::get('/daftar-nilai/import', [\App\Http\Controllers\RankingController::class, 'importForm'])->name('daftar-nilai.import');
         Route::post('/daftar-nilai/import', [\App\Http\Controllers\RankingController::class, 'import']);
         Route::get('/daftar-nilai/import/template', [\App\Http\Controllers\RankingController::class, 'template']);
 
         // Excel Templates
-        Route::get('/excel-template', function () {
-            return view('excel-template');
-        });
         Route::post('/excel-template/upload', [\App\Http\Controllers\MonitoringController::class, 'uploadTemplate']);
         Route::delete('/excel-template/delete', [\App\Http\Controllers\MonitoringController::class, 'deleteTemplate']);
 
@@ -165,24 +175,32 @@ Route::middleware('auth')->group(function () {
         Route::post('/excel-template/evaluasi/upload', [\App\Http\Controllers\MonitoringController::class, 'uploadTemplateEvaluasi']);
         Route::delete('/excel-template/evaluasi/delete', [\App\Http\Controllers\MonitoringController::class, 'deleteTemplateEvaluasi']);
 
+        // Template Surat Word (Pra-Monitoring) upload/delete
+        Route::post('/word-template/upload', [\App\Http\Controllers\PraMonitoringController::class, 'uploadWordTemplate']);
+        Route::delete('/word-template/delete', [\App\Http\Controllers\PraMonitoringController::class, 'deleteWordTemplate']);
+
         // Dashboard
-        Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index']);
+        Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard/chart-data', [\App\Http\Controllers\DashboardController::class, 'chartData']);
 
         // Settings
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
+        Route::get('/excel-template', function () {
+            return view('excel-template');
+        })->name('excel-template');
+        Route::get('/excel-template/example', [\App\Http\Controllers\MonitoringController::class, 'downloadExampleTemplate'])->name('excel-template.example');
 
         // Daftar Nilai
-        Route::get('/daftar-nilai', [\App\Http\Controllers\RankingController::class, 'index']);
-        Route::get('/daftar-nilai/pra-monitoring', [\App\Http\Controllers\RankingController::class, 'praMonitoring']);
-        Route::get('/daftar-nilai/peringkat', [\App\Http\Controllers\RankingController::class, 'peringkat']);
+        Route::get('/daftar-nilai', [\App\Http\Controllers\RankingController::class, 'index'])->name('daftar-nilai.index');
+        Route::get('/daftar-nilai/pra-monitoring', [\App\Http\Controllers\RankingController::class, 'praMonitoring'])->name('daftar-nilai.pra-monitoring');
+        Route::get('/daftar-nilai/peringkat', [\App\Http\Controllers\RankingController::class, 'peringkat'])->name('daftar-nilai.peringkat');
         Route::get('/daftar-nilai/peringkat/excel', [\App\Http\Controllers\RankingController::class, 'peringkatExcel']);
         Route::get('/daftar-nilai/peringkat/rankings', [\App\Http\Controllers\RankingController::class, 'peringkatRankings']);
         Route::get('/daftar-nilai/excel', [\App\Http\Controllers\RankingController::class, 'excel']);
-        Route::get('/daftar-nilai/performa', [\App\Http\Controllers\RankingController::class, 'performa']);
-        Route::get('/gerai-pendampingan', [\App\Http\Controllers\RankingController::class, 'pendampingan']);
-        Route::get('/nilai-pairing', [\App\Http\Controllers\RankingController::class, 'nilaiPairing']);
+        Route::get('/daftar-nilai/performa', [\App\Http\Controllers\RankingController::class, 'performa'])->name('daftar-nilai.performa');
+        Route::get('/gerai-pendampingan', [\App\Http\Controllers\RankingController::class, 'pendampingan'])->name('gerai-pendampingan');
+        Route::get('/nilai-pairing', [\App\Http\Controllers\RankingController::class, 'nilaiPairing'])->name('nilai-pairing');
         Route::get('/nilai-pairing/excel', [\App\Http\Controllers\RankingController::class, 'nilaiPairingExcel']);
 
         // Report admin-only
@@ -197,11 +215,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/report/excel-detail', [ReportController::class, 'excelDetail']);
 
         // Evaluasi
-        Route::get('/report/evaluasi', [\App\Http\Controllers\ReportController::class, 'evaluasi']);
-        Route::get('/evaluasi', [\App\Http\Controllers\EvaluasiController::class, 'selectGerai']);
+        Route::get('/report/evaluasi', [\App\Http\Controllers\ReportController::class, 'evaluasi'])->name('report.evaluasi');
+        Route::get('/evaluasi', [\App\Http\Controllers\EvaluasiController::class, 'selectGerai'])->name('evaluasi.select-gerai');
         Route::get('/evaluasi/checkin/{gerai}', [\App\Http\Controllers\EvaluasiController::class, 'checkinForm']);
         Route::get('/evaluasi/{report}/assessment', [\App\Http\Controllers\EvaluasiController::class, 'assessment']);
-        Route::post('/evaluasi/{report}/assessment', [\App\Http\Controllers\EvaluasiController::class, 'saveAssessmentForm']);
+
         Route::post('/evaluasi/{report}/submit', [\App\Http\Controllers\EvaluasiController::class, 'submit']);
         Route::post('/evaluasi/{report}/cancel', [\App\Http\Controllers\EvaluasiController::class, 'cancelAssessment']);
         Route::get('/evaluasi/{report}/temuan', [\App\Http\Controllers\EvaluasiController::class, 'temuanForm']);
@@ -209,10 +227,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/evaluasi/{report}/pdf', [\App\Http\Controllers\EvaluasiController::class, 'pdf']);
         Route::get('/evaluasi/{report}/excel', [\App\Http\Controllers\EvaluasiController::class, 'excel']);
         Route::get('/evaluasi/{report}', [\App\Http\Controllers\EvaluasiController::class, 'show']);
+        Route::put('/evaluasi/{report}', [\App\Http\Controllers\EvaluasiController::class, 'update']);
         Route::delete('/evaluasi/{report}', [\App\Http\Controllers\EvaluasiController::class, 'destroy']);
 
-        // Excel template download (example)
-        Route::get('/excel-template/example', [\App\Http\Controllers\MonitoringController::class, 'downloadExampleTemplate']);
     });
 
     // === All authenticated users (guest + admin) ===
@@ -220,12 +237,12 @@ Route::middleware('auth')->group(function () {
     Route::put('/user', [UserController::class, 'update']);
 
     // Report (with ownership filtering in controller)
-        Route::get('/report/monitoring', [ReportController::class, 'index']);
-        Route::get('/report/pra-monitoring', [ReportController::class, 'preMonitoring']);
-        Route::get('/report/re-monitoring', [ReportController::class, 'reMonitoring']);
+        Route::get('/report/monitoring', [ReportController::class, 'index'])->name('report.monitoring');
+        Route::get('/report/pra-monitoring', [ReportController::class, 'preMonitoring'])->name('report.pra-monitoring');
+        Route::get('/report/re-monitoring', [ReportController::class, 'reMonitoring'])->name('report.re-monitoring');
 
     // Monitoring (with authorizeReport ownership check)
-    Route::get('/monitoring', [\App\Http\Controllers\MonitoringController::class, 'selectGerai']);
+    Route::get('/monitoring', [\App\Http\Controllers\MonitoringController::class, 'selectGerai'])->name('monitoring.select-gerai');
     Route::get('/monitoring/checkin/{gerai}', [\App\Http\Controllers\MonitoringController::class, 'checkinForm']);
     Route::post('/monitoring/checkin/{gerai}', [\App\Http\Controllers\MonitoringController::class, 'doCheckin']);
     Route::get('/monitoring/{report}/assessment', [\App\Http\Controllers\MonitoringController::class, 'assessment']);
@@ -241,7 +258,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/monitoring/{report}', [\App\Http\Controllers\MonitoringController::class, 'destroy']);
 
     // Pra-Monitoring
-    Route::get('/pra-monitoring', [\App\Http\Controllers\PraMonitoringController::class, 'selectGerai']);
+    Route::get('/pra-monitoring', [\App\Http\Controllers\PraMonitoringController::class, 'selectGerai'])->name('pra-monitoring.select-gerai');
     Route::get('/pra-monitoring/checkin/{gerai}', [\App\Http\Controllers\PraMonitoringController::class, 'checkinForm']);
     Route::post('/pra-monitoring/checkin/{gerai}', [\App\Http\Controllers\PraMonitoringController::class, 'doCheckin']);
     Route::get('/pra-monitoring/{report}/assessment', [\App\Http\Controllers\PraMonitoringController::class, 'assessment']);
@@ -257,7 +274,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/pra-monitoring/{report}', [\App\Http\Controllers\PraMonitoringController::class, 'destroy']);
 
     // Re-Monitoring
-    Route::get('/re-monitoring', [\App\Http\Controllers\ReMonitoringController::class, 'selectGerai']);
+    Route::get('/re-monitoring', [\App\Http\Controllers\ReMonitoringController::class, 'selectGerai'])->name('re-monitoring.select-gerai');
     Route::get('/re-monitoring/checkin/{gerai}', [\App\Http\Controllers\ReMonitoringController::class, 'checkinForm']);
     Route::post('/re-monitoring/checkin/{gerai}', [\App\Http\Controllers\ReMonitoringController::class, 'doCheckin']);
     Route::get('/re-monitoring/{report}/assessment', [\App\Http\Controllers\ReMonitoringController::class, 'assessment']);

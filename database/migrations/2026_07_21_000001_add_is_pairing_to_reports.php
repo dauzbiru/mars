@@ -9,11 +9,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('monitoring_reports', function (Blueprint $table) {
-            $table->boolean('is_pairing')->default(false)->after('revisi');
+            $table->boolean('is_pairing')->default(false);
         });
 
         Schema::table('pra_monitoring_reports', function (Blueprint $table) {
-            $table->boolean('is_pairing')->default(false)->after('revisi');
+            $table->boolean('is_pairing')->default(false);
         });
     }
 

@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Gerai;
 use App\Models\MonitoringReport;
 use App\Models\Ranking;
+use App\Models\ReMonitoringReport;
+use App\Models\PraMonitoringReport;
 use App\Models\SemesterPeriod;
 use App\Models\User;
 use App\Services\ScoreCalculator;
@@ -20,11 +22,7 @@ class RankingController extends Controller
         $search = $request->input('search');
         if ($search) $search = str_replace(['%', '_'], '', $search);
 
-        $existingLabels = MonitoringReport::whereIn('type', ['monitoring', 'import'])
-            ->whereNotNull('submit_at')
-            ->whereNotNull('periode_label')
-            ->distinct()
-            ->pluck('periode_label');
+        $existingLabels = $this->getExistingPeriodLabels();
 
         $periodeLabels = SemesterPeriod::orderByDesc('year')->orderByDesc('start_month')
             ->get()
@@ -147,10 +145,8 @@ class RankingController extends Controller
         $period = SemesterPeriod::where('year', $now->year)
             ->where('start_month', '<=', $bulan)
             ->where('end_month', '>=', $bulan)
-            ->first();
-
-        if (!$period) {
-            $period = SemesterPeriod::where(function ($q) use ($now, $bulan) {
+            ->first()
+            ?? SemesterPeriod::where(function ($q) use ($now, $bulan) {
                     $q->where('year', '<', $now->year)
                       ->orWhere(function ($q2) use ($now, $bulan) {
                           $q2->where('year', $now->year)
@@ -160,13 +156,12 @@ class RankingController extends Controller
                 ->orderByDesc('year')
                 ->orderByDesc('end_month')
                 ->first();
-        }
 
-        $reports = MonitoringReport::with('gerai', 'user', 'finding')
+        $reports = MonitoringReport::with('gerai', 'user')
             ->whereIn('type', ['monitoring', 'import'])
             ->whereNotNull('submit_at')
             ->where('grade', 'C')
-            ->where('user_id', auth()->id())
+            ->when(auth()->user()?->role !== 'admin', fn($q) => $q->where('user_id', auth()->id()))
             ->where('periode_label', $period->label)
             ->join('gerais', 'monitoring_reports.gerai_id', '=', 'gerais.id')
             ->orderBy('monitoring_reports.nilai')
@@ -196,54 +191,14 @@ class RankingController extends Controller
         $nonPairingUsers = collect();
         $resultsByUser = [];
 
-        if ($geraiId && $gerais->contains('id', $geraiId)) {
-            $selectedGerai = $gerais->firstWhere('id', $geraiId);
-
-            $items = \App\Models\Category::whereNull('parent_id')
-                ->with(['items.criteria'])
-                ->orderBy('sort')
-                ->get();
-
-            $pairingReportIds = \App\Models\MonitoringReport::withoutGlobalScope('no_pairing')
-                ->where('gerai_id', $geraiId)
-                ->where('is_pairing', true)
-                ->whereNotNull('submit_at')
-                ->pluck('id');
-
-            $nonPairingReportIds = \App\Models\MonitoringReport::where('gerai_id', $geraiId)
-                ->where('is_pairing', false)
-                ->whereNotNull('submit_at')
-                ->pluck('id');
-
-            $allResults = \App\Models\Result::where(function ($q) use ($pairingReportIds, $nonPairingReportIds) {
-                    $q->whereIn('reportable_id', $pairingReportIds)
-                      ->orWhereIn('reportable_id', $nonPairingReportIds);
-                })
-                ->where('reportable_type', \App\Models\MonitoringReport::class)
-                ->whereNotNull('criterion_id')
-                ->with('user', 'criterion')
-                ->get();
-
-            $pairingUsers = $allResults->filter(fn($r) => in_array($r->reportable_id, $pairingReportIds->toArray()))
-                ->pluck('user')->unique('id')->values();
-
-            $nonPairingUsers = $allResults->filter(fn($r) => in_array($r->reportable_id, $nonPairingReportIds->toArray()))
-                ->pluck('user')->unique('id')->values();
-
-            // resultsByUser[userId][itemId] = score
-            foreach ($allResults as $r) {
-                $item = $r->item;
-                if (!$item || !$item->bobot) continue;
-                $criteriaCount = $item->criteria->count();
-                if ($criteriaCount <= 1) {
-                    $resultsByUser[$r->user_id][$r->item_id] = $item->bobot;
-                    continue;
-                }
-                $interval = $item->bobot / ($criteriaCount - 1);
-                $idx = $item->criteria->search(fn($c) => $c->id === $r->criterion_id);
-                $resultsByUser[$r->user_id][$r->item_id] = $idx !== false ? $item->bobot - ($interval * $idx) : 0;
+            if ($geraiId && $gerais->contains('id', $geraiId)) {
+                $selectedGerai = $gerais->firstWhere('id', $geraiId);
+                $pairingData = $this->loadPairingDataForGerai($geraiId);
+                $items = $pairingData['items'];
+                $pairingUsers = $pairingData['pairingUsers'];
+                $nonPairingUsers = $pairingData['nonPairingUsers'];
+                $resultsByUser = $pairingData['resultsByUser'];
             }
-        }
 
         return view('ranking.nilai-pairing', compact(
             'gerais', 'selectedGerai', 'items',
@@ -257,56 +212,17 @@ class RankingController extends Controller
         $gerai = \App\Models\Gerai::find($geraiId);
         if (!$gerai) abort(404);
 
-        $items = \App\Models\Category::whereNull('parent_id')
-            ->with(['items.criteria'])
-            ->orderBy('sort')
-            ->get();
+        $pairingData = $this->loadPairingDataForGerai($geraiId);
 
-        $pairingReportIds = \App\Models\MonitoringReport::withoutGlobalScope('no_pairing')
-            ->where('gerai_id', $geraiId)
-            ->where('is_pairing', true)
-            ->whereNotNull('submit_at')
-            ->pluck('id');
+        return $this->buildNilaiPairingExcel($gerai, $pairingData['items'], $pairingData['pairingUsers'], $pairingData['nonPairingUsers'], $pairingData['resultsByUser']);
+    }
 
-        $nonPairingReportIds = \App\Models\MonitoringReport::where('gerai_id', $geraiId)
-            ->where('is_pairing', false)
-            ->whereNotNull('submit_at')
-            ->pluck('id');
-
-        $allResults = \App\Models\Result::where(function ($q) use ($pairingReportIds, $nonPairingReportIds) {
-                $q->whereIn('reportable_id', $pairingReportIds)
-                  ->orWhereIn('reportable_id', $nonPairingReportIds);
-            })
-            ->where('reportable_type', \App\Models\MonitoringReport::class)
-            ->whereNotNull('criterion_id')
-            ->with('user', 'criterion')
-            ->get();
-
-        $pairingUsers = $allResults->filter(fn($r) => in_array($r->reportable_id, $pairingReportIds->toArray()))
-            ->pluck('user')->unique('id')->values();
-
-        $nonPairingUsers = $allResults->filter(fn($r) => in_array($r->reportable_id, $nonPairingReportIds->toArray()))
-            ->pluck('user')->unique('id')->values();
-
-        $resultsByUser = [];
-        foreach ($allResults as $r) {
-            $item = $r->item;
-            if (!$item || !$item->bobot) continue;
-            $criteriaCount = $item->criteria->count();
-            if ($criteriaCount <= 1) {
-                $resultsByUser[$r->user_id][$r->item_id] = $item->bobot;
-                continue;
-            }
-            $interval = $item->bobot / ($criteriaCount - 1);
-            $idx = $item->criteria->search(fn($c) => $c->id === $r->criterion_id);
-            $resultsByUser[$r->user_id][$r->item_id] = $idx !== false ? $item->bobot - ($interval * $idx) : 0;
-        }
-
+    private function buildNilaiPairingExcel($gerai, $items, $pairingUsers, $nonPairingUsers, $resultsByUser)
+    {
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle($gerai->kode_gerai);
 
-        // Header row 1: Kriteria, Bobot, then user names
         $col = 1;
         $sheet->getCellByColumnAndRow($col++, 1)->setValue('Kriteria');
         $sheet->getCellByColumnAndRow($col++, 1)->setValue('Bobot');
@@ -317,7 +233,6 @@ class RankingController extends Controller
             $sheet->getCellByColumnAndRow($col++, 1)->setValue($u->name);
         }
 
-        // Header row 2: Non-Pairing / Pairing labels
         $sheet->getCellByColumnAndRow(1, 2)->setValue('');
         $sheet->getCellByColumnAndRow(2, 2)->setValue('');
         for ($i = 0; $i < $nonPairingUsers->count(); $i++) {
@@ -327,7 +242,6 @@ class RankingController extends Controller
             $sheet->getCellByColumnAndRow(3 + $nonPairingUsers->count() + $i, 2)->setValue('Pairing');
         }
 
-        // Bold headers
         for ($c = 1; $c < $col; $c++) {
             $sheet->getCellByColumnAndRow($c, 1)->getFont()->setBold(true);
             $sheet->getCellByColumnAndRow($c, 2)->getFont()->setBold(true);
@@ -362,10 +276,6 @@ class RankingController extends Controller
 
     public function markWaSent($reportId)
     {
-        if (auth()->user()->role !== 'admin') {
-            abort(403);
-        }
-
         $report = MonitoringReport::findOrFail($reportId);
         $sent = !$report->wa_sent_at;
         $report->update(['wa_sent_at' => $sent ? now() : null]);
@@ -388,11 +298,11 @@ class RankingController extends Controller
         }
 
         $reports = $query
-            ->select('monitoring_reports.*')
+            ->select('pra_monitoring_reports.*')
             ->with(['results.item.criteria'])
-            ->join('gerais', 'monitoring_reports.gerai_id', '=', 'gerais.id')
+            ->join('gerais', 'pra_monitoring_reports.gerai_id', '=', 'gerais.id')
             ->orderBy('gerais.kode_gerai')
-            ->orderBy('monitoring_reports.submit_at', 'desc')
+            ->orderBy('pra_monitoring_reports.submit_at', 'desc')
             ->paginate(50)
             ->through(function ($report) {
                 $total = ScoreCalculator::calculateForReport($report);
@@ -457,8 +367,7 @@ class RankingController extends Controller
         }
 
         $rankings = $query->get()
-            ->sortBy(fn($r) => $r->periode_label)
-            ->sortBy(fn($r) => $r->gerai->kode_gerai)
+            ->sort(fn($a, $b) => [$a->gerai->kode_gerai, $a->periode_label] <=> [$b->gerai->kode_gerai, $b->periode_label])
             ->values();
 
         $writer = new Writer();
@@ -484,11 +393,7 @@ class RankingController extends Controller
 
     private function loadPeringkat($selectedPeriode = null)
     {
-        $existingLabels = MonitoringReport::whereIn('type', ['monitoring', 'import'])
-            ->whereNotNull('submit_at')
-            ->whereNotNull('periode_label')
-            ->distinct()
-            ->pluck('periode_label');
+        $existingLabels = $this->getExistingPeriodLabels();
 
         $periodeLabels = SemesterPeriod::orderByDesc('year')->orderByDesc('start_month')
             ->get()
@@ -579,7 +484,8 @@ class RankingController extends Controller
 
         $latestScores = array_filter(array_column(array_column($rows, 'p3'), 'skor'), fn($v) => $v !== null);
         $totalLatest = count($latestScores);
-        $countGe975 = count(array_filter($latestScores, fn($s) => round($s) >= 975));
+        $threshold = MonitoringReport::GRADE_B_THRESHOLD;
+        $countGe975 = count(array_filter($latestScores, fn($s) => round($s) >= $threshold));
         $countLe974 = $totalLatest - $countGe975;
         $pctGe975 = $totalLatest > 0 ? round($countGe975 / $totalLatest * 100, 2) : 0;
         $pctLe974 = $totalLatest > 0 ? round($countLe974 / $totalLatest * 100, 2) : 0;
@@ -765,18 +671,14 @@ class RankingController extends Controller
         $search = $request->input('search');
         if ($search) $search = str_replace(['%', '_'], '', $search);
 
-        $existingLabels = MonitoringReport::whereIn('type', ['monitoring', 'import'])
-            ->whereNotNull('submit_at')
-            ->whereNotNull('periode_label')
-            ->distinct()
-            ->pluck('periode_label');
+        $existingLabels = $this->getExistingPeriodLabels();
 
         $periodeLabels = SemesterPeriod::orderByDesc('year')->orderByDesc('start_month')
             ->get()
             ->filter(fn($p) => $existingLabels->contains($p->label))
             ->pluck('label');
 
-        $query = MonitoringReport::with('gerai', 'user')
+        $query = MonitoringReport::with('gerai', 'user', 'results.item.criteria')
             ->whereIn('type', ['monitoring', 'import'])
             ->whereNotNull('submit_at');
 
@@ -812,19 +714,13 @@ class RankingController extends Controller
         return compact('reports', 'periodeLabels', 'periodeLabel', 'search');
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, MonitoringReport $report)
     {
-        if (auth()->user()->role !== 'admin') {
-            abort(403);
-        }
-
         $request->validate([
             'nilai' => 'required|numeric|min:0|max:1000',
             'checkin_at' => 'required|date',
             'petugas' => 'required|string|max:255',
         ]);
-
-        $report = MonitoringReport::findOrFail($id);
 
         $petugas = User::where('name', $request->input('petugas'))->orWhere('username', $request->input('petugas'))->first();
         if ($petugas) {
@@ -841,15 +737,10 @@ class RankingController extends Controller
         return redirect('/daftar-nilai')->with('success', 'Nilai berhasil diperbarui.');
     }
 
-    public function destroy($id)
+    public function destroy(MonitoringReport $report)
     {
-        if (auth()->user()->role !== 'admin') {
-            abort(403);
-        }
-
-        $report = MonitoringReport::findOrFail($id);
         $report->results()->delete();
-        $report->finding()?->delete();
+        
         $report->delete();
 
         return redirect('/daftar-nilai')->with('success', 'Nilai berhasil dihapus.');
@@ -857,10 +748,6 @@ class RankingController extends Controller
 
     public function hapusPeriode(Request $request)
     {
-        if (auth()->user()->role !== 'admin') {
-            abort(403);
-        }
-
         $periodeLabel = $request->input('periode_label');
 
         if (!$periodeLabel) {
@@ -875,11 +762,58 @@ class RankingController extends Controller
         $count = 0;
         foreach ($reports as $report) {
             $report->results()->delete();
-            $report->finding()?->delete();
+            
             $report->delete();
             $count++;
         }
 
         return redirect('/daftar-nilai')->with('success', "Berhasil menghapus {$count} data nilai periode {$periodeLabel}.");
+    }
+
+    private function loadPairingDataForGerai(int $geraiId): array
+    {
+        $items = \App\Models\Category::whereNull('parent_id')
+            ->with(['items.criteria'])
+            ->orderBy('sort')
+            ->get();
+
+        $allReports = \App\Models\MonitoringReport::where('gerai_id', $geraiId)
+            ->whereNotNull('submit_at')
+            ->get(['id', 'is_pairing']);
+
+        $pairingReportIds = $allReports->where('is_pairing', true)->pluck('id');
+        $nonPairingReportIds = $allReports->where('is_pairing', false)->pluck('id');
+
+        $allResults = \App\Models\Result::where(function ($q) use ($pairingReportIds, $nonPairingReportIds) {
+                $q->whereIn('reportable_id', $pairingReportIds)
+                  ->orWhereIn('reportable_id', $nonPairingReportIds);
+            })
+            ->where('reportable_type', \App\Models\MonitoringReport::class)
+            ->whereNotNull('criterion_id')
+            ->with('user', 'criterion')
+            ->get();
+
+        $pairingUsers = $allResults->filter(fn($r) => $pairingReportIds->contains($r->reportable_id))
+            ->pluck('user')->unique('id')->values();
+
+        $nonPairingUsers = $allResults->filter(fn($r) => $nonPairingReportIds->contains($r->reportable_id))
+            ->pluck('user')->unique('id')->values();
+
+        $resultsByUser = [];
+        foreach ($allResults as $r) {
+            $item = $r->item;
+            $resultsByUser[$r->user_id][$r->item_id] = \App\Services\ScoreCalculator::calculateItemScore($item, $r);
+        }
+
+        return compact('items', 'pairingUsers', 'nonPairingUsers', 'resultsByUser');
+    }
+
+    private function getExistingPeriodLabels(): \Illuminate\Support\Collection
+    {
+        return MonitoringReport::whereIn('type', ['monitoring', 'import'])
+            ->whereNotNull('submit_at')
+            ->whereNotNull('periode_label')
+            ->distinct()
+            ->pluck('periode_label');
     }
 }

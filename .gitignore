@@ -48,3 +48,7 @@ storage/app/private/*.xlsx
 # Temp/scratch files
 cookie.txt
 test_pra_monitoring.xlsx
+
+# Python (scripts/)
+__pycache__/
+*.pyc

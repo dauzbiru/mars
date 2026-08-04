@@ -58,7 +58,7 @@
 
 <div id="fabMenu" class="fixed bottom-6 right-6 z-40 flex flex-col items-center gap-3">
     <div id="fabActions" class="flex flex-col items-center gap-3 transition-all duration-200 ease-in-out opacity-0 scale-0 pointer-events-none">
-        <a href="/pgs/export"
+        <a href="/pgs/export" target="_blank"
             class="w-12 h-12 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 flex items-center justify-center text-xs font-medium relative">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
             <span class="absolute right-full mr-3 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">Download Excel</span>
@@ -152,7 +152,7 @@
         <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
             <p class="font-medium mb-1">Format file:</p>
             <p>Kolom A: Nama PG<br>Kolom B: Kota<br>Kolom C: No Telepon</p>
-            <a href="/pgs/template" class="mt-2 inline-block text-blue-600 hover:underline font-medium">Download template &rarr;</a>
+            <a href="/pgs/template" target="_blank" class="mt-2 inline-block text-blue-600 hover:underline font-medium">Download template &rarr;</a>
         </div>
         <form method="POST" action="/pgs/import" enctype="multipart/form-data">
             @csrf

@@ -7,7 +7,7 @@
         <div class="px-4 sm:px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-3">
             <h2 class="text-base sm:text-lg font-semibold text-gray-800 truncate">Nilai Pairing</h2>
             @if($selectedGerai)
-            <a href="/nilai-pairing/excel?gerai_id={{ $selectedGerai->id }}"
+            <a href="/nilai-pairing/excel?gerai_id={{ $selectedGerai->id }}" target="_blank"
                 style="background:#059669;color:#fff" class="inline-block px-4 py-2 text-xs font-medium rounded-lg hover:opacity-80">Download Excel</a>
             @endif
         </div>

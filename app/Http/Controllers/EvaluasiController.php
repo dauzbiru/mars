@@ -8,6 +8,7 @@ use App\Models\MonitoringReport;
 use App\Models\ReMonitoringReport;
 use App\Models\SemesterPeriod;
 use App\Models\Ranking;
+use App\Models\KotaMap;
 use Illuminate\Http\Request;
 use App\Services\EvaluasiHistoryBuilder;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -51,7 +52,7 @@ class EvaluasiController extends MonitoringController
             '{petugas}'          => strtoupper($report->user?->name ?? '-'),
             '{periode}'          => strtoupper($report->tanggal->locale('id')->isoFormat('MMMM YYYY')),
             '{type}'             => 'Evaluasi',
-            '{nama_kota}'        => strtoupper($report->gerai->nama_kota ?? '-'),
+            '{nama_kota}'        => strtoupper(KotaMap::where('kode', substr($report->gerai->kode_gerai, 0, 3))->value('nama_kota') ?? $report->gerai->nama_kota ?? '-'),
             '{area}'             => $report->gerai->area ?? '-',
             '{opening_at}'       => $report->gerai->opening_at ? strtoupper($report->gerai->opening_at->locale('id')->isoFormat('D MMMM YYYY')) : '-',
             '{prev_checkin}'     => $lastMonitoring ? strtoupper($lastMonitoring->checkin_at->setTimezone($tz)->locale('id')->isoFormat('D MMMM YYYY')) : '-',
@@ -62,20 +63,26 @@ class EvaluasiController extends MonitoringController
 
     protected function buildExcel($report, array $headerReplacements, $outputDir = null)
     {
-        $response = parent::buildExcel($report, $headerReplacements, $outputDir);
-
-        $dateSuffix = $report->tanggal->format('Y-m-d');
-        $filename = "laporan-evaluasi-{$report->gerai->kode_gerai}-" . $dateSuffix . '.xlsx';
+        $filename = "Evaluasi - {$report->gerai->kode_gerai} - " . $report->tanggal->locale('id')->isoFormat('MMMM YYYY') . '.xlsx';
         $outPath = $outputDir ? rtrim($outputDir, '\\/') . DIRECTORY_SEPARATOR . $filename : \Illuminate\Support\Facades\Storage::path($filename);
 
-        if (!file_exists($outPath)) return $response;
+        // Call parent with a known output directory, then rename to our filename
+        $parentResult = parent::buildExcel($report, $headerReplacements, dirname($outPath));
+        if (is_string($parentResult) && $parentResult !== $outPath) {
+            if (file_exists($outPath)) {
+                unlink($outPath);
+            }
+            rename($parentResult, $outPath);
+        } elseif (!is_string($parentResult)) {
+            return $parentResult;
+        }
 
         $geraiId = $report->gerai_id;
 
         $historyBuilder = new EvaluasiHistoryBuilder($geraiId);
         $historyData = $historyBuilder->mapHistoryData(function ($data, $r) {
             $data['year'] = (int) $data['year'];
-            $data['standar'] = 975;
+            $data['standar'] = MonitoringReport::GRADE_B_THRESHOLD;
             unset($data['grade'], $data['finding']);
             return $data;
         })->reverse()->values();
@@ -90,22 +97,18 @@ class EvaluasiController extends MonitoringController
                 $xpath = new \DOMXPath($dom);
                 $xpath->registerNamespace('s', $ns);
 
-                // Clear values in D8:M12 (keep cell structure & formatting)
+                // Pre-fetch all cells in D8:M12 range
                 $allCols = range('D', 'M');
+                $cellsD8M12 = [];
                 foreach ($allCols as $col) {
                     for ($row = 8; $row <= 12; $row++) {
                         $ref = $col . $row;
-                        $cells = $xpath->query("//s:c[@r='$ref']");
-                        if ($cells->length > 0) {
-                            $cell = $cells->item(0);
-                            foreach ($cell->childNodes as $child) {
-                                $cell->removeChild($child);
-                            }
-                        }
+                        $found = $xpath->query("//s:c[@r='$ref']");
+                        $cellsD8M12[$ref] = $found->length > 0 ? $found->item(0) : null;
                     }
                 }
 
-                // Paste history data into D8:M12 (newest on the right)
+                // Paste history data into D8:M12 (clear + write in 1 pass)
                 $filled = $historyData->toArray();
                 $cols = array_reverse(range('D', 'M'));
                 $mappedCols = [];
@@ -128,9 +131,12 @@ class EvaluasiController extends MonitoringController
                     ];
                     foreach ($rows as $row => ['val' => $val, 'type' => $type]) {
                         $ref = $col . $row;
-                        $cells = $xpath->query("//s:c[@r='$ref']");
-                        if ($cells->length === 0) continue;
-                        $cell = $cells->item(0);
+                        $cell = $cellsD8M12[$ref] ?? null;
+                        if (!$cell) continue;
+                        while ($cell->hasChildNodes()) {
+                            $cell->removeChild($cell->firstChild);
+                        }
+                        $cell->removeAttribute('t');
                         if ($type === 'str') {
                             $cell->setAttribute('t', 'inlineStr');
                             $is = $dom->createElementNS($ns, 'is');
@@ -273,22 +279,21 @@ class EvaluasiController extends MonitoringController
                     $i = $j;
                 }
 
-                $xml = $dom->saveXML();
                 if ($mergeRefs) {
-                    $mcEntries = '';
+                    $existingMCs = $xpath->query('//s:mergeCells')->item(0);
+                    if (!$existingMCs) {
+                        $existingMCs = $dom->createElementNS($ns, 'mergeCells');
+                        $existingMCs->setAttribute('count', '0');
+                        $sheetData->parentNode->appendChild($existingMCs);
+                    }
                     foreach ($mergeRefs as $ref) {
-                        $mcEntries .= '<mergeCell ref="' . $ref . '"/>';
+                        $mcEl = $dom->createElementNS($ns, 'mergeCell');
+                        $mcEl->setAttribute('ref', $ref);
+                        $existingMCs->appendChild($mcEl);
                     }
-                    if (preg_match('/<mergeCells\s+count="(\d+)"/', $xml, $m)) {
-                        $newCount = (int) $m[1] + count($mergeRefs);
-                        $xml = preg_replace('/<mergeCells\s+count="\d+"/', '<mergeCells count="' . $newCount . '"', $xml);
-                        $xml = str_replace('</mergeCells>', $mcEntries . '</mergeCells>', $xml);
-                    } else {
-                        $mcXml = '<mergeCells count="' . count($mergeRefs) . '">' . $mcEntries . '</mergeCells>';
-                        $xml = str_replace('</sheetData>', '</sheetData>' . $mcXml, $xml);
-                    }
+                    $existingMCs->setAttribute('count', (string)($existingMCs->childNodes->length));
                 }
-                $zip->addFromString('xl/worksheets/sheet1.xml', $xml);
+                $zip->addFromString('xl/worksheets/sheet1.xml', $dom->saveXML());
             }
 
             // --- Fill DATA CHART sheet (sheet3) with period data ---
@@ -317,7 +322,7 @@ class EvaluasiController extends MonitoringController
 
                     $periodScore = is_numeric($d['nilai'] ?? null) ? round((float) $d['nilai']) : 0;
 
-                    foreach ([1 => $chartLabel, 2 => (string) $periodScore, 3 => '975'] as $rowNum => $cellValue) {
+                    foreach ([1 => $chartLabel, 2 => (string) $periodScore, 3 => (string) MonitoringReport::GRADE_B_THRESHOLD] as $rowNum => $cellValue) {
                         $ref = $col . $rowNum;
                         $cells = $xpath3->query("//s:c[@r='$ref']");
 
@@ -397,13 +402,12 @@ class EvaluasiController extends MonitoringController
                 $xpath2->registerNamespace('s', $ns2);
 
                 $lastReport = $historyBuilder->getLastReport();
-                $lastFinding = $lastReport->finding ?? null;
 
-                if ($lastFinding) {
+                if ($lastReport && ($lastReport->major || $lastReport->minor || $lastReport->peringatan_awal)) {
                     // Parse peringatan_awal into numbered items (strip "1. " prefix)
                     $paItems = [];
-                    if (!empty($lastFinding->peringatan_awal)) {
-                        $rawPALines = explode("\n", $lastFinding->peringatan_awal);
+                    if (!empty($lastReport->peringatan_awal)) {
+                        $rawPALines = explode("\n", $lastReport->peringatan_awal);
                         $curItem = '';
                         foreach ($rawPALines as $rl) {
                             if (preg_match('/^\d+[\.\)]\s*/', $rl)) {
@@ -428,16 +432,16 @@ class EvaluasiController extends MonitoringController
                     $lines = [];
 
                     // Checklist kondisi (bottom up)
-                    $lines[] = 'Kondisi stiker kaca: ' . ($lastFinding->kondisi_stiker_kaca ?: 'Baik');
-                    $lines[] = 'Kondisi vinyl reklame dinding/jalan: ' . ($lastFinding->kondisi_vinyl ?: 'Baik');
-                    $lines[] = 'Kondisi awning: ' . ($lastFinding->kondisi_awning ?: 'Baik');
-                    $lines[] = 'Kondisi cat: ' . ($lastFinding->kondisi_cat ?: 'Baik');
+                    $lines[] = 'Kondisi stiker kaca: ' . ($lastReport->kondisi_stiker_kaca ?: 'Baik');
+                    $lines[] = 'Kondisi vinyl reklame dinding/jalan: ' . ($lastReport->kondisi_vinyl ?: 'Baik');
+                    $lines[] = 'Kondisi awning: ' . ($lastReport->kondisi_awning ?: 'Baik');
+                    $lines[] = 'Kondisi cat: ' . ($lastReport->kondisi_cat ?: 'Baik');
                     $lines[] = 'Checklist Kondisi Gerai:';
                     $lines[] = ''; // space
 
                     // Note (bottom up)
-                    if (!empty($lastFinding->note)) {
-                        $noteLines = array_reverse(explode("\n", $lastFinding->note));
+                    if (!empty($lastReport->note)) {
+                        $noteLines = array_reverse(explode("\n", $lastReport->note));
                         foreach ($noteLines as $nl) {
                             $lines[] = $nl;
                         }
@@ -520,22 +524,20 @@ class EvaluasiController extends MonitoringController
                         $sheetData2->removeChild($row);
                     }
 
-                    // Add merge cells
+                    // Add merge cells via DOM
                     if ($mergeRefs2) {
-                        $xml2 = $dom2->saveXML();
-                        $mcEntries = '';
+                        $existingMCs2 = $xpath2->query('//s:mergeCells')->item(0);
+                        if (!$existingMCs2) {
+                            $existingMCs2 = $dom2->createElementNS($ns2, 'mergeCells');
+                            $existingMCs2->setAttribute('count', '0');
+                            $sheetData2->parentNode->appendChild($existingMCs2);
+                        }
                         foreach ($mergeRefs2 as $ref) {
-                            $mcEntries .= '<mergeCell ref="' . $ref . '"/>';
+                            $mcEl = $dom2->createElementNS($ns2, 'mergeCell');
+                            $mcEl->setAttribute('ref', $ref);
+                            $existingMCs2->appendChild($mcEl);
                         }
-                        if (preg_match('/<mergeCells\s+count="(\d+)"/', $xml2, $m)) {
-                            $newCount = (int) $m[1] + count($mergeRefs2);
-                            $xml2 = preg_replace('/<mergeCells\s+count="\d+"/', '<mergeCells count="' . $newCount . '"', $xml2);
-                            $xml2 = str_replace('</mergeCells>', $mcEntries . '</mergeCells>', $xml2);
-                        } else {
-                            $mcXml = '<mergeCells count="' . count($mergeRefs2) . '">' . $mcEntries . '</mergeCells>';
-                            $xml2 = str_replace('</sheetData>', '</sheetData>' . $mcXml, $xml2);
-                        }
-                        $dom2->loadXML($xml2);
+                        $existingMCs2->setAttribute('count', (string)($existingMCs2->childNodes->length));
                     }
 
                     $zip->addFromString('xl/worksheets/sheet2.xml', $dom2->saveXML());
@@ -549,11 +551,17 @@ class EvaluasiController extends MonitoringController
         $pyScript = base_path('scripts/evaluasi-font.py');
         exec("python " . escapeshellarg($pyScript) . " " . escapeshellarg($outPath) . " 2>&1", $output, $returnCode);
 
+        if ($outputDir) {
+            return $outPath;
+        }
         return response()->download($outPath, $filename)->deleteFileAfterSend(true);
     }
 
     protected function pendingReport()
     {
+        if (auth()->user()?->role === 'admin') {
+            return null;
+        }
         return EvaluasiReport::where('user_id', auth()->id())
             ->whereNull('tanggal')
             ->first();
@@ -561,18 +569,22 @@ class EvaluasiController extends MonitoringController
 
     public function checkinForm(Gerai $gerai)
     {
-        $pending = EvaluasiReport::where('user_id', auth()->id())
-            ->whereNull('tanggal')
-            ->with('gerai')
-            ->first();
+        $isAdmin = auth()->user()?->role === 'admin';
 
-        if ($pending) {
-            return redirect("/{$this->prefix()}/{$pending->id}")
-                ->with('warning', 'Anda masih memiliki laporan evaluasi yang belum diselesaikan. Selesaikan atau batalkan dulu.');
+        if (!$isAdmin) {
+            $pending = EvaluasiReport::where('user_id', auth()->id())
+                ->whereNull('tanggal')
+                ->with('gerai')
+                ->first();
+
+            if ($pending) {
+                return redirect("/{$this->prefix()}/{$pending->id}")
+                    ->with('warning', 'Anda masih memiliki laporan evaluasi yang belum diselesaikan. Selesaikan atau batalkan dulu.');
+            }
         }
 
         $existing = EvaluasiReport::where('gerai_id', $gerai->id)
-            ->where('user_id', auth()->id())
+            ->when(!$isAdmin, fn($q) => $q->where('user_id', auth()->id()))
             ->first();
 
         if ($existing) {
@@ -611,18 +623,15 @@ class EvaluasiController extends MonitoringController
             }
 
             $belowAvgCount = $historyData->slice(0, -1)
-                ->filter(fn($h) => $h['nilai'] !== null && round((float) $h['nilai']) < 975)
+                ->filter(fn($h) => $h['nilai'] !== null && round((float) $h['nilai']) < MonitoringReport::GRADE_B_THRESHOLD)
                 ->count();
         }
 
         $catatan = "1. Kinerja operasional serta pemahaman untuk Pengawas & Karyawan {$gradeLabel}.\n2. Kebersihan di halaman gerai serta kelengkapan teknis di gerai {$gradeLabel}.\n3. {$pimpinanText}";
 
-        $poin1 = "1. Poin kinerja di gerai {$gerai->kode_gerai} berada di atas Standar Kinerja pada {$periodeLabel}";
-        if ($belowAvgCount > 0) {
-            $poin1 .= " dan pernah {$belowAvgCount}x berada di bawah Standar Kinerja pada monitoring periode sebelumnya.";
-        } else {
-            $poin1 .= '.';
-        }
+        $poin1 = "1. Poin kinerja di gerai {$gerai->kode_gerai} berada di atas Standar Kinerja pada {$periodeLabel} dan " . ($belowAvgCount > 0
+            ? "pernah {$belowAvgCount}x berada di bawah Standar Kinerja pada monitoring periode sebelumnya."
+            : 'belum pernah berada di bawah Standar Kinerja pada monitoring periode sebelumnya.');
         $keterangan = "{$poin1}\n{$posisiText}\n3. Gerai {$gerai->kode_gerai} masuk dalam Grade {$gradeLetter} dengan kategori {$gradeLabel}.";
 
         $report->update([
@@ -645,13 +654,11 @@ class EvaluasiController extends MonitoringController
         $lastMonReport = MonitoringReport::where('gerai_id', $report->gerai_id)
             ->where('type', 'monitoring')
             ->whereNotNull('submit_at')
-            ->with('finding')
             ->latest('checkin_at')
             ->first();
 
         $lastRemonReport = ReMonitoringReport::where('gerai_id', $report->gerai_id)
             ->whereNotNull('submit_at')
-            ->with('finding')
             ->latest('checkin_at')
             ->first();
 
@@ -671,7 +678,7 @@ class EvaluasiController extends MonitoringController
                 ->where('checkin_at', '<', $lastReport->checkin_at)
                 ->orderByDesc('checkin_at')
                 ->get();
-            $belowAverageCount = $prevReports->filter(fn($r) => $r->nilai !== null && round((float) $r->nilai) < 975)->count();
+            $belowAverageCount = $prevReports->filter(fn($r) => $r->nilai !== null && round((float) $r->nilai) < MonitoringReport::GRADE_B_THRESHOLD)->count();
         }
 
         return response()->view('evaluasi.assessment', compact('report', 'prefix', 'incomplete', 'lastReport', 'lastReportType', 'belowAverageCount'))
@@ -680,7 +687,7 @@ class EvaluasiController extends MonitoringController
             ->header('Expires', '0');
     }
 
-    public function saveAssessmentForm(Request $request, $id, ?\App\Models\Category $category = null)
+    public function update(Request $request, $id)
     {
         $report = EvaluasiReport::findOrFail($id);
         $this->authorizeReport($report);
@@ -691,6 +698,10 @@ class EvaluasiController extends MonitoringController
         ]);
 
         $report->update($validated);
+
+        if ($request->ajax()) {
+            return response()->json(['ok' => true]);
+        }
 
         return redirect("/{$this->prefix()}/{$report->id}");
     }
@@ -759,7 +770,7 @@ class EvaluasiController extends MonitoringController
             $lastReportMonth = $lastReportModel->checkin_at->locale('id')->isoFormat('MMMM YYYY');
 
             $belowAverageCount = $historyData->slice(0, -1)
-                ->filter(fn($h) => $h['nilai'] !== null && round((float) $h['nilai']) < 975)
+                ->filter(fn($h) => $h['nilai'] !== null && round((float) $h['nilai']) < MonitoringReport::GRADE_B_THRESHOLD)
                 ->count();
         }
 
@@ -771,7 +782,7 @@ class EvaluasiController extends MonitoringController
         $report = EvaluasiReport::findOrFail($id);
         $this->authorizeReport($report);
 
-        $filename = "laporan-evaluasi-{$report->gerai->kode_gerai}";
+        $filename = "Evaluasi - {$report->gerai->kode_gerai} - " . $report->tanggal->locale('id')->isoFormat('MMMM YYYY');
         $tempDir = storage_path('app/temp-pdf');
         if (!is_dir($tempDir)) mkdir($tempDir, 0755, true);
 

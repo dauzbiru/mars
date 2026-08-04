@@ -9,7 +9,10 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        if (DB::connection()->getDriverName() === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        }
+
         // 1. Create pra_monitoring_reports
         Schema::create('pra_monitoring_reports', function (Blueprint $table) {
             $table->id();
@@ -105,8 +108,13 @@ return new class extends Migration
         $this->copyData('re-monitoring', 're_monitoring_reports');
         $this->copyData('evaluasi', 'evaluasi_reports');
 
-        // 9. Drop old FK constraints before deleting rows
+        // 9. Drop old FK constraints before deleting rows.
+        //    Semua FK di results harus di-drop dulu karena MySQL melarang
+        //    menghapus index unik yang masih dipakai foreign key.
         Schema::table('results', function (Blueprint $table) {
+            $table->dropForeign(['item_id']);
+            $table->dropForeign(['user_id']);
+            $table->dropForeign(['criterion_id']);
             $table->dropForeign(['monitoring_report_id']);
         });
         Schema::table('monitoring_findings', function (Blueprint $table) {
@@ -124,11 +132,19 @@ return new class extends Migration
             $table->unique(['item_id', 'user_id', 'reportable_type', 'reportable_id']);
         });
 
-        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        // 12. Re-add FK constraints on results (kini ditopang index unik baru)
+        Schema::table('results', function (Blueprint $table) {
+            $table->foreign('item_id')->references('id')->on('items')->cascadeOnDelete();
+            $table->foreign('user_id')->references('id')->on('users')->cascadeOnDelete();
+            $table->foreign('criterion_id')->references('id')->on('criteria')->cascadeOnDelete();
+        });
+
+        if (DB::connection()->getDriverName() === 'mysql') {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        }
     }
 
-    private function copyData(string $type, string $table): void
-    {
+    private function copyData(string $type, string $table): void    {
         $reports = DB::table('monitoring_reports')->where('type', $type)->get();
         foreach ($reports as $r) {
             $data = [

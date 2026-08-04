@@ -9,10 +9,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $columns = array_filter(['email', 'email_verified_at'], fn ($col) => Schema::hasColumn('users', $col));
-            if ($columns) {
-                $table->dropColumn($columns);
+            if (!Schema::hasColumn('users', 'email')) {
+                return;
             }
+
+            // SQLite tidak mengizinkan DROP COLUMN selama index yang merujuk
+            // kolom tersebut masih ada. Index harus di-drop terlebih dahulu.
+            $table->dropUnique('users_email_unique');
+            $table->dropColumn(['email', 'email_verified_at']);
         });
     }
 
