@@ -27,7 +27,6 @@ Homestead.yaml
 Thumbs.db
 
 # Dev scripts (machine-specific)
-serve.ps1
 start.bat
 
 # Binary files

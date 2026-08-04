@@ -12,7 +12,7 @@ class MonitoringReport extends Model
 
     protected $fillable = [
         'gerai_id', 'user_id', 'type', 'location', 'nilai', 'grade', 'periode_label',
-        'checkin_at', 'submit_at', 'is_pairing',
+        'checkin_at', 'submit_at', 'is_pairing', 'wa_sent_at',
         'editing_user_id', 'editing_at', 'editing_snapshot',
         'major', 'minor', 'peringatan_awal',
         'ttd_petugas', 'ttd_pimpinan',
