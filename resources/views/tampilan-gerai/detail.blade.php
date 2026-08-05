@@ -12,9 +12,6 @@
             @endif
         </h2>
     </div>
-    <div class="flex gap-2">
-        <a href="/tampilan-gerai" style="background:#F3F4F6;color:#374151" class="px-3 py-1.5 text-xs font-medium rounded-lg hover:opacity-80">Kembali</a>
-    </div>
 </div>
 
 @php
@@ -23,7 +20,6 @@
         're-monitoring' => ['#FEF3C7', '#D97706', 'Re-Monitoring'],
         default => ['#DBEAFE', '#1D4ED8', 'Monitoring'],
     };
-    $totalPhotos = $blocks->sum(fn ($b) => $b->photos->count());
 @endphp
 
 <div class="bg-white rounded-xl shadow-md overflow-hidden mb-4">
@@ -72,40 +68,39 @@
     </div>
 </div>
 
-<div class="bg-white rounded-xl shadow-md overflow-hidden mb-4">
-    <div class="px-4 sm:px-6 py-3 border-b border-gray-200 bg-gray-50">
-        <h3 class="text-sm font-semibold text-gray-700">Data Tampilan Gerai</h3>
-    </div>
-    <div class="p-4 sm:p-5 flex items-center gap-6">
-        <div>
-            <p class="text-2xl font-bold text-blue-600">{{ $blocks->count() }}</p>
-            <p class="text-xs text-gray-500 mt-0.5">Blok Keterangan</p>
-        </div>
-        <div class="w-px self-stretch bg-gray-200"></div>
-        <div>
-            <p class="text-2xl font-bold text-blue-600">{{ $totalPhotos }}</p>
-            <p class="text-xs text-gray-500 mt-0.5">Foto</p>
-        </div>
-    </div>
-</div>
-
 @php $blockIdx = 0; @endphp
 @forelse ($blocks as $block)
-    <div class="bg-white rounded-xl shadow-md overflow-hidden mb-4">
+    <div class="bg-white rounded-xl shadow-md overflow-hidden mb-4" id="block-{{ $block->id }}" data-editing="0">
         <div class="px-4 sm:px-6 py-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between gap-3">
-            <h3 class="text-sm font-semibold text-gray-700">{{ $loop->iteration }}. {{ $block->keterangan ?: 'Tanpa keterangan' }}</h3>
-            @if ($block->photos->isNotEmpty())
-                <span class="shrink-0 text-[10px] font-medium text-gray-500">{{ $block->photos->count() }} foto</span>
-            @endif
+            <div class="flex items-center gap-2 flex-1 min-w-0">
+                <span class="text-xl font-semibold text-gray-700 shrink-0">{{ $loop->iteration }}.</span>
+                <span class="tg-ket-text text-xl font-semibold text-gray-700 flex-1 min-w-0">{{ $block->keterangan ?: '' }}</span>
+                <input type="text" value="{{ $block->keterangan ?? '' }}" placeholder="Tambah keterangan..."
+                    class="tg-ket-input flex-1 min-w-0 border-0 bg-transparent text-xl font-semibold text-gray-700 focus:outline-none focus:ring-0 p-0 hidden"
+                    style="box-shadow:none"
+                    onblur="saveKet({{ $block->id }}, this.value)" onkeydown="if(event.key==='Enter'){this.blur()}">
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                @if ($block->photos->isNotEmpty())
+                    <span class="text-[10px] font-medium text-gray-500">{{ $block->photos->count() }} foto</span>
+                @endif
+                <button type="button" onclick="toggleEditBlock(this)" class="tg-edit-btn" style="padding:4px 10px;font-size:11px;font-weight:600;border-radius:6px;cursor:pointer;background:#EFF6FF;color:#2563EB;border:1px solid #BFDBFE">Edit</button>
+                <button type="button" onclick="hapusBlock({{ $block->id }})" class="tg-del-btn" style="width:1.75rem;height:1.75rem;display:flex;align-items:center;justify-content:center;border-radius:6px;background:rgba(220,38,38,0.08);cursor:pointer;color:#DC2626;font-size:12px" title="Hapus blok">&#10005;</button>
+            </div>
         </div>
         <div class="p-4 sm:p-5">
             @if ($block->photos->isNotEmpty())
-                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                <div class="flex gap-3 overflow-x-auto pb-2" style="scroll-snap-type:x mandatory">
                     @foreach ($block->photos as $photo)
-                        <button type="button" onclick="openLightbox({{ $blockIdx }}, {{ $loop->index }})" class="group relative rounded-lg overflow-hidden border border-gray-200 bg-gray-100 block" style="aspect-ratio:1/1;cursor:zoom-in">
-                            <img src="{{ $photo->url() }}" alt="Foto tampilan gerai" loading="lazy"
-                                 style="width:100%;height:100%;object-fit:cover" class="group-hover:opacity-90 transition-opacity">
-                        </button>
+                        <div class="relative shrink-0 group" style="width:120px;height:120px;scroll-snap-align:start">
+                            <button type="button" onclick="openLightbox({{ $blockIdx }}, {{ $loop->index }})" class="block w-full h-full rounded-lg overflow-hidden border border-gray-200 bg-gray-100" style="cursor:pointer">
+                                <img src="{{ $photo->url() }}" alt="Foto tampilan gerai" loading="lazy"
+                                     style="width:100%;height:100%;object-fit:cover" class="group-hover:opacity-90 transition-opacity">
+                            </button>
+                            <button type="button" onclick="hapusFoto({{ $photo->id }})"
+                                class="tg-photo-del hidden"
+                                style="position:absolute;top:4px;right:4px;width:1.25rem;height:1.25rem;align-items:center;justify-content:center;border-radius:9999px;background:rgba(220,38,38,0.85);color:#fff;font-size:10px;cursor:pointer" title="Hapus foto">&#10005;</button>
+                        </div>
                     @endforeach
                 </div>
             @else
@@ -123,8 +118,8 @@
 {{-- Lightbox Foto --}}
 <div id="tgLightbox" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background:rgba(0,0,0,0.9)" onclick="closeLightbox()">
     <button type="button" onclick="event.stopPropagation(); closeLightbox()" style="position:absolute;top:1rem;right:1rem;width:2.5rem;height:2.5rem;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.5rem;line-height:1;border-radius:9999px;background:rgba(255,255,255,0.12);cursor:pointer" aria-label="Tutup">&times;</button>
-    <button id="tgPrev" type="button" onclick="event.stopPropagation(); prevPhoto()" style="position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);width:3rem;height:3rem;display:flex;align-items:center;justify-content:center;color:#fff;font-size:2.5rem;line-height:1;border-radius:9999px;background:rgba(255,255,255,0.12);cursor:pointer;visibility:hidden" aria-label="Sebelumnya">&lsaquo;</button>
-    <button id="tgNext" type="button" onclick="event.stopPropagation(); nextPhoto()" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);width:3rem;height:3rem;display:flex;align-items:center;justify-content:center;color:#fff;font-size:2.5rem;line-height:1;border-radius:9999px;background:rgba(255,255,255,0.12);cursor:pointer;visibility:hidden" aria-label="Berikutnya">&rsaquo;</button>
+    <button id="tgPrev" type="button" onclick="event.stopPropagation(); prevPhoto()" style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);width:2.5rem;height:2.5rem;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.25rem;font-weight:300;line-height:1;border-radius:9999px;background:rgba(255,255,255,0.15);cursor:pointer;visibility:hidden" aria-label="Sebelumnya">&#10094;</button>
+    <button id="tgNext" type="button" onclick="event.stopPropagation(); nextPhoto()" style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);width:2.5rem;height:2.5rem;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.25rem;font-weight:300;line-height:1;border-radius:9999px;background:rgba(255,255,255,0.15);cursor:pointer;visibility:hidden" aria-label="Berikutnya">&#10095;</button>
     <img id="tgLightboxImg" src="" alt="Foto tampilan gerai" style="max-width:92vw;max-height:82vh;object-fit:contain;border-radius:0.5rem;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);background:#111">
     <span id="tgLightboxCount" style="position:absolute;bottom:1rem;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.9);font-size:0.875rem;font-weight:500"></span>
 </div>
@@ -135,6 +130,8 @@
 var tgPhotoGroups = {!! json_encode($blocks->map(fn ($b) => $b->photos->map(fn ($p) => $p->url())->values())->values(), JSON_HEX_TAG) !!};
 var tgBlock = 0;
 var tgPhoto = 0;
+var tgCsrf = '{{ csrf_token() }}';
+var tgOrigKet = {};
 
 function openLightbox(blockIdx, photoIdx) {
     tgBlock = blockIdx;
@@ -149,10 +146,8 @@ function renderLightbox() {
     if (!group || !group.length) return;
     if (tgPhoto >= group.length) tgPhoto = group.length - 1;
     if (tgPhoto < 0) tgPhoto = 0;
-
     document.getElementById('tgLightboxImg').src = group[tgPhoto];
     document.getElementById('tgLightboxCount').textContent = (tgPhoto + 1) + ' / ' + group.length;
-
     document.getElementById('tgPrev').style.visibility = tgPhoto > 0 ? 'visible' : 'hidden';
     document.getElementById('tgNext').style.visibility = tgPhoto < group.length - 1 ? 'visible' : 'hidden';
 }
@@ -163,22 +158,126 @@ function closeLightbox() {
 }
 
 function prevPhoto() {
-    var group = tgPhotoGroups[tgBlock];
-    if (!group || tgPhoto <= 0) return;
+    var g = tgPhotoGroups[tgBlock];
+    if (!g || tgPhoto <= 0) return;
     tgPhoto--;
     renderLightbox();
 }
 
 function nextPhoto() {
-    var group = tgPhotoGroups[tgBlock];
-    if (!group || tgPhoto >= group.length - 1) return;
+    var g = tgPhotoGroups[tgBlock];
+    if (!g || tgPhoto >= g.length - 1) return;
     tgPhoto++;
     renderLightbox();
 }
 
+function saveKet(blockId, val) {
+    fetch('/tampilan-gerai/block/' + blockId, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': tgCsrf, 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ keterangan: val })
+    });
+}
+
+function toggleEditBlock(btn) {
+    var card = btn.closest('[id^="block-"]');
+    var editing = card.dataset.editing === '1';
+    var blockId = card.id.replace('block-', '');
+
+    var textEl = card.querySelector('.tg-ket-text');
+    var inputEl = card.querySelector('.tg-ket-input');
+    var photoDels = card.querySelectorAll('.tg-photo-del');
+    var delBtn = card.querySelector('.tg-del-btn');
+
+    if (!editing) {
+        tgOrigKet[blockId] = inputEl.value;
+        card.dataset.editing = '1';
+        textEl.classList.add('hidden');
+        inputEl.classList.remove('hidden');
+        inputEl.focus();
+        photoDels.forEach(function (d) { d.classList.remove('hidden'); d.style.display = 'flex'; });
+        btn.textContent = 'Selesai';
+        btn.style.background = '#F0FDF4';
+        btn.style.color = '#16A34A';
+        btn.style.borderColor = '#BBF7D0';
+        delBtn.innerHTML = 'Batal';
+        delBtn.style.width = 'auto';
+        delBtn.style.padding = '4px 10px';
+        delBtn.style.fontSize = '11px';
+        delBtn.style.fontWeight = '600';
+        delBtn.style.background = '#FEF3C7';
+        delBtn.style.color = '#D97706';
+        delBtn.style.borderColor = '#FDE68A';
+        delBtn.style.border = '1px solid #FDE68A';
+        delBtn.onclick = function () { cancelEditBlock(card, btn, delBtn); };
+    } else {
+        saveKet(blockId, inputEl.value);
+        textEl.textContent = inputEl.value || '';
+        textEl.classList.remove('hidden');
+        inputEl.classList.add('hidden');
+        photoDels.forEach(function (d) { d.classList.add('hidden'); d.style.display = ''; });
+        btn.textContent = 'Edit';
+        btn.style.background = '#EFF6FF';
+        btn.style.color = '#2563EB';
+        btn.style.borderColor = '#BFDBFE';
+        delBtn.innerHTML = '&#10005;';
+        delBtn.style.width = '1.75rem';
+        delBtn.style.padding = '';
+        delBtn.style.fontSize = '12px';
+        delBtn.style.fontWeight = '';
+        delBtn.style.background = 'rgba(220,38,38,0.08)';
+        delBtn.style.color = '#DC2626';
+        delBtn.style.border = '';
+        delBtn.onclick = function () { hapusBlock(parseInt(blockId)); };
+        card.dataset.editing = '0';
+    }
+}
+
+function cancelEditBlock(card, editBtn, delBtn) {
+    var blockId = card.id.replace('block-', '');
+    var textEl = card.querySelector('.tg-ket-text');
+    var inputEl = card.querySelector('.tg-ket-input');
+    var photoDels = card.querySelectorAll('.tg-photo-del');
+
+    inputEl.value = tgOrigKet[blockId] || '';
+    textEl.classList.remove('hidden');
+    inputEl.classList.add('hidden');
+    photoDels.forEach(function (d) { d.classList.add('hidden'); d.style.display = ''; });
+    editBtn.textContent = 'Edit';
+    editBtn.style.background = '#EFF6FF';
+    editBtn.style.color = '#2563EB';
+    editBtn.style.borderColor = '#BFDBFE';
+    delBtn.innerHTML = '&#10005;';
+    delBtn.style.width = '1.75rem';
+    delBtn.style.padding = '';
+    delBtn.style.fontSize = '12px';
+    delBtn.style.fontWeight = '';
+    delBtn.style.background = 'rgba(220,38,38,0.08)';
+    delBtn.style.color = '#DC2626';
+    delBtn.style.border = '';
+    delBtn.onclick = function () { hapusBlock(parseInt(blockId)); };
+    card.dataset.editing = '0';
+}
+
+function hapusFoto(photoId, btn) {
+    if (!confirm('Hapus foto ini?')) return;
+    fetch('/tampilan-gerai/photo/' + photoId, {
+        method: 'DELETE',
+        headers: { 'X-CSRF-TOKEN': tgCsrf, 'X-Requested-With': 'XMLHttpRequest' }
+    }).then(function (r) { return r.json(); }).then(function () { location.reload(); });
+}
+
+function hapusBlock(blockId) {
+    if (!confirm('Hapus blok ini beserta semua fotonya?')) return;
+    fetch('/tampilan-gerai/block/' + blockId, {
+        method: 'DELETE',
+        headers: { 'X-CSRF-TOKEN': tgCsrf, 'X-Requested-With': 'XMLHttpRequest' }
+    }).then(function (r) { return r.json(); }).then(function () { location.reload(); });
+}
+
 document.addEventListener('keydown', function (e) {
-    var lightbox = document.getElementById('tgLightbox');
-    if (lightbox.classList.contains('hidden')) return;
+    var lb = document.getElementById('tgLightbox');
+    if (lb.classList.contains('hidden')) return;
     if (e.key === 'Escape') closeLightbox();
     if (e.key === 'ArrowLeft') prevPhoto();
     if (e.key === 'ArrowRight') nextPhoto();

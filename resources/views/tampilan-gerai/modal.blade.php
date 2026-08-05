@@ -1,20 +1,17 @@
 <div id="tgModal" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background:rgba(0,0,0,0.5)" onclick="closeTampilanGeraiModal()">
-    <div class="relative bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 flex flex-col" style="max-height:80vh" onclick="event.stopPropagation()">
-        <div class="flex items-center justify-between px-4 py-2.5 border-b border-gray-100 shrink-0">
-            <h3 class="text-sm font-bold text-gray-800">Foto Tampilan Gerai</h3>
-            <button type="button" onclick="closeTampilanGeraiModal()" class="text-gray-400 hover:text-gray-600 cursor-pointer p-1" aria-label="Tutup">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    <div class="relative bg-white rounded-2xl shadow-2xl w-full mx-4 flex flex-col" style="max-width:480px;max-height:85vh" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between px-5 py-3.5 border-b border-gray-100 shrink-0">
+            <h3 class="text-sm font-bold text-gray-800">Data Tampilan Gerai</h3>
+            <button type="button" onclick="closeTampilanGeraiModal()" style="width:2rem;height:2rem;display:flex;align-items:center;justify-content:center;border-radius:9999px;background:rgba(0,0,0,0.05);cursor:pointer;color:#9CA3AF" aria-label="Tutup">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
 
-        <div id="tgBlocks" class="flex-1 overflow-y-auto px-4 py-3 space-y-3"></div>
+        <div id="tgBlocks" class="flex-1 overflow-y-auto px-5 py-4 space-y-4"></div>
 
-        <div class="px-4 py-2.5 border-t border-gray-100 shrink-0 space-y-2">
-            <button type="button" onclick="tgAddBlock()" class="w-full py-2 rounded-xl border-2 border-blue-300 text-sm font-semibold text-blue-600 hover:bg-blue-50 cursor-pointer transition-colors" style="border-style:dashed">
-                + Tambah Keterangan
-            </button>
-            <button type="button" onclick="closeTampilanGeraiModal()" class="w-full py-2 rounded-xl bg-gray-100 text-gray-700 text-sm font-semibold cursor-pointer hover:bg-gray-200 transition-colors">
-                Tutup
+        <div class="px-5 py-3 border-t border-gray-100 shrink-0">
+            <button type="button" onclick="tgAddBlock()" class="w-full py-2.5 rounded-xl border-2 border-dashed border-blue-300 text-sm font-semibold text-blue-500 hover:bg-blue-50 hover:border-blue-400 cursor-pointer transition-colors">
+                + Tambah Blok
             </button>
         </div>
     </div>
@@ -70,13 +67,14 @@ function tgLoad() {
 function tgRenderBlock(block) {
     var container = document.getElementById('tgBlocks');
     var div = document.createElement('div');
-    div.className = 'bg-gray-50 border border-gray-100 rounded-xl p-3';
+    div.className = 'bg-gray-50 rounded-xl p-4';
+    div.style.border = '1px solid #F3F4F6';
     div.dataset.blockId = block.id;
 
     var header = document.createElement('div');
-    header.className = 'flex items-center justify-between mb-1';
+    header.className = 'flex items-center justify-between mb-2';
     var label = document.createElement('label');
-    label.className = 'text-[10px] font-medium text-gray-500';
+    label.className = 'text-[11px] font-semibold text-gray-500 uppercase tracking-wide';
     label.textContent = 'Keterangan';
     var right = document.createElement('div');
     right.className = 'flex items-center gap-2';
@@ -85,7 +83,7 @@ function tgRenderBlock(block) {
     status.textContent = '';
     var del = document.createElement('button');
     del.type = 'button';
-    del.className = 'text-[10px] text-red-500 hover:text-red-700 cursor-pointer';
+    del.className = 'text-[10px] font-medium text-red-400 hover:text-red-600 cursor-pointer px-1.5 py-0.5 rounded hover:bg-red-50 transition-colors';
     del.textContent = 'Hapus';
     del.onclick = function () { tgDeleteBlock(div); };
     right.appendChild(status);
@@ -95,7 +93,7 @@ function tgRenderBlock(block) {
 
     var ta = document.createElement('textarea');
     ta.rows = 1;
-    ta.className = 'w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden';
+    ta.className = 'w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden placeholder:text-gray-400';
     ta.placeholder = 'Tulis keterangan kondisi tampilan gerai...';
     ta.value = block.keterangan || '';
     ta.oninput = function () {
@@ -106,7 +104,7 @@ function tgRenderBlock(block) {
     ta.onblur = function () { tgSaveKeterangan(block.id, ta.value, true); };
 
     var photos = document.createElement('div');
-    photos.className = 'flex flex-wrap gap-1.5 mt-1.5 tg-photos';
+    photos.className = 'flex flex-wrap gap-2 mt-3 tg-photos';
     (block.photos || []).forEach(function (p) {
         photos.appendChild(tgPhotoTile(p.id, p.url));
     });
@@ -122,9 +120,10 @@ function tgRenderBlock(block) {
 
 function tgPhotoTile(id, url) {
     var tile = document.createElement('div');
-    tile.className = 'relative rounded-lg overflow-hidden border border-gray-200 bg-white shrink-0';
-    tile.style.width = '64px';
-    tile.style.height = '64px';
+    tile.className = 'relative rounded-xl overflow-hidden bg-white shrink-0';
+    tile.style.width = '80px';
+    tile.style.height = '80px';
+    tile.style.border = '1px solid #E5E7EB';
     tile.dataset.photoId = id;
     var img = document.createElement('img');
     img.src = url;
@@ -134,16 +133,22 @@ function tgPhotoTile(id, url) {
     img.loading = 'lazy';
     var x = document.createElement('button');
     x.type = 'button';
-    x.className = 'absolute rounded-full bg-white text-gray-600 flex items-center justify-center cursor-pointer';
-    x.style.top = '2px';
-    x.style.right = '2px';
-    x.style.width = '16px';
-    x.style.height = '16px';
-    x.style.fontSize = '10px';
-    x.style.lineHeight = '1';
-    x.style.background = 'rgba(0,0,0,0.55)';
+    x.className = 'absolute flex items-center justify-center cursor-pointer transition-opacity';
+    x.style.top = '4px';
+    x.style.right = '4px';
+    x.style.width = '18px';
+    x.style.height = '18px';
+    x.style.borderRadius = '9999px';
+    x.style.background = 'rgba(0,0,0,0.5)';
     x.style.color = '#fff';
+    x.style.fontSize = '11px';
+    x.style.lineHeight = '1';
+    x.style.opacity = '0';
     x.innerHTML = '&times;';
+    x.onmouseenter = function () { x.style.opacity = '1'; };
+    x.onmouseleave = function () { x.style.opacity = '0'; };
+    tile.onmouseenter = function () { x.style.opacity = '1'; };
+    tile.onmouseleave = function () { x.style.opacity = '0'; };
     x.onclick = function () { tgDeletePhoto(tile); };
     tile.appendChild(img);
     tile.appendChild(x);
@@ -152,11 +157,11 @@ function tgPhotoTile(id, url) {
 
 function tgAddPhotoTile(blockId) {
     var label = document.createElement('label');
-    label.className = 'rounded-lg bg-white flex items-center justify-center cursor-pointer hover:bg-blue-50 shrink-0';
-    label.style.width = '64px';
-    label.style.height = '64px';
+    label.className = 'rounded-xl bg-white flex items-center justify-center cursor-pointer hover:bg-blue-50 shrink-0 transition-colors';
+    label.style.width = '80px';
+    label.style.height = '80px';
     label.style.border = '2px dashed #93C5FD';
-    label.innerHTML = '<svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>';
+    label.innerHTML = '<svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>';
     var input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';

@@ -22,10 +22,19 @@ class NotificationComposer
 
         $assessmentType = null;
         $assessmentId = null;
+        $assessmentSubmitted = false;
         if ($isAssessmentPage) {
             if (preg_match('#^/?(monitoring|pra-monitoring|re-monitoring)/(\d+)/assessment#', request()->path(), $m)) {
                 $assessmentType = $m[1];
                 $assessmentId = (int) $m[2];
+
+                $modelClass = match($assessmentType) {
+                    'pra-monitoring' => PraMonitoringReport::class,
+                    're-monitoring' => ReMonitoringReport::class,
+                    default => MonitoringReport::class,
+                };
+                $report = $modelClass::find($assessmentId);
+                $assessmentSubmitted = $report && $report->submit_at !== null;
             }
         }
 
@@ -123,6 +132,7 @@ class NotificationComposer
              ->with('isAssessmentPage', $isAssessmentPage)
              ->with('assessmentType', $assessmentType)
              ->with('assessmentId', $assessmentId)
+             ->with('assessmentSubmitted', $assessmentSubmitted)
              ->with('geraiCounts', $geraiCounts);
     }
 }
