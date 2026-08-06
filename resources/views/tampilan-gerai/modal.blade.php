@@ -130,7 +130,9 @@ function tgPhotoTile(id, url) {
     img.style.width = '100%';
     img.style.height = '100%';
     img.style.objectFit = 'cover';
+    img.style.cursor = 'zoom-in';
     img.loading = 'lazy';
+    img.onclick = function () { tgOpenLightbox(tile); };
     var x = document.createElement('button');
     x.type = 'button';
     x.className = 'absolute flex items-center justify-center cursor-pointer transition-opacity';
@@ -335,6 +337,29 @@ function tgAddBlock() {
         .then(function (data) {
             tgRenderBlock({ id: data.id, keterangan: '', photos: [] });
         });
+}
+
+function tgOpenLightbox(tile) {
+    var img = tile.querySelector('img');
+    if (!img) return;
+
+    var overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;';
+    overlay.onclick = function () { overlay.remove(); };
+
+    var photo = document.createElement('img');
+    photo.src = img.src;
+    photo.style.cssText = 'max-width:92vw;max-height:88vh;object-fit:contain;border-radius:0.5rem;box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);background:#111;';
+    photo.onclick = function (e) { e.stopPropagation(); };
+    overlay.appendChild(photo);
+
+    var close = document.createElement('button');
+    close.innerHTML = '&times;';
+    close.style.cssText = 'position:absolute;top:1rem;right:1rem;width:2.5rem;height:2.5rem;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.5rem;line-height:1;border-radius:9999px;background:rgba(255,255,255,0.12);cursor:pointer;';
+    close.onclick = function (e) { e.stopPropagation(); overlay.remove(); };
+    overlay.appendChild(close);
+
+    document.body.appendChild(overlay);
 }
 </script>
 @endpush
