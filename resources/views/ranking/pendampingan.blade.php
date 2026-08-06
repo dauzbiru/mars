@@ -110,6 +110,7 @@
                 <button onclick="insertPlaceholder('{franchisee}')" type="button" class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">{franchisee}</button>
                 <button onclick="insertPlaceholder('{grade}')" type="button" class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">{grade}</button>
                 <button onclick="insertPlaceholder('{nilai}')" type="button" class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">{nilai}</button>
+                <button onclick="insertPlaceholder('{periode}')" type="button" class="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200">{periode}</button>
             </div>
             <div class="mt-4 flex justify-end gap-3">
                 <button onclick="closeCustomMessageModal()" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300">Tutup</button>
@@ -313,7 +314,8 @@
                    .replace(/\{nama_gerai\}/g, currentGeraiData.nama_gerai)
                    .replace(/\{franchisee\}/g, currentGeraiData.franchisee)
                    .replace(/\{grade\}/g, currentGeraiData.grade)
-                   .replace(/\{nilai\}/g, currentGeraiData.nilai);
+                   .replace(/\{nilai\}/g, currentGeraiData.nilai)
+                   .replace(/\{periode\}/g, '{{ $period->label }}');
         window.open('https://wa.me/' + number + '?text=' + encodeURIComponent(text), '_blank');
         if (currentReportId) {
             var xhr = new XMLHttpRequest();
