@@ -164,7 +164,7 @@ class RankingController extends Controller
             ->where('user_id', auth()->id())
             ->where('periode_label', $period->label)
             ->join('gerais', 'monitoring_reports.gerai_id', '=', 'gerais.id')
-            ->orderBy('monitoring_reports.nilai')
+            ->orderBy('gerais.kode_gerai')
             ->select('monitoring_reports.*')
             ->get();
 
