@@ -122,6 +122,12 @@
     });
 
     var suggestData = {!! json_encode($gerais->map(fn($g) => ['search' => $g->kode_gerai . ' ' . $g->nama_gerai, 'primary' => $g->kode_gerai, 'secondary' => $g->nama_gerai]), JSON_HEX_TAG) !!};
+    var rankingSearchUrl = @js(route('daftar-nilai.index'));
+
+    function goToRankingSearch(q) {
+        q = (q || '').trim();
+        window.location.href = rankingSearchUrl + (q ? '?search=' + encodeURIComponent(q) : '');
+    }
 
     function filterRanking(q) {
         q = q.toLowerCase();
@@ -142,9 +148,7 @@
             li.innerHTML = '<span class="font-medium text-gray-800">' + item.primary + '</span>' + (item.secondary ? '<span class="text-gray-500"> - ' + item.secondary + '</span>' : '');
             li.addEventListener('mousedown', function(e) {
                 e.preventDefault();
-                document.getElementById('searchRanking').value = item.primary;
-                list.classList.add('hidden');
-                filterRanking(item.primary);
+                goToRankingSearch(item.primary);
             });
             list.appendChild(li);
         });
@@ -156,6 +160,17 @@
     document.getElementById('searchRanking').addEventListener('blur', function() {
         setTimeout(function() { document.getElementById('rankingSuggest').classList.add('hidden'); }, 200);
     });
+
+    document.getElementById('searchRanking').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            goToRankingSearch(this.value);
+        }
+    });
+
+    @if ($search)
+    document.getElementById('searchRanking').value = @js($search);
+    @endif
 
     function openEditModal(id, nama, nilai, tanggal, petugas) {
         closeFab();
