@@ -27,7 +27,7 @@
             </div>
         </div>
 
-        <div class="max-h-[calc(100vh-200px)] overflow-auto" style="max-height:calc(100dvh - 200px);overscroll-behavior:contain">
+        <div id="geraiScroll" class="max-h-[calc(100vh-200px)] overflow-auto" style="max-height:calc(100dvh - 200px);overscroll-behavior:contain; -webkit-overflow-scrolling:touch">
             <table class="w-full">
                 <thead>
                     <tr class="bg-gray-50 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider sticky top-0 z-10">
@@ -342,6 +342,17 @@ function updateDlLink() {
 </script>
 
 <script>
+(function () {
+    var scroller = document.getElementById('geraiScroll');
+    if (!scroller) return;
+    function lock(e) {
+        var atTop = scroller.scrollTop <= 0;
+        var atBottom = scroller.scrollTop + scroller.clientHeight >= scroller.scrollHeight - 1;
+        if ((atTop && e.deltaY < 0) || (atBottom && e.deltaY > 0)) e.preventDefault();
+    }
+    scroller.addEventListener('wheel', lock, { passive: false });
+})();
+
 var kotaMap = {
     @foreach ($kotaMaps as $km)
         '{{ $km->kode }}': ['{{ $km->nama_kota }}', '{{ $km->area }}']@if(!$loop->last),@endif
