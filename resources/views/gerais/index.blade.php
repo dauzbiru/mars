@@ -27,7 +27,7 @@
             </div>
         </div>
 
-        <div class="max-h-[calc(100vh-200px)] overflow-auto">
+        <div class="max-h-[calc(100vh-200px)] overflow-auto" style="overscroll-behavior:contain">
             <table class="w-full">
                 <thead>
                     <tr class="bg-gray-50 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider sticky top-0 z-10">

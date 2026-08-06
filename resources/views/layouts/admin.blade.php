@@ -271,7 +271,7 @@
                         @endif
                     </button>
                     @if ($pendingReports->isNotEmpty() || $editingReports->isNotEmpty())
-                    <div id="notifDropdown" class="hidden absolute right-0 top-full mt-1 w-72 bg-white rounded-lg shadow-lg border py-2 z-50 max-h-80 overflow-y-auto">
+                    <div id="notifDropdown" class="hidden fixed right-2 top-14 z-50 w-72 max-w-[calc(100vw-1rem)] bg-white rounded-lg shadow-lg border py-2 max-h-80 overflow-y-auto" style="overscroll-behavior:contain">
                         @if ($editingReports->isNotEmpty())
                         <div class="px-4 py-2 border-b border-gray-100">
                             <p class="text-xs font-semibold text-orange-500 uppercase">Edit Belum Selesai</p>
