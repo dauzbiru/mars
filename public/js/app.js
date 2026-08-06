@@ -41,6 +41,12 @@ function toggleSidebar() {
     sidebar.classList.toggle('-translate-x-full');
     overlay.classList.toggle('hidden');
 
+    if (!sidebar.classList.contains('-translate-x-full')) {
+        document.body.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = '';
+    }
+
     var top = document.getElementById('burgerTop');
     var mid = document.getElementById('burgerMid');
     var bot = document.getElementById('burgerBot');
