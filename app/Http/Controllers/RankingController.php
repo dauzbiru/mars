@@ -162,6 +162,12 @@ class RankingController extends Controller
             ->whereNotNull('submit_at')
             ->where('grade', 'C')
             ->when(auth()->user()?->role !== 'admin', fn($q) => $q->where('user_id', auth()->id()))
+            ->when(auth()->user()?->role === 'admin', function ($q) {
+                $q->where(function ($q2) {
+                    $q2->where('user_id', auth()->id())
+                       ->orWhereHas('user', fn($q3) => $q3->where('role', 'guest'));
+                });
+            })
             ->where('periode_label', $period->label)
             ->join('gerais', 'monitoring_reports.gerai_id', '=', 'gerais.id')
             ->orderBy('gerais.kode_gerai')
