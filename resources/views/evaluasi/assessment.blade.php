@@ -71,13 +71,13 @@
         {{-- Catatan --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-3">
             <label for="catatan" class="block text-xs font-semibold text-gray-600 mb-2">Catatan</label>
-            <textarea name="catatan" id="catatan" rows="5" class="w-full p-2.5 border border-gray-200 rounded-xl text-sm outline-none resize-none box-border" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" placeholder="Tulis catatan evaluasi...">{{ old('catatan', $report->catatan ?? '') }}</textarea>
+            <textarea name="catatan" id="catatan" rows="5" class="w-full p-2.5 border border-gray-200 rounded-xl text-sm outline-none resize-none box-border" oninput="autoGrow(this)" placeholder="Tulis catatan evaluasi...">{{ old('catatan', $report->catatan ?? '') }}</textarea>
         </div>
 
         {{-- Keterangan --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
             <label for="keterangan" class="block text-xs font-semibold text-gray-600 mb-2">Keterangan</label>
-            <textarea name="keterangan" id="keterangan" rows="5" class="w-full p-2.5 border border-gray-200 rounded-xl text-sm outline-none resize-none box-border" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" placeholder="Tulis keterangan evaluasi...">{{ old('keterangan', $report->keterangan ?? '') }}</textarea>
+            <textarea name="keterangan" id="keterangan" rows="5" class="w-full p-2.5 border border-gray-200 rounded-xl text-sm outline-none resize-none box-border" oninput="autoGrow(this)" placeholder="Tulis keterangan evaluasi...">{{ old('keterangan', $report->keterangan ?? '') }}</textarea>
         </div>
 
         {{-- Actions --}}
@@ -101,6 +101,15 @@
 
 @push('scripts')
 <script>
+function autoGrow(el) {
+    var y = window.scrollY || window.pageYOffset || 0;
+    el.style.height = '';
+    el.style.height = el.scrollHeight + 'px';
+    if ((window.scrollY || window.pageYOffset || 0) !== y) {
+        window.scrollTo(0, y);
+    }
+}
+
 var kodeGerai = @json($report->gerai->kode_gerai);
 var namaGerai = @json($report->gerai->nama_gerai);
 
@@ -139,7 +148,6 @@ if (!keteranganEl.value.trim()) {
 }
 keteranganEl.style.height = '';
 keteranganEl.style.height = keteranganEl.scrollHeight + 'px';
-
 function submitEvaluasi() {
     var f = document.getElementById('assessment-form');
     var formData = new FormData(f);

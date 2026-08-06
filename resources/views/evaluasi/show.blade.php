@@ -162,11 +162,11 @@
             @method('PUT')
             <div class="mb-3">
                 <label class="block text-xs font-medium text-gray-500 mb-1">Catatan</label>
-                <textarea name="catatan" rows="5" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ $report->catatan }}</textarea>
+                <textarea name="catatan" rows="5" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" oninput="autoGrow(this)">{{ $report->catatan }}</textarea>
             </div>
             <div class="mb-4">
                 <label class="block text-xs font-medium text-gray-500 mb-1">Keterangan</label>
-                <textarea name="keterangan" rows="5" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ $report->keterangan }}</textarea>
+                <textarea name="keterangan" rows="5" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" oninput="autoGrow(this)">{{ $report->keterangan }}</textarea>
             </div>
             <div class="flex gap-3">
                 <button type="button" onclick="toggleEditEvaluasi()" class="flex-1 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 transition">Batal</button>
@@ -188,11 +188,11 @@
             @method('PUT')
             <div class="mb-3">
                 <label class="block text-xs font-medium text-gray-500 mb-1">Catatan</label>
-                <textarea name="catatan" id="catatan" rows="5" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" placeholder="Tulis catatan evaluasi...">{{ old('catatan', $report->catatan ?? '') }}</textarea>
+                <textarea name="catatan" id="catatan" rows="5" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" oninput="autoGrow(this)" placeholder="Tulis catatan evaluasi...">{{ old('catatan', $report->catatan ?? '') }}</textarea>
             </div>
             <div class="mb-4">
                 <label class="block text-xs font-medium text-gray-500 mb-1">Keterangan</label>
-                <textarea name="keterangan" id="keterangan" rows="5" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'" placeholder="Tulis keterangan evaluasi...">{{ old('keterangan', $report->keterangan ?? '') }}</textarea>
+                <textarea name="keterangan" id="keterangan" rows="5" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" oninput="autoGrow(this)" placeholder="Tulis keterangan evaluasi...">{{ old('keterangan', $report->keterangan ?? '') }}</textarea>
             </div>
             <div class="flex gap-3">
                 <button type="button" onclick="showConfirm('Batalkan laporan ini? Laporan akan dihapus.', function(){ document.getElementById('delete-form').submit(); })" class="flex-1 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 transition">Batalkan</button>
@@ -226,6 +226,15 @@
 
 @push('scripts')
 <script>
+function autoGrow(el) {
+    var y = window.scrollY || window.pageYOffset || 0;
+    el.style.height = '';
+    el.style.height = el.scrollHeight + 'px';
+    if ((window.scrollY || window.pageYOffset || 0) !== y) {
+        window.scrollTo(0, y);
+    }
+}
+
 window.history.replaceState(null, '', window.location.href);
 window.addEventListener('popstate', function() {
     window.location.href = '/evaluasi';

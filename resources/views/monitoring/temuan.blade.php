@@ -43,11 +43,11 @@
             <div class="dropdown-body px-4 pb-4 space-y-3" style="display:none">
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Major</label>
-                    <textarea name="major" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('major', $report->major ?? '-') }}</textarea>
+                    <textarea name="major" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="autoGrow(this)">{{ old('major', $report->major ?? '-') }}</textarea>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Minor</label>
-                    <textarea name="minor" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('minor', $report->minor ?? '-') }}</textarea>
+                    <textarea name="minor" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="autoGrow(this)">{{ old('minor', $report->minor ?? '-') }}</textarea>
                 </div>
             </div>
         </div>
@@ -64,35 +64,35 @@
                 @if ($prefix === 'pra-monitoring')
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Pengawas</label>
-                    <textarea name="pengawas" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="PS&#10;PS" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('pengawas', $report->pengawas ?? '') }}</textarea>
+                    <textarea name="pengawas" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="PS&#10;PS" oninput="autoGrow(this)">{{ old('pengawas', $report->pengawas ?? '') }}</textarea>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Rata-rata AJ</label>
-                        <textarea name="rata_rata_aj" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="250" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('rata_rata_aj', $report->rata_rata_aj ?? '') }}</textarea>
+                        <textarea name="rata_rata_aj" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="250" oninput="autoGrow(this)">{{ old('rata_rata_aj', $report->rata_rata_aj ?? '') }}</textarea>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Mesin Ozon</label>
-                        <textarea name="mesin_ozon" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="D 123" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('mesin_ozon', $report->mesin_ozon ?? '') }}</textarea>
+                        <textarea name="mesin_ozon" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="D 123" oninput="autoGrow(this)">{{ old('mesin_ozon', $report->mesin_ozon ?? '') }}</textarea>
                     </div>
                 </div>
                 @else
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Pengawas</label>
-                    <textarea name="pengawas" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="PS&#10;PS" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('pengawas', $report->pengawas ?? '') }}</textarea>
+                    <textarea name="pengawas" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="PS&#10;PS" oninput="autoGrow(this)">{{ old('pengawas', $report->pengawas ?? '') }}</textarea>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Rata-rata AJ</label>
-                        <textarea name="rata_rata_aj" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="250" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('rata_rata_aj', $report->rata_rata_aj ?? '') }}</textarea>
+                        <textarea name="rata_rata_aj" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="250" oninput="autoGrow(this)">{{ old('rata_rata_aj', $report->rata_rata_aj ?? '') }}</textarea>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">TDS</label>
-                        <textarea name="tds" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="90/30" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('tds', $report->tds ?? '') }}</textarea>
+                        <textarea name="tds" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="90/30" oninput="autoGrow(this)">{{ old('tds', $report->tds ?? '') }}</textarea>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">Mesin Ozon</label>
-                        <textarea name="mesin_ozon" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="D 123" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('mesin_ozon', $report->mesin_ozon ?? '') }}</textarea>
+                        <textarea name="mesin_ozon" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="D 123" oninput="autoGrow(this)">{{ old('mesin_ozon', $report->mesin_ozon ?? '') }}</textarea>
                     </div>
                 </div>
                 @endif
@@ -102,11 +102,11 @@
                         <button type="button" id="btnCekTypo" onclick="cekTypo()" class="text-[10px] font-medium text-purple-600 bg-purple-50 border border-purple-200 rounded px-1.5 py-0.5 hover:bg-purple-100 cursor-pointer transition-colors">Cek Typo</button>
                         <span id="typoSpinner" class="hidden text-[10px] text-purple-500">Loading...</span>
                     </div>
-                    <textarea name="peringatan_awal" id="peringatanAwal" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('peringatan_awal', $report->peringatan_awal ?? '') }}</textarea>
+                    <textarea name="peringatan_awal" id="peringatanAwal" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="autoGrow(this)">{{ old('peringatan_awal', $report->peringatan_awal ?? '') }}</textarea>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Note</label>
-                    <textarea name="note" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('note', $report->note ?? '') }}</textarea>
+                    <textarea name="note" rows="3" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="autoGrow(this)">{{ old('note', $report->note ?? '') }}</textarea>
                 </div>
             </div>
         </div>
@@ -122,19 +122,19 @@
             <div class="dropdown-body px-4 pb-4 space-y-3" style="display:none">
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Kondisi Cat</label>
-                    <textarea name="kondisi_cat" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('kondisi_cat', $report->kondisi_cat ?? 'Baik') }}</textarea>
+                    <textarea name="kondisi_cat" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="autoGrow(this)">{{ old('kondisi_cat', $report->kondisi_cat ?? 'Baik') }}</textarea>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Kondisi Awning</label>
-                    <textarea name="kondisi_awning" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('kondisi_awning', $report->kondisi_awning ?? 'Baik') }}</textarea>
+                    <textarea name="kondisi_awning" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="autoGrow(this)">{{ old('kondisi_awning', $report->kondisi_awning ?? 'Baik') }}</textarea>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Kondisi Vinyl Reklame Dinding/Jalan</label>
-                    <textarea name="kondisi_vinyl" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('kondisi_vinyl', $report->kondisi_vinyl ?? 'Baik') }}</textarea>
+                    <textarea name="kondisi_vinyl" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="autoGrow(this)">{{ old('kondisi_vinyl', $report->kondisi_vinyl ?? 'Baik') }}</textarea>
                 </div>
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">Kondisi Stiker Kaca</label>
-                    <textarea name="kondisi_stiker_kaca" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ old('kondisi_stiker_kaca', $report->kondisi_stiker_kaca ?? 'Baik') }}</textarea>
+                    <textarea name="kondisi_stiker_kaca" rows="2" class="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" oninput="autoGrow(this)">{{ old('kondisi_stiker_kaca', $report->kondisi_stiker_kaca ?? 'Baik') }}</textarea>
                 </div>
             </div>
         </div>
@@ -152,7 +152,7 @@
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">{{ $label }}</label>
                         <div class="relative">
-                            <textarea name="penjelasan_isi[]" rows="1" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden" placeholder="Ketik atau pilih penjelasan..." oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ $report->penjelasan_isi[$i] ?? '' }}</textarea>
+                            <textarea name="penjelasan_isi[]" rows="1" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden" placeholder="Ketik atau pilih penjelasan..." oninput="autoGrow(this)">{{ $report->penjelasan_isi[$i] ?? '' }}</textarea>
                             <ul class="suggest-list hidden absolute z-10 left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto list-none p-0 m-0 mt-1" style="max-height:200px"></ul>
                         </div>
                     </div>
@@ -174,7 +174,7 @@
                 <div>
                     <label class="block text-xs font-medium text-gray-500 mb-1">{{ $item['name'] }}</label>
                     <div class="relative" data-formulir="3">
-                        <textarea name="penjelasan_isi_3[{{ $item['id'] }}]" rows="1" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden" placeholder="Ketik atau pilih penjelasan..." oninput="this.style.height='';this.style.height=this.scrollHeight+'px'">{{ $report->penjelasan_isi_3[$item['id']] ?? '' }}</textarea>
+                        <textarea name="penjelasan_isi_3[{{ $item['id'] }}]" rows="1" class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none overflow-hidden" placeholder="Ketik atau pilih penjelasan..." oninput="autoGrow(this)">{{ $report->penjelasan_isi_3[$item['id']] ?? '' }}</textarea>
                         <ul class="suggest-list hidden absolute z-10 left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg max-h-48 overflow-y-auto list-none p-0 m-0 mt-1" style="max-height:200px"></ul>
                     </div>
                 </div>
@@ -222,6 +222,15 @@
 
 @push('scripts')
 <script>
+function autoGrow(el) {
+    var y = window.scrollY || window.pageYOffset || 0;
+    el.style.height = '';
+    el.style.height = el.scrollHeight + 'px';
+    if ((window.scrollY || window.pageYOffset || 0) !== y) {
+        window.scrollTo(0, y);
+    }
+}
+
 function compressImage(input) {
     var file = input.files[0];
     if (!file) return;
@@ -479,8 +488,7 @@ function markFixed(corrected, original) {
 function applyTypoFix() {
     var ta = document.getElementById('peringatanAwal');
     ta.value = window._typoCorrected || '';
-    ta.style.height = 'auto';
-    ta.style.height = ta.scrollHeight + 'px';
+    autoGrow(ta);
     closeTypoModal();
 }
 
@@ -524,8 +532,7 @@ var temuanFields = temuanForm.querySelectorAll('textarea, input[type=text]');
 temuanFields.forEach(function(el) {
     el.addEventListener('input', function() {
         if (this.tagName === 'TEXTAREA') {
-            this.style.height = '';
-            this.style.height = this.scrollHeight + 'px';
+            autoGrow(this);
         }
         clearTimeout(autoSaveTimer);
         autoSaveTimer = setTimeout(function() {
