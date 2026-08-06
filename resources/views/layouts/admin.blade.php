@@ -12,6 +12,10 @@
     <style>
         .swal-small { font-size: 0.8rem !important; }
         .swal-small-btn { font-size: 0.75rem !important; padding: 0.4em 1em !important; }
+        #notifDropdown { position: fixed; right: 0.5rem; top: 3.5rem; max-width: calc(100vw - 1rem); z-index: 50; }
+        @media (min-width: 640px) {
+            #notifDropdown { position: absolute; right: 0; top: 100%; margin-top: 0.25rem; max-width: none; }
+        }
     </style>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" integrity="sha256-GzSkJVLJbxDk36qko2cnawOGiqz/Y8GsQv/jMTUrx1Q=" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/themes/airbnb.css" integrity="sha256-LmZ7wnicF1GBpKNxhhOURrtTXXl7vgjlNtFyVcjZsHk=" crossorigin="anonymous">
@@ -271,7 +275,7 @@
                         @endif
                     </button>
                     @if ($pendingReports->isNotEmpty() || $editingReports->isNotEmpty())
-                    <div id="notifDropdown" class="hidden fixed right-2 top-14 z-50 w-72 max-w-[calc(100vw-1rem)] bg-white rounded-lg shadow-lg border py-2 max-h-80 overflow-y-auto" style="overscroll-behavior:contain">
+                    <div id="notifDropdown" class="hidden absolute right-0 top-full mt-1 w-72 max-w-sm bg-white rounded-lg shadow-lg border py-2 max-h-80 overflow-y-auto" style="overscroll-behavior:contain">
                         @if ($editingReports->isNotEmpty())
                         <div class="px-4 py-2 border-b border-gray-100">
                             <p class="text-xs font-semibold text-orange-500 uppercase">Edit Belum Selesai</p>
