@@ -27,8 +27,8 @@
             </div>
         </div>
 
-        <div class="max-h-[calc(100vh-200px)] overflow-auto" style="overscroll-behavior:contain">
-            <table class="w-full">
+        <div class="overflow-x-auto">
+            <table class="w-full min-w-[600px]">
                 <thead>
                     <tr class="bg-gray-50 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider sticky top-0 z-10">
                         <th class="px-3 sm:px-6 py-3 whitespace-nowrap cursor-pointer hover:text-gray-700 select-none" onclick="sortTable('kode_gerai')">Kode <span class="sort-icon" data-col="kode_gerai"></span></th>
