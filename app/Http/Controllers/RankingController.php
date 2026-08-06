@@ -161,7 +161,7 @@ class RankingController extends Controller
             ->whereIn('type', ['monitoring', 'import'])
             ->whereNotNull('submit_at')
             ->where('grade', 'C')
-            ->when(auth()->user()?->role !== 'admin', fn($q) => $q->where('user_id', auth()->id()))
+            ->where('user_id', auth()->id())
             ->where('periode_label', $period->label)
             ->join('gerais', 'monitoring_reports.gerai_id', '=', 'gerais.id')
             ->orderBy('monitoring_reports.nilai')
