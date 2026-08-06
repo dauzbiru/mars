@@ -3,6 +3,11 @@
 @section('title', 'Gerai - MARS')
 
 @section('content')
+    <style>
+        @media (min-width: 1024px) {
+            #fabMenu { right: 4rem; }
+        }
+    </style>
     <div class="bg-white rounded-xl shadow-md">
         <div class="sticky top-0 bg-white z-10 px-4 sm:px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">
@@ -27,7 +32,7 @@
             </div>
         </div>
 
-        <div id="geraiScroll" class="max-h-[calc(100vh-200px)] overflow-auto" style="max-height:calc(100dvh - 280px);overscroll-behavior:contain; -webkit-overflow-scrolling:touch">
+        <div id="geraiScroll" class="max-h-[calc(100vh-200px)] overflow-auto" style="max-height:calc(100dvh - 200px);overscroll-behavior:contain; -webkit-overflow-scrolling:touch">
             <table class="w-full">
                 <thead>
                     <tr class="bg-gray-50 text-left text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider sticky top-0 z-10">
