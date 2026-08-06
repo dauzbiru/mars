@@ -790,7 +790,7 @@ class EvaluasiController extends MonitoringController
 
         if ($excelPath && file_exists($excelPath)) {
             $pdfPath = $tempDir . '/' . $filename . '.pdf';
-            $pyScript = base_path('storage/app/xlwings-to-pdf.py');
+            $pyScript = base_path('scripts/xlwings-to-pdf.py');
             $cmd = 'python ' . escapeshellarg($pyScript) . ' ' . escapeshellarg($excelPath) . ' ' . escapeshellarg($pdfPath) . ' 2>&1';
             exec($cmd, $output, $returnCode);
             @unlink($excelPath);

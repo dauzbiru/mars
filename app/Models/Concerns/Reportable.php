@@ -4,6 +4,7 @@ namespace App\Models\Concerns;
 
 use App\Models\Result;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 trait Reportable
 {
@@ -20,6 +21,20 @@ trait Reportable
         if ($bulat >= self::GRADE_C_THRESHOLD) return 'C';
         if ($bulat >= self::GRADE_D_THRESHOLD) return 'D';
         return 'E';
+    }
+
+    protected static function bootReportable(): void
+    {
+        static::deleting(function ($report) {
+            $ttdPaths = array_filter([$report->ttd_petugas, $report->ttd_pimpinan]);
+            if ($ttdPaths) {
+                Storage::disk('public')->delete(array_values($ttdPaths));
+            }
+
+            foreach ($report->tampilanGeraiBlocks as $block) {
+                $block->delete();
+            }
+        });
     }
 
     public function results()

@@ -758,7 +758,7 @@ class ReportController extends Controller
             default => \App\Http\Controllers\MonitoringController::class,
         };
         $controller = app($controllerClass);
-        $pyScript = base_path('storage/app/xlwings-to-pdf.py');
+        $pyScript = base_path('scripts/xlwings-to-pdf.py');
         $generated = [];
 
         foreach ($reports as $report) {

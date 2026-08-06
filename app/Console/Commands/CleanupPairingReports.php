@@ -30,7 +30,7 @@ class CleanupPairingReports extends Command
                     ->whereIn('reportable_id', $ids)
                     ->delete();
 
-                $class::whereIn('id', $ids)->delete();
+                $class::withoutGlobalScope('no_pairing')->whereIn('id', $ids)->get()->each->delete();
             }
 
             $this->info("Dihapus " . $reports->count() . " laporan pairing dari " . class_basename($model));

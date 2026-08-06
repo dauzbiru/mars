@@ -44,6 +44,9 @@ storage/app/private/*.xlsx
 cookie.txt
 test_pra_monitoring.xlsx
 
+# Database + storage backups
+MARS-backup-*/
+
 # Python (scripts/)
 __pycache__/
 *.pyc

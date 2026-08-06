@@ -25,7 +25,7 @@ Artisan::command('reports:cleanup', function () {
     $monCount = $monIds->count();
     if ($monCount > 0) {
         Result::where('reportable_type', MonitoringReport::class)->whereIn('reportable_id', $monIds)->delete();
-        MonitoringReport::whereIn('id', $monIds)->delete();
+        MonitoringReport::withoutGlobalScope('no_pairing')->whereIn('id', $monIds)->get()->each->delete();
         $total += $monCount;
     }
     $this->info("Monitoring: deleted {$monCount} report(s).");
@@ -38,7 +38,7 @@ Artisan::command('reports:cleanup', function () {
     $praCount = $praIds->count();
     if ($praCount > 0) {
         Result::where('reportable_type', PraMonitoringReport::class)->whereIn('reportable_id', $praIds)->delete();
-        PraMonitoringReport::whereIn('id', $praIds)->delete();
+        PraMonitoringReport::withoutGlobalScope('no_pairing')->whereIn('id', $praIds)->get()->each->delete();
         $total += $praCount;
     }
     $this->info("Pra-Monitoring: deleted {$praCount} report(s).");
@@ -51,7 +51,7 @@ Artisan::command('reports:cleanup', function () {
     $reCount = $reIds->count();
     if ($reCount > 0) {
         Result::where('reportable_type', ReMonitoringReport::class)->whereIn('reportable_id', $reIds)->delete();
-        ReMonitoringReport::whereIn('id', $reIds)->delete();
+        ReMonitoringReport::withoutGlobalScope('no_pairing')->whereIn('id', $reIds)->get()->each->delete();
         $total += $reCount;
     }
     $this->info("Re-Monitoring: deleted {$reCount} report(s).");
