@@ -3,11 +3,6 @@
 @section('title', 'Gerai - MARS')
 
 @section('content')
-    <style>
-        #fabMenu { right: 2.5rem; }
-        @media (min-width: 640px) { #fabMenu { right: 3rem; } }
-        @media (min-width: 1024px) { #fabMenu { right: 3.5rem; } }
-    </style>
     <div class="bg-white rounded-xl shadow-md">
         <div class="sticky top-0 bg-white z-10 px-4 sm:px-6 py-4 border-b border-gray-200 flex items-center justify-between gap-3">
             <div class="flex items-center gap-3">

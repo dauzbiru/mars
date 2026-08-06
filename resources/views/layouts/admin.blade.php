@@ -16,6 +16,9 @@
         @media (min-width: 640px) {
             #notifDropdown { position: absolute; right: 0; top: 100%; margin-top: 0.25rem; max-width: none; }
         }
+        #fabMenu, #waBtn, .fixed.bottom-6.right-6.z-40 { right: 2.5rem; }
+        @media (min-width: 640px) { #fabMenu, #waBtn, .fixed.bottom-6.right-6.z-40 { right: 3rem; } }
+        @media (min-width: 1024px) { #fabMenu, #waBtn, .fixed.bottom-6.right-6.z-40 { right: 3.5rem; } }
     </style>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" integrity="sha256-GzSkJVLJbxDk36qko2cnawOGiqz/Y8GsQv/jMTUrx1Q=" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/themes/airbnb.css" integrity="sha256-LmZ7wnicF1GBpKNxhhOURrtTXXl7vgjlNtFyVcjZsHk=" crossorigin="anonymous">
