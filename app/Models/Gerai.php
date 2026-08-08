@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasPhoneNumber;
 use Illuminate\Database\Eloquent\Model;
 
 class Gerai extends Model
 {
+    use HasPhoneNumber;
+
     protected $fillable = ['kode_gerai', 'nama_gerai', 'franchisee', 'alamat', 'email', 'no_telepon', 'opening_at', 'nama_kota', 'area', 'is_active', 'closed_at'];
 
     protected function casts(): array

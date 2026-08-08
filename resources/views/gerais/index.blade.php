@@ -113,7 +113,7 @@
             </div>
             <div class="mb-4">
                 <label for="create_no_telepon" class="block text-sm font-medium text-gray-700 mb-1">No Telepon</label>
-                <input id="create_no_telepon" type="text" name="no_telepon" placeholder="628xxxxxxxx"
+                <input id="create_no_telepon" type="text" name="no_telepon" placeholder="08xxxxxxxxxx"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div class="mb-6">
@@ -178,7 +178,7 @@
             </div>
             <div class="mb-4">
                 <label for="edit_no_telepon" class="block text-sm font-medium text-gray-700 mb-1">No Telepon</label>
-                <input id="edit_no_telepon" type="text" name="no_telepon" placeholder="628xxxxxxxx"
+                <input id="edit_no_telepon" type="text" name="no_telepon" placeholder="08xxxxxxxxxx"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div class="mb-6">

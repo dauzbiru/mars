@@ -113,6 +113,18 @@ Route::middleware('auth')->group(function () {
         Route::put('/gerais/kota-maps/{kotaMap}', [GeraiController::class, 'updateKotaMap']);
         Route::delete('/gerais/kota-maps/{kotaMap}', [GeraiController::class, 'destroyKotaMap']);
 
+        // Daftar Harga Uji Lab
+        Route::get('/harga-lab', [\App\Http\Controllers\HargaLabController::class, 'index'])->name('harga-lab.index');
+        Route::post('/harga-lab', [\App\Http\Controllers\HargaLabController::class, 'store']);
+        Route::put('/harga-lab/{hargaLab}', [\App\Http\Controllers\HargaLabController::class, 'update']);
+        Route::delete('/harga-lab/{hargaLab}', [\App\Http\Controllers\HargaLabController::class, 'destroy']);
+
+        // Daftar Harga Air Baku
+        Route::get('/harga-air-baku', [\App\Http\Controllers\HargaAirBakuController::class, 'index'])->name('harga-air-baku.index');
+        Route::post('/harga-air-baku', [\App\Http\Controllers\HargaAirBakuController::class, 'store']);
+        Route::put('/harga-air-baku/{hargaAirBaku}', [\App\Http\Controllers\HargaAirBakuController::class, 'update']);
+        Route::delete('/harga-air-baku/{hargaAirBaku}', [\App\Http\Controllers\HargaAirBakuController::class, 'destroy']);
+
         // Komplain
         Route::get('/komplain', [KomplainController::class, 'index'])->name('komplain.index');
         Route::get('/komplain/pdf/all', [KomplainController::class, 'pdfAll']);

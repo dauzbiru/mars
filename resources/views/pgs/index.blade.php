@@ -36,7 +36,7 @@
                             <td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-500 whitespace-nowrap">{{ $index + 1 }}</td>
                             <td class="px-3 sm:px-6 py-3 text-xs sm:text-sm font-medium text-gray-800 whitespace-nowrap">{{ $pg->nama_pg }}</td>
                             <td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell">{{ $pg->kota ?? '-' }}</td>
-                            <td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell">{{ $pg->no_telepon ?? '-' }}</td>
+                            <td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell">{{ $pg->no_telepon ? (str_starts_with($pg->no_telepon, '62') ? '0' . substr($pg->no_telepon, 2) : $pg->no_telepon) : '-' }}</td>
                             <td class="px-3 sm:px-6 py-3 text-right whitespace-nowrap">
                                 <button onclick="openEditModal({{ $pg->id }})"
                                     class="inline-block px-2 sm:px-3 py-1 text-xs font-medium rounded-lg hover:opacity-80 cursor-pointer" style="background:#FEF3C7;color:#D97706">Edit</button>
@@ -102,7 +102,7 @@
             </div>
             <div class="mb-6">
                 <label for="create_no_telepon" class="block text-sm font-medium text-gray-700 mb-1">No Telepon</label>
-                <input id="create_no_telepon" type="text" name="no_telepon" placeholder="628xxxxxxxx"
+                <input id="create_no_telepon" type="text" name="no_telepon" placeholder="08xxxxxxxxxx"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div class="flex gap-3">
@@ -132,7 +132,7 @@
             </div>
             <div class="mb-6">
                 <label for="edit_no_telepon" class="block text-sm font-medium text-gray-700 mb-1">No Telepon</label>
-                <input id="edit_no_telepon" type="text" name="no_telepon" placeholder="628xxxxxxxx"
+                <input id="edit_no_telepon" type="text" name="no_telepon" placeholder="08xxxxxxxxxx"
                     class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
             <div class="flex gap-3">

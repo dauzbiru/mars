@@ -380,10 +380,10 @@ document.addEventListener('click', function(e) {
         </div>
         <div>
             <label class="block text-xs text-gray-500 mb-1">Nomor Telepon</label>
-            <input type="text" id="waNumber" placeholder="628xxxxxxxx"
+            <input type="text" id="waNumber" placeholder="08xxxxxxxxxx"
                 class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent">
         </div>
-        <p id="waError" class="text-xs text-red-500 mt-1 hidden">Nomor tidak valid. Gunakan format: 628xx...</p>
+        <p id="waError" class="text-xs text-red-500 mt-1 hidden">Nomor tidak valid. Periksa kembali nomor Anda.</p>
         <div class="mt-4 flex justify-end gap-3">
             <button onclick="closeWaModal()" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300">Batal</button>
             <button onclick="sendWa()" class="px-4 py-2 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600">Kirim</button>
@@ -501,6 +501,8 @@ function sendWa() {
         document.getElementById('waError').classList.remove('hidden');
         return;
     }
+    if (number.startsWith('0')) number = '62' + number.slice(1);
+    else if (!number.startsWith('62')) number = '62' + number;
     document.getElementById('waError').classList.add('hidden');
     closeWaModal();
     var text = 'Laporan ' + prefix + ' Gerai ' + geraiName + ' Tanggal ' + tgl;

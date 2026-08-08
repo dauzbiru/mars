@@ -122,7 +122,7 @@ class PgController extends Controller
         $writer->openToFile($filename);
 
         $writer->addRow(Row::fromValues(['Nama PG', 'Kota', 'No Telepon']));
-        $writer->addRow(Row::fromValues(['PG Contoh', 'Jakarta', '6281234567890']));
+        $writer->addRow(Row::fromValues(['PG Contoh', 'Jakarta', '081234567890']));
 
         $writer->close();
 
