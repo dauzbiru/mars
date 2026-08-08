@@ -129,7 +129,7 @@ class MonitoringController extends Controller
             )
             ->orderBy('kode_gerai')->get();
 
-        $isAdmin = Auth::user()?->role === 'admin';
+        $isAdmin = (bool) Auth::user()?->isAdmin();
         if ($this->type === 'evaluasi') {
             $query = $this->modelClass()::whereNull('tanggal');
         } else {
@@ -604,6 +604,25 @@ class MonitoringController extends Controller
         ]);
     }
 
+    public function updateInfo(Request $request, $id)
+    {
+        $report = $this->modelClass()::withoutGlobalScope('no_pairing')->findOrFail($id);
+        $this->authorizeReport($report);
+
+        $request->validate([
+            'checkin_at' => 'required|date',
+            'submit_at' => 'nullable|date',
+        ]);
+
+        $report->checkin_at = \Carbon\Carbon::parse($request->input('checkin_at'))->setTimezone('Asia/Jakarta');
+        $report->submit_at = $request->filled('submit_at')
+            ? \Carbon\Carbon::parse($request->input('submit_at'))->setTimezone('Asia/Jakarta')
+            : null;
+        $report->save();
+
+        return back()->with('success', 'Informasi laporan berhasil diperbarui.');
+    }
+
     public function pdf($id)
     {
         $report = $this->modelClass()::withoutGlobalScope('no_pairing')->with('gerai', 'user')->findOrFail($id);
@@ -976,7 +995,7 @@ class MonitoringController extends Controller
 
     protected function pendingReport()
     {
-        if (Auth::user()?->role === 'admin') {
+        if (Auth::user()?->isAdmin()) {
             return null;
         }
         return $this->modelClass()::where('user_id', Auth::id())
@@ -987,7 +1006,7 @@ class MonitoringController extends Controller
 
     protected function authorizeReport($report): void
     {
-        if ($report->user_id !== Auth::id() && Auth::user()?->role !== 'admin') {
+        if ($report->user_id !== Auth::id() && !Auth::user()?->isAdmin()) {
             abort(403, 'Anda tidak berhak mengakses laporan ini.');
         }
     }

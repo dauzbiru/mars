@@ -38,7 +38,7 @@ class NotificationComposer
             }
         }
 
-        $isAdmin = Auth::user()?->role === 'admin';
+        $isAdmin = (bool) Auth::user()?->isAdmin();
 
         $geraiCounts = [
             'pra-monitoring' => \App\Models\Gerai::active()

@@ -645,7 +645,7 @@ class ReportController extends Controller
         $query = $modelClass::with('gerai', 'user')
             ->whereNotNull('submit_at');
 
-        if (Auth::user()->role !== 'admin') {
+        if (!Auth::user()->isAdmin()) {
             $query->where('user_id', Auth::id());
         }
 
@@ -739,7 +739,7 @@ class ReportController extends Controller
                   ->where('periode_label', $request->periode_label);
         }
 
-        if (Auth::user()->role !== 'admin') {
+        if (!Auth::user()->isAdmin()) {
             $query->where('user_id', Auth::id());
         }
 

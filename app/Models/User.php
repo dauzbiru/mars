@@ -18,6 +18,21 @@ class User extends Authenticatable
 
     protected $fillable = ['name', 'username', 'password', 'role'];
 
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'superadmin';
+    }
+
+    public function isAdmin(): bool
+    {
+        return in_array($this->role, ['admin', 'superadmin'], true);
+    }
+
+    public function isGuest(): bool
+    {
+        return $this->role === 'guest';
+    }
+
     public function monitoringReports(): HasMany
     {
         return $this->hasMany(MonitoringReport::class);

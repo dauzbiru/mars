@@ -53,6 +53,12 @@
                         <input type="radio" name="role" value="guest" {{ old('role') == 'guest' ? 'checked' : '' }} class="text-blue-600">
                         <span class="text-sm text-gray-700">Guest</span>
                     </label>
+                    @if (auth()->user()->isSuperAdmin())
+                    <label class="inline-flex items-center gap-2">
+                        <input type="radio" name="role" value="superadmin" {{ old('role') == 'superadmin' ? 'checked' : '' }} class="text-purple-600">
+                        <span class="text-sm text-gray-700">Superadmin</span>
+                    </label>
+                    @endif
                 </div>
                 @error('role')
                     <p class="text-red-500 text-sm mt-1">{{ $message }}</p>

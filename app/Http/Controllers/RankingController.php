@@ -161,8 +161,8 @@ class RankingController extends Controller
             ->whereIn('type', ['monitoring', 'import'])
             ->whereNotNull('submit_at')
             ->where('grade', 'C')
-            ->when(auth()->user()?->role !== 'admin', fn($q) => $q->where('user_id', auth()->id()))
-            ->when(auth()->user()?->role === 'admin', function ($q) {
+            ->when(!auth()->user()?->isAdmin(), fn($q) => $q->where('user_id', auth()->id()))
+            ->when(auth()->user()?->isAdmin(), function ($q) {
                 $q->where(function ($q2) {
                     $q2->where('user_id', auth()->id())
                        ->orWhereHas('user', fn($q3) => $q3->where('role', 'guest'));

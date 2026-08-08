@@ -56,7 +56,7 @@ class PgController extends Controller
     public function importExcel(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls',
+            'file' => 'required|file|mimes:xlsx',
         ]);
 
         $file = $request->file('file');

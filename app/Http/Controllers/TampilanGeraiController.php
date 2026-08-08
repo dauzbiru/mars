@@ -26,7 +26,7 @@ class TampilanGeraiController extends Controller
     {
         $class = $this->modelMap()[$type] ?? abort(404);
         $report = $class::withoutGlobalScope('no_pairing')->findOrFail($id);
-        if ($report->user_id !== Auth::id() && Auth::user()?->role !== 'admin') {
+        if ($report->user_id !== Auth::id() && !Auth::user()?->isAdmin()) {
             abort(403, 'Anda tidak berhak mengakses laporan ini.');
         }
         return $report;
@@ -46,7 +46,7 @@ class TampilanGeraiController extends Controller
             ], function ($query) {
                 $query->whereNotNull('submit_at');
             })
-            ->when(Auth::user()?->role !== 'admin', function ($query) {
+            ->when(!Auth::user()?->isAdmin(), function ($query) {
                 $query->where('user_id', Auth::id());
             })
             ->get();
@@ -206,7 +206,7 @@ class TampilanGeraiController extends Controller
 
     protected function authorizeBlock(TampilanGeraiBlock $block): void
     {
-        if ($block->user_id !== Auth::id() && Auth::user()?->role !== 'admin') {
+        if ($block->user_id !== Auth::id() && !Auth::user()?->isAdmin()) {
             abort(403, 'Anda tidak berhak mengubah data ini.');
         }
     }

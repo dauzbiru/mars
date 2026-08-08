@@ -33,7 +33,6 @@ class AuthController extends Controller
         if ($user->role === 'guest') {
             return redirect()->to('/guest');
         }
-
         return redirect()->to('/dashboard');
     }
 

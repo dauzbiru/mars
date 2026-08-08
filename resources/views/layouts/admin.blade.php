@@ -109,6 +109,7 @@
                     Data PG
                 </a>
                 {{-- Tugas Dropdown --}}
+                @if (auth()->user()->isSuperAdmin())
                 @php
                     $isTugasActive = request()->is('categories*') || request()->is('tugas/penjelasan-formulir-2') || request()->is('tugas/penjelasan-formulir-3');
                 @endphp
@@ -136,6 +137,7 @@
                         Penjelasan Formulir 3
                     </a>
                 </div>
+                @endif
                 <a href="/komplain"
                     class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->is('komplain*') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700' }}">
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -220,6 +222,7 @@
                     </svg>
                     Laporan Evaluasi
                 </a>
+                @if (auth()->user()->isSuperAdmin())
                 <a href="/excel-template"
                     class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors {{ request()->is('excel-template') ? 'bg-blue-50 text-blue-700' : 'text-gray-600 hover:bg-blue-50 hover:text-blue-700' }}">
                     <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -235,6 +238,7 @@
                     </svg>
                     Pengaturan
                 </a>
+                @endif
             @endif
         </nav>
 
@@ -362,7 +366,7 @@
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                         Re-Monitoring
                     </a>
-                    @if (auth()->user()->role === 'admin')
+                    @if (auth()->user()->isAdmin())
                     <a href="/evaluasi" class="flex items-center gap-2 px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                         Evaluasi

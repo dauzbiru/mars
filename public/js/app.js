@@ -52,7 +52,7 @@ function toggleSidebar() {
     var bot = document.getElementById('burgerBot');
     var navbarMars = document.getElementById('navbarMars');
     var sidebarMars = document.getElementById('sidebarMars');
-    var fabMenus = document.querySelectorAll('#fabMenu');
+    var fabMenus = document.querySelectorAll('.fixed.bottom-6.right-6');
     var burgerBtn = document.getElementById('burgerBtn');
     if (sidebar.classList.contains('-translate-x-full')) {
         top.style.transform = 'none';

@@ -559,7 +559,7 @@ class EvaluasiController extends MonitoringController
 
     protected function pendingReport()
     {
-        if (auth()->user()?->role === 'admin') {
+        if (auth()->user()?->isAdmin()) {
             return null;
         }
         return EvaluasiReport::where('user_id', auth()->id())
@@ -569,7 +569,7 @@ class EvaluasiController extends MonitoringController
 
     public function checkinForm(Gerai $gerai)
     {
-        $isAdmin = auth()->user()?->role === 'admin';
+        $isAdmin = (bool) auth()->user()?->isAdmin();
 
         if (!$isAdmin) {
             $pending = EvaluasiReport::where('user_id', auth()->id())

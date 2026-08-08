@@ -16,7 +16,7 @@ use App\Http\Controllers\SettingsController;
 
 Route::get('/', function () {
     if (Auth::check()) {
-        if (Auth::user()->role === 'admin') {
+        if (in_array(Auth::user()->role, ['admin', 'superadmin'], true)) {
             return redirect('/dashboard');
         }
         return redirect('/guest');
@@ -28,7 +28,7 @@ Route::get('/guest', function () {
     if (!Auth::check()) {
         return redirect('/login');
     }
-    if (Auth::user()->role === 'admin') {
+    if (in_array(Auth::user()->role, ['admin', 'superadmin'], true)) {
         return redirect('/dashboard');
     }
     return view('guest.landing');
@@ -53,44 +53,46 @@ Route::middleware('auth')->group(function () {
         Route::delete('/user/{user}', [UserController::class, 'destroy']);
 
         // Categories
-        Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
-        Route::get('/categories/create', [CategoryController::class, 'create']);
-        Route::post('/categories', [CategoryController::class, 'store']);
-        Route::put('/categories/reorder', [CategoryController::class, 'reorder']);
-        Route::get('/categories/{category}', [CategoryController::class, 'show']);
-        Route::get('/categories/{category}/edit', [CategoryController::class, 'edit']);
-        Route::put('/categories/{category}', [CategoryController::class, 'update']);
-        Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
+        Route::middleware('superadmin')->group(function () {
+            Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
+            Route::get('/categories/create', [CategoryController::class, 'create']);
+            Route::post('/categories', [CategoryController::class, 'store']);
+            Route::put('/categories/reorder', [CategoryController::class, 'reorder']);
+            Route::get('/categories/{category}', [CategoryController::class, 'show']);
+            Route::get('/categories/{category}/edit', [CategoryController::class, 'edit']);
+            Route::put('/categories/{category}', [CategoryController::class, 'update']);
+            Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
 
-        // Penjelasan Formulir
-        Route::get('/tugas/penjelasan-formulir-2', [PenjelasanFormulirController::class, 'index'])->defaults('formulir', 2);
-        Route::get('/tugas/penjelasan-formulir-3', [PenjelasanFormulirController::class, 'index'])->defaults('formulir', 3);
-        Route::post('/tugas/penjelasan-formulir/{formulir}', [PenjelasanFormulirController::class, 'store']);
-        Route::put('/tugas/penjelasan-formulir/{penjelasan_formulir}', [PenjelasanFormulirController::class, 'update']);
-        Route::delete('/tugas/penjelasan-formulir/{penjelasan_formulir}', [PenjelasanFormulirController::class, 'destroy']);
-        Route::get('/tugas/penjelasan-formulir/{formulir}/import', [PenjelasanFormulirController::class, 'importForm']);
-        Route::post('/tugas/penjelasan-formulir/{formulir}/import', [PenjelasanFormulirController::class, 'import']);
-        Route::get('/tugas/penjelasan-formulir/{formulir}/template', [PenjelasanFormulirController::class, 'template']);
+            // Penjelasan Formulir
+            Route::get('/tugas/penjelasan-formulir-2', [PenjelasanFormulirController::class, 'index'])->defaults('formulir', 2);
+            Route::get('/tugas/penjelasan-formulir-3', [PenjelasanFormulirController::class, 'index'])->defaults('formulir', 3);
+            Route::post('/tugas/penjelasan-formulir/{formulir}', [PenjelasanFormulirController::class, 'store']);
+            Route::put('/tugas/penjelasan-formulir/{penjelasan_formulir}', [PenjelasanFormulirController::class, 'update']);
+            Route::delete('/tugas/penjelasan-formulir/{penjelasan_formulir}', [PenjelasanFormulirController::class, 'destroy']);
+            Route::get('/tugas/penjelasan-formulir/{formulir}/import', [PenjelasanFormulirController::class, 'importForm']);
+            Route::post('/tugas/penjelasan-formulir/{formulir}/import', [PenjelasanFormulirController::class, 'import']);
+            Route::get('/tugas/penjelasan-formulir/{formulir}/template', [PenjelasanFormulirController::class, 'template']);
 
-        // Items + Criteria
-        Route::get('/categories/{category}/items/create', [ItemController::class, 'create']);
-        Route::post('/categories/{category}/items', [ItemController::class, 'store']);
-        Route::get('/items/{item}/edit', [ItemController::class, 'edit']);
-        Route::put('/items/{item}', [ItemController::class, 'update']);
-        Route::put('/items/{item}/up', [ItemController::class, 'moveUp']);
-        Route::put('/items/{item}/down', [ItemController::class, 'moveDown']);
-        Route::delete('/items/{item}', [ItemController::class, 'destroy']);
-        Route::put('/categories/{category}/items/reorder', [ItemController::class, 'reorder']);
-        Route::put('/categories/{category}/items/bobot', [ItemController::class, 'batchBobot']);
+            // Items + Criteria
+            Route::get('/categories/{category}/items/create', [ItemController::class, 'create']);
+            Route::post('/categories/{category}/items', [ItemController::class, 'store']);
+            Route::get('/items/{item}/edit', [ItemController::class, 'edit']);
+            Route::put('/items/{item}', [ItemController::class, 'update']);
+            Route::put('/items/{item}/up', [ItemController::class, 'moveUp']);
+            Route::put('/items/{item}/down', [ItemController::class, 'moveDown']);
+            Route::delete('/items/{item}', [ItemController::class, 'destroy']);
+            Route::put('/categories/{category}/items/reorder', [ItemController::class, 'reorder']);
+            Route::put('/categories/{category}/items/bobot', [ItemController::class, 'batchBobot']);
 
-        Route::get('/items/{item}/criteria', [CriterionController::class, 'index']);
-        Route::get('/items/{item}/criteria/create', [CriterionController::class, 'create']);
-        Route::post('/items/{item}/criteria', [CriterionController::class, 'store']);
-        Route::post('/items/{item}/criteria/batch', [CriterionController::class, 'batchStore']);
-        Route::put('/items/{item}/criteria/reorder', [CriterionController::class, 'reorder']);
-        Route::get('/items/{item}/criteria/{criterion}/edit', [CriterionController::class, 'edit']);
-        Route::put('/items/{item}/criteria/{criterion}', [CriterionController::class, 'update']);
-        Route::delete('/items/{item}/criteria/{criterion}', [CriterionController::class, 'destroy']);
+            Route::get('/items/{item}/criteria', [CriterionController::class, 'index']);
+            Route::get('/items/{item}/criteria/create', [CriterionController::class, 'create']);
+            Route::post('/items/{item}/criteria', [CriterionController::class, 'store']);
+            Route::post('/items/{item}/criteria/batch', [CriterionController::class, 'batchStore']);
+            Route::put('/items/{item}/criteria/reorder', [CriterionController::class, 'reorder']);
+            Route::get('/items/{item}/criteria/{criterion}/edit', [CriterionController::class, 'edit']);
+            Route::put('/items/{item}/criteria/{criterion}', [CriterionController::class, 'update']);
+            Route::delete('/items/{item}/criteria/{criterion}', [CriterionController::class, 'destroy']);
+        });
 
         // Gerai
         Route::get('/gerais', [GeraiController::class, 'index'])->name('gerai.index');
@@ -168,28 +170,30 @@ Route::middleware('auth')->group(function () {
         Route::get('/daftar-nilai/import/template', [\App\Http\Controllers\RankingController::class, 'template']);
 
         // Excel Templates
-        Route::post('/excel-template/upload', [\App\Http\Controllers\MonitoringController::class, 'uploadTemplate']);
-        Route::delete('/excel-template/delete', [\App\Http\Controllers\MonitoringController::class, 'deleteTemplate']);
+        Route::middleware('superadmin')->group(function () {
+            Route::post('/excel-template/upload', [\App\Http\Controllers\MonitoringController::class, 'uploadTemplate']);
+            Route::delete('/excel-template/delete', [\App\Http\Controllers\MonitoringController::class, 'deleteTemplate']);
 
-        // Template Evaluasi upload/delete
-        Route::post('/excel-template/evaluasi/upload', [\App\Http\Controllers\MonitoringController::class, 'uploadTemplateEvaluasi']);
-        Route::delete('/excel-template/evaluasi/delete', [\App\Http\Controllers\MonitoringController::class, 'deleteTemplateEvaluasi']);
+            // Template Evaluasi upload/delete
+            Route::post('/excel-template/evaluasi/upload', [\App\Http\Controllers\MonitoringController::class, 'uploadTemplateEvaluasi']);
+            Route::delete('/excel-template/evaluasi/delete', [\App\Http\Controllers\MonitoringController::class, 'deleteTemplateEvaluasi']);
 
-        // Template Surat Word (Pra-Monitoring) upload/delete
-        Route::post('/word-template/upload', [\App\Http\Controllers\PraMonitoringController::class, 'uploadWordTemplate']);
-        Route::delete('/word-template/delete', [\App\Http\Controllers\PraMonitoringController::class, 'deleteWordTemplate']);
+            // Template Surat Word (Pra-Monitoring) upload/delete
+            Route::post('/word-template/upload', [\App\Http\Controllers\PraMonitoringController::class, 'uploadWordTemplate']);
+            Route::delete('/word-template/delete', [\App\Http\Controllers\PraMonitoringController::class, 'deleteWordTemplate']);
+
+            // Settings
+            Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+            Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
+            Route::get('/excel-template', function () {
+                return view('excel-template');
+            })->name('excel-template');
+            Route::get('/excel-template/example', [\App\Http\Controllers\MonitoringController::class, 'downloadExampleTemplate'])->name('excel-template.example');
+        });
 
         // Dashboard
         Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard/chart-data', [\App\Http\Controllers\DashboardController::class, 'chartData']);
-
-        // Settings
-        Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
-        Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
-        Route::get('/excel-template', function () {
-            return view('excel-template');
-        })->name('excel-template');
-        Route::get('/excel-template/example', [\App\Http\Controllers\MonitoringController::class, 'downloadExampleTemplate'])->name('excel-template.example');
 
         // Daftar Nilai
         Route::get('/daftar-nilai', [\App\Http\Controllers\RankingController::class, 'index'])->name('daftar-nilai.index');
@@ -255,6 +259,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/monitoring/{report}/pdf', [\App\Http\Controllers\MonitoringController::class, 'pdf']);
     Route::get('/monitoring/{report}/excel', [\App\Http\Controllers\MonitoringController::class, 'excel']);
     Route::get('/monitoring/{report}', [\App\Http\Controllers\MonitoringController::class, 'show']);
+    Route::put('/monitoring/{report}/info', [\App\Http\Controllers\MonitoringController::class, 'updateInfo'])->middleware('superadmin');
     Route::delete('/monitoring/{report}', [\App\Http\Controllers\MonitoringController::class, 'destroy']);
 
     // Pra-Monitoring
@@ -271,6 +276,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/pra-monitoring/{report}/pdf', [\App\Http\Controllers\PraMonitoringController::class, 'pdf']);
     Route::get('/pra-monitoring/{report}/excel', [\App\Http\Controllers\PraMonitoringController::class, 'excel']);
     Route::get('/pra-monitoring/{report}', [\App\Http\Controllers\PraMonitoringController::class, 'show']);
+    Route::put('/pra-monitoring/{report}/info', [\App\Http\Controllers\PraMonitoringController::class, 'updateInfo'])->middleware('superadmin');
     Route::delete('/pra-monitoring/{report}', [\App\Http\Controllers\PraMonitoringController::class, 'destroy']);
 
     // Re-Monitoring
@@ -287,6 +293,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/re-monitoring/{report}/pdf', [\App\Http\Controllers\ReMonitoringController::class, 'pdf']);
     Route::get('/re-monitoring/{report}/excel', [\App\Http\Controllers\ReMonitoringController::class, 'excel']);
     Route::get('/re-monitoring/{report}', [\App\Http\Controllers\ReMonitoringController::class, 'show']);
+        Route::put('/re-monitoring/{report}/info', [\App\Http\Controllers\ReMonitoringController::class, 'updateInfo'])->middleware('superadmin');
         Route::delete('/re-monitoring/{report}', [\App\Http\Controllers\ReMonitoringController::class, 'destroy']);
 
     });

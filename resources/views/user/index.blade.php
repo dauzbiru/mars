@@ -49,6 +49,8 @@
                                 <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm">
                                     @if ($u->role === 'guest')
                                         <span class="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">Guest</span>
+                                    @elseif ($u->role === 'superadmin')
+                                        <span class="inline-block px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">Superadmin</span>
                                     @else
                                         <span class="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">Admin</span>
                                     @endif
@@ -132,6 +134,12 @@
                             <input type="radio" name="role" value="guest" {{ old('role') === 'guest' ? 'checked' : '' }} class="text-blue-600">
                             <span class="text-sm text-gray-700">Guest</span>
                         </label>
+                        @if (auth()->user()->isSuperAdmin())
+                        <label class="inline-flex items-center gap-2">
+                            <input type="radio" name="role" value="superadmin" {{ old('role') === 'superadmin' ? 'checked' : '' }} class="text-purple-600">
+                            <span class="text-sm text-gray-700">Superadmin</span>
+                        </label>
+                        @endif
                     </div>
                 </div>
                 <div class="flex gap-3">
@@ -182,6 +190,12 @@
                             <input type="radio" name="role" value="guest" id="editRoleGuest" class="text-blue-600">
                             <span class="text-sm text-gray-700">Guest</span>
                         </label>
+                        @if (auth()->user()->isSuperAdmin())
+                        <label class="inline-flex items-center gap-2">
+                            <input type="radio" name="role" value="superadmin" id="editRoleSuperadmin" class="text-purple-600">
+                            <span class="text-sm text-gray-700">Superadmin</span>
+                        </label>
+                        @endif
                     </div>
                 </div>
                 <div class="flex gap-3">
@@ -206,6 +220,8 @@ function openEditModal(id, name, username, role) {
     document.getElementById('editUsername').value = username;
     document.getElementById('editRoleAdmin').checked = role === 'admin';
     document.getElementById('editRoleGuest').checked = role === 'guest';
+    var superRadio = document.getElementById('editRoleSuperadmin');
+    if (superRadio) superRadio.checked = role === 'superadmin';
     document.getElementById('editModal').classList.remove('hidden');
 }
 function closeEditModal() {

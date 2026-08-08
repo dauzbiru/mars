@@ -611,13 +611,6 @@ function sortTable(col) {
         el.textContent = el.getAttribute('data-col') === col ? (dir === 'asc' ? ' \u25B2' : ' \u25BC') : '';
     });
 
-    geraiData.sort(function(a, b) {
-        var va = a[col], vb = b[col];
-        if (col === 'lama_beroperasi') return dir === 'asc' ? (va||-1) - (vb||-1) : (vb||-1) - (va||-1);
-        if (col === 'opening_at') return dir === 'asc' ? (va||' ').localeCompare(vb||' ') : (vb||' ').localeCompare(va||' ');
-        return dir === 'asc' ? String(va||'').localeCompare(String(vb||'')) : String(vb||'').localeCompare(String(va||''));
-    });
-
     renderGeraiTable();
 }
 
@@ -625,44 +618,78 @@ function renderGeraiTable() {
     var tbody = document.getElementById('geraiTableBody');
     var q = (document.getElementById('searchGerai').value || '').toLowerCase();
     var status = currentGeraiStatus;
-    var html = '';
-    geraiData.forEach(function(g) {
+    var sortCol = null, sortDir = 'asc';
+    for (var k in sortState) { sortCol = k; sortDir = sortState[k]; }
+
+    var matched = geraiData.filter(function(g) {
         var match = q ? (g.kode_gerai.toLowerCase().includes(q) || g.nama_gerai.toLowerCase().includes(q)) : true;
         var st = status === 'aktif' ? g.is_active : (status === 'tutup' ? !g.is_active : true);
-        if (!match || !st) return;
-        var diff = '-';
-        if (g.is_active && g.lama_beroperasi > 0) {
-            var parts = [];
-            var d = g.lama_beroperasi;
-            if (d >= 365) parts.push(Math.floor(d/365) + ' thn');
-            if (d%365 >= 30) parts.push(Math.floor((d%365)/30) + ' bln');
-            if (parts.length === 0 || d%30 > 0) parts.push(d%30 + ' hr');
-            diff = parts.join(' ');
-        }
-        var phone = g.no_telepon && String(g.no_telepon).startsWith('62') ? '0' + String(g.no_telepon).slice(2) : (g.no_telepon || '-');
-        html += '<tr class="hover:bg-gray-50 ' + (!g.is_active ? 'bg-gray-100' : '') + '" data-active="' + (g.is_active ? '1' : '0') + '">'
-            + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm font-medium text-gray-800 whitespace-nowrap">' + g.kode_gerai + '</td>'
-            + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 truncate max-w-[120px] sm:max-w-none">' + g.nama_gerai + '</td>'
-            + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell">' + g.franchisee + '</td>'
-            + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 truncate max-w-[120px] sm:max-w-none hidden sm:table-cell">' + (g.alamat || '-') + '</td>'
-            + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell">' + (g.email || '-') + '</td>'
-            + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell">' + phone + '</td>'
-            + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell">' + (g.opening_at ? formatDate(g.opening_at) : '-') + '</td>'
-            + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell">' + diff + '</td>'
-            + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell">' + (g.nama_kota || '-') + '</td>'
-            + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell">' + (g.area || '-') + '</td>'
-            + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm whitespace-nowrap">' + (g.is_active ? '<span class="text-green-600 font-medium">Aktif</span>' : '<span class="text-gray-800 font-medium">Tutup</span>') + '</td>'
-            + '<td class="px-3 sm:px-6 py-3 text-right whitespace-nowrap">'
-            + '<button onclick="openEditModal(' + g.id + ')" class="inline-block px-2 sm:px-3 py-1 text-xs font-medium rounded-lg hover:opacity-80 cursor-pointer" style="background:#FEF3C7;color:#D97706">Edit</button>'
-            + (g.is_active
-                ? '<form method="POST" action="/gerais/' + g.id + '/tutup" onsubmit="showConfirm(\'Tutup gerai ini?\', function(){ this.submit(); }.bind(this)); return false;" class="inline"><input type="hidden" name="_token" value="' + csrfToken + '"><button class="inline-block px-2 sm:px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Tutup</button></form>'
-                + '<form method="POST" action="/gerais/' + g.id + '" onsubmit="showConfirm(\'Hapus gerai ini?\', function(){ this.submit(); }.bind(this)); return false;" class="inline"><input type="hidden" name="_token" value="' + csrfToken + '"><input type="hidden" name="_method" value="DELETE"><button style="background:#FEE2E2;color:#DC2626" class="inline-block px-2 sm:px-3 py-1 text-xs font-medium rounded-lg hover:opacity-80">Hapus</button></form>'
-                : '<form method="POST" action="/gerais/' + g.id + '/buka" onsubmit="showConfirm(\'Buka kembali gerai ini?\', function(){ this.submit(); }.bind(this)); return false;" class="inline"><input type="hidden" name="_token" value="' + csrfToken + '"><button class="inline-block px-2 sm:px-3 py-1 text-xs font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100">Buka</button></form>'
-                + '<form method="POST" action="/gerais/' + g.id + '" onsubmit="showConfirm(\'Hapus gerai ini?\', function(){ this.submit(); }.bind(this)); return false;" class="inline"><input type="hidden" name="_token" value="' + csrfToken + '"><input type="hidden" name="_method" value="DELETE"><button style="background:#FEE2E2;color:#DC2626" class="inline-block px-2 sm:px-3 py-1 text-xs font-medium rounded-lg hover:opacity-80">Hapus</button></form>')
-            + '</td></tr>';
+        return match && st;
     });
-    if (!html) html = '<tr><td colspan="12" class="px-3 sm:px-6 py-8 text-center text-sm text-gray-500">Belum ada data gerai.</td></tr>';
-    tbody.innerHTML = html;
+
+    var groupSort = function(list) {
+        if (!sortCol || sortCol === 'status') return list;
+        var col = sortCol, dir = sortDir;
+        return list.slice().sort(function(a, b) {
+            var va = a[col], vb = b[col];
+            var r;
+            if (col === 'lama_beroperasi') r = (va||-1) - (vb||-1);
+            else if (col === 'opening_at') r = (va||' ').localeCompare(vb||' ');
+            else r = String(va||'').localeCompare(String(vb||''));
+            return dir === 'asc' ? r : -r;
+        });
+    };
+
+    var active = groupSort(matched.filter(function(g) { return g.is_active; }));
+    var closed = groupSort(matched.filter(function(g) { return !g.is_active; }));
+    var closedFirst = sortCol === 'status' && sortDir === 'desc';
+    var groups = closedFirst ? [closed, active] : [active, closed];
+    var groupLabels = closedFirst ? ['Gerai Tutup', 'Gerai Buka'] : ['Gerai Buka', 'Gerai Tutup'];
+
+    var rows = [];
+    groups.forEach(function(group, gi) {
+        if (group.length === 0) return;
+        if (gi > 0 && rows.length > 0) {
+            rows.push('<tr class="border-t-2 border-gray-400"><td colspan="12" class="px-3 sm:px-6 py-2 bg-gray-200/60 text-xs font-semibold text-gray-600 uppercase tracking-wide">' + groupLabels[gi] + '</td></tr>');
+        }
+        group.forEach(function(g) {
+            var diff = '-';
+            if (g.is_active && g.lama_beroperasi > 0) {
+                var parts = [];
+                var d = g.lama_beroperasi;
+                if (d >= 365) parts.push(Math.floor(d/365) + ' thn');
+                if (d%365 >= 30) parts.push(Math.floor((d%365)/30) + ' bln');
+                if (parts.length === 0 || d%30 > 0) parts.push(d%30 + ' hr');
+                diff = parts.join(' ');
+            }
+            var phone = g.no_telepon && String(g.no_telepon).startsWith('62') ? '0' + String(g.no_telepon).slice(2) : (g.no_telepon || '-');
+            rows.push('<tr class="hover:bg-gray-50 ' + (!g.is_active ? 'bg-gray-100' : '') + '" data-active="' + (g.is_active ? '1' : '0') + '">'
+                + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm font-medium text-gray-800 whitespace-nowrap">' + g.kode_gerai + '</td>'
+                + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 truncate max-w-[120px] sm:max-w-none">' + g.nama_gerai + '</td>'
+                + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell">' + g.franchisee + '</td>'
+                + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 truncate max-w-[120px] sm:max-w-none hidden sm:table-cell">' + (g.alamat || '-') + '</td>'
+                + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell">' + (g.email || '-') + '</td>'
+                + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell">' + phone + '</td>'
+                + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell">' + (g.opening_at ? formatDate(g.opening_at) : '-') + '</td>'
+                + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell">' + diff + '</td>'
+                + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell">' + (g.nama_kota || '-') + '</td>'
+                + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm text-gray-600 whitespace-nowrap hidden sm:table-cell">' + (g.area || '-') + '</td>'
+                + '<td class="px-3 sm:px-6 py-3 text-xs sm:text-sm whitespace-nowrap">' + (g.is_active ? '<span class="text-green-600 font-medium">Aktif</span>' : '<span class="text-gray-800 font-medium">Tutup</span>') + '</td>'
+                + '<td class="px-3 sm:px-6 py-3 text-right whitespace-nowrap">'
+                + '<button onclick="openEditModal(' + g.id + ')" class="inline-block px-2 sm:px-3 py-1 text-xs font-medium rounded-lg hover:opacity-80 cursor-pointer" style="background:#FEF3C7;color:#D97706">Edit</button>'
+                + (g.is_active
+                    ? '<form method="POST" action="/gerais/' + g.id + '/tutup" onsubmit="showConfirm(\'Tutup gerai ini?\', function(){ this.submit(); }.bind(this)); return false;" class="inline"><input type="hidden" name="_token" value="' + csrfToken + '"><button class="inline-block px-2 sm:px-3 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Tutup</button></form>'
+                    + '<form method="POST" action="/gerais/' + g.id + '" onsubmit="showConfirm(\'Hapus gerai ini?\', function(){ this.submit(); }.bind(this)); return false;" class="inline"><input type="hidden" name="_token" value="' + csrfToken + '"><input type="hidden" name="_method" value="DELETE"><button style="background:#FEE2E2;color:#DC2626" class="inline-block px-2 sm:px-3 py-1 text-xs font-medium rounded-lg hover:opacity-80">Hapus</button></form>'
+                    : '<form method="POST" action="/gerais/' + g.id + '/buka" onsubmit="showConfirm(\'Buka kembali gerai ini?\', function(){ this.submit(); }.bind(this)); return false;" class="inline"><input type="hidden" name="_token" value="' + csrfToken + '"><button class="inline-block px-2 sm:px-3 py-1 text-xs font-medium text-green-600 bg-green-50 rounded-lg hover:bg-green-100">Buka</button></form>'
+                    + '<form method="POST" action="/gerais/' + g.id + '" onsubmit="showConfirm(\'Hapus gerai ini?\', function(){ this.submit(); }.bind(this)); return false;" class="inline"><input type="hidden" name="_token" value="' + csrfToken + '"><input type="hidden" name="_method" value="DELETE"><button style="background:#FEE2E2;color:#DC2626" class="inline-block px-2 sm:px-3 py-1 text-xs font-medium rounded-lg hover:opacity-80">Hapus</button></form>')
+                + '</td></tr>');
+        });
+    });
+
+    if (rows.length === 0) {
+        rows.push('<tr><td colspan="12" class="px-3 sm:px-6 py-8 text-center text-sm text-gray-500">Belum ada data gerai.</td></tr>');
+    }
+    tbody.innerHTML = rows.join('');
 }
 
 function formatDate(ymd) {

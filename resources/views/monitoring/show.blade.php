@@ -49,11 +49,25 @@
             </tr>
             <tr>
                 <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm font-medium text-gray-500">Checkin</td>
-                <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm text-gray-800">{{ $report->checkin_at->format('d-m-Y H:i:s') }}</td>
+                <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm text-gray-800">
+                    {{ $report->checkin_at->format('d-m-Y H:i:s') }}
+                    @if (auth()->user()->isSuperAdmin())
+                        <button type="button" onclick="openInfoEdit('checkin')" class="ml-2 align-middle text-gray-400 hover:text-blue-600 transition-colors" title="Edit Checkin">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        </button>
+                    @endif
+                </td>
             </tr>
             <tr>
                 <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm font-medium text-gray-500">Submit</td>
-                <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm text-gray-800">{{ $report->submit_at ? $report->submit_at->format('d-m-Y H:i:s') : '-' }}</td>
+                <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm text-gray-800">
+                    {{ $report->submit_at ? $report->submit_at->format('d-m-Y H:i:s') : '-' }}
+                    @if (auth()->user()->isSuperAdmin())
+                        <button type="button" onclick="openInfoEdit('submit')" class="ml-2 align-middle text-gray-400 hover:text-blue-600 transition-colors" title="Edit Submit">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        </button>
+                    @endif
+                </td>
             </tr>
             <tr>
                 <td class="px-4 sm:px-6 py-3 text-xs sm:text-sm font-medium text-gray-500">Petugas</td>
@@ -312,6 +326,34 @@ document.addEventListener('click', function(e) {
 @endif
 
 @if ($prefix !== 'evaluasi')
+{{-- Info Edit Modal --}}
+@if (auth()->user()->isSuperAdmin())
+<div id="infoEditModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+    <div class="fixed inset-0 bg-black/50" onclick="closeInfoEdit()"></div>
+    <div class="relative bg-white rounded-xl shadow-xl max-w-sm w-full mx-4 p-6">
+        <h3 class="text-base font-semibold text-gray-800 mb-4">Edit Informasi Laporan</h3>
+        <form method="POST" action="/{{ $prefix }}/{{ $report->id }}/info">
+            @csrf
+            @method('PUT')
+            <div class="mb-4" id="infoFieldCheckin">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Checkin</label>
+                <input type="datetime-local" name="checkin_at" id="infoCheckin"
+                    class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            <div class="mb-6" id="infoFieldSubmit">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Submit</label>
+                <input type="datetime-local" name="submit_at" id="infoSubmit"
+                    class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            </div>
+            <div class="mt-4 flex justify-end gap-3">
+                <button type="button" onclick="closeInfoEdit()" class="px-4 py-2 bg-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-300">Batal</button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+@endif
+
 {{-- PDF Modal --}}
 <div id="pdfModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
     <div class="fixed inset-0 bg-black/50" onclick="closePdfModal()"></div>
@@ -378,6 +420,22 @@ var allPgs = {!! json_encode($allPgs->map(fn($p) => [
 var allContacts = allGerais.concat(allPgs);
 
 var pdfUrl = '/{{ $prefix }}/{{ $report->id }}/pdf';
+
+function openInfoEdit(type) {
+    var checkin = document.getElementById('infoCheckin');
+    var submit = document.getElementById('infoSubmit');
+    checkin.value = '{{ $report->checkin_at->setTimezone('Asia/Jakarta')->format('Y-m-d\TH:i') }}';
+    submit.value = '{{ $report->submit_at ? $report->submit_at->setTimezone('Asia/Jakarta')->format('Y-m-d\TH:i') : '' }}';
+    document.getElementById('infoFieldCheckin').classList.toggle('hidden', type !== 'checkin');
+    document.getElementById('infoFieldSubmit').classList.toggle('hidden', type !== 'submit');
+    checkin.required = type === 'checkin';
+    submit.required = type === 'submit';
+    document.getElementById('infoEditModal').classList.remove('hidden');
+}
+
+function closeInfoEdit() {
+    document.getElementById('infoEditModal').classList.add('hidden');
+}
 
 function showPdfModal() {
     document.getElementById('pdfModal').classList.remove('hidden');

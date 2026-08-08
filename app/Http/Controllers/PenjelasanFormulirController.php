@@ -81,7 +81,7 @@ class PenjelasanFormulirController extends Controller
         $this->validateFormulir($formulir);
 
         $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls',
+            'file' => 'required|file|mimes:xlsx',
         ]);
 
         $reader = new Reader();

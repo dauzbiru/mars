@@ -14,7 +14,7 @@ class UserController extends Controller
 
         return view('user.index', [
             'user' => Auth::user(),
-            'users' => User::latest()->get(),
+            'users' => User::when(!Auth::user()->isSuperAdmin(), fn ($q) => $q->where('role', '!=', 'superadmin'))->latest()->get(),
             'tab' => $tab,
         ]);
     }
@@ -26,11 +26,13 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+        $allowedRoles = Auth::user()->isSuperAdmin() ? ['admin', 'guest', 'superadmin'] : ['admin', 'guest'];
+
         $request->validate([
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|alpha_dash|unique:users,username',
             'password' => 'required|string|min:6|confirmed',
-            'role' => 'required|in:admin,guest',
+            'role' => 'required|in:' . implode(',', $allowedRoles),
         ]);
 
         User::create([
@@ -45,17 +47,26 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
+        if (!Auth::user()->isSuperAdmin() && $user->isSuperAdmin()) {
+            abort(403);
+        }
+
         return view('user.edit', ['user' => $user]);
     }
 
     public function updateUser(Request $request, User $user)
     {
+        if (!Auth::user()->isSuperAdmin() && $user->isSuperAdmin()) {
+            abort(403);
+        }
+
+        $allowedRoles = Auth::user()->isSuperAdmin() ? ['admin', 'guest', 'superadmin'] : ['admin', 'guest'];
 
         $request->validate([
             'name' => 'required|string|max:255',
             'username' => 'required|string|max:255|alpha_dash|unique:users,username,' . $user->id,
             'password' => 'nullable|string|min:6|confirmed',
-            'role' => 'required|in:admin,guest',
+            'role' => 'required|in:' . implode(',', $allowedRoles),
         ]);
 
         $user->update([
@@ -77,6 +88,10 @@ class UserController extends Controller
     {
         if ($user->id === Auth::id()) {
             return back()->with('warning', 'Tidak bisa menghapus akun sendiri.');
+        }
+
+        if (!Auth::user()->isSuperAdmin() && $user->isSuperAdmin()) {
+            abort(403);
         }
 
         $user->delete();
