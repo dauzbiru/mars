@@ -135,11 +135,23 @@ class PraMonitoringController extends MonitoringController
         $placeholder = $ssIndexText[$ssIndex] ?? '';
         if (!preg_match('/\{item_score:(.*?)\}/', $placeholder, $m)) return;
 
-        $itemName = trim($m[1]);
-        if (!isset($items[$itemName])) return;
+        $norm = function($s) {
+            $s = str_replace(["\xC2\xAB", "\xC2\xBB", "\xE2\x80\x98", "\xE2\x80\x99",
+                "\xE2\x80\x9A", "\xE2\x80\x9B", "\xE2\x80\x9C", "\xE2\x80\x9D",
+                "\xE2\x80\x9E", "\xE2\x80\x9F", "\xE2\x80\xB9", "\xE2\x80\xBA"], '"', $s);
+            return trim(preg_replace('/\s+/', ' ', $s));
+        };
+
+        $normItems = [];
+        foreach ($items as $name => $data) {
+            $normItems[$norm($name)] = $data;
+        }
+
+        $itemKey = $norm(trim($m[1]));
+        if (!isset($normItems[$itemKey])) return;
 
         $scoreVal = (float)$ssIndexScore[$ssIndex];
-        $bobotVal = (float)$items[$itemName]['bobot'];
+        $bobotVal = (float)$normItems[$itemKey]['bobot'];
         if ($scoreVal >= $bobotVal) return;
 
         $ns = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
@@ -272,7 +284,10 @@ class PraMonitoringController extends MonitoringController
                 $infoRows[] = static::xmlMakeBRow($dom2, $ns2, '', $infoRn);
                 $infoRows[] = static::xmlMakeBRow($dom2, $ns2, 'Note:', $infoRn);
                 foreach (preg_split('/\r?\n/', $noteContent) as $line) {
-                    if (trim($line) !== '') $infoRows[] = static::xmlMakeBRow($dom2, $ns2, trim($line), $infoRn);
+                    $line = trim($line);
+                    if ($line === '') continue;
+                    $line = preg_replace('/^-(?=[^\s-])/', '- ', $line);
+                    $infoRows[] = static::xmlMakeBRow($dom2, $ns2, $line, $infoRn);
                 }
             }
             $infoRows[] = static::xmlMakeBRow($dom2, $ns2, '', $infoRn);
@@ -786,6 +801,12 @@ class PraMonitoringController extends MonitoringController
         if (!$reportPdf) {
             $reportPdf = $this->pdfDompdf($report, $revisi, $filename, $tempDir . '/' . uniqid('report_') . '.pdf');
         }
+
+        if (request()->boolean('no_cover')) {
+            return response()->download($reportPdf, $filename . '.pdf')->deleteFileAfterSend(true);
+        }
+
+        $filename = 'CL ' . $filename;
 
         // 2. Cover letter + merge
         $coverPdf = $this->generateCoverLetter($report, $reportPdf, $tempDir);

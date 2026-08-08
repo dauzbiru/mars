@@ -1038,7 +1038,10 @@ trait ExcelXmlHelpers
                             $infoRows[] = static::xmlMakeBRow($dom3, $ns3, '', $infoRn);
                             $infoRows[] = static::xmlMakeBRow($dom3, $ns3, 'Note:', $infoRn);
                             foreach (preg_split('/\r?\n/', $noteContent) as $line) {
-                                if (trim($line) !== '') $infoRows[] = static::xmlMakeBRow($dom3, $ns3, trim($line), $infoRn);
+                                $line = trim($line);
+                                if ($line === '') continue;
+                                $line = preg_replace('/^-(?=[^\s-])/', '- ', $line);
+                                $infoRows[] = static::xmlMakeBRow($dom3, $ns3, $line, $infoRn);
                             }
                         }
                         $infoRows[] = static::xmlMakeBRow($dom3, $ns3, '', $infoRn);

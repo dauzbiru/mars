@@ -355,6 +355,7 @@ document.addEventListener('click', function(e) {
         </div>
         <div class="mt-4 flex justify-end gap-3">
             <button onclick="closePdfModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">Batal</button>
+            <button onclick="downloadPdfNoCover()" style="background:#7C3AED;color:#fff" class="px-4 py-2 text-sm font-medium rounded-lg hover:opacity-90">Download PDF Tanpa Cover</button>
             <button onclick="downloadPdf()" style="background:#800000;color:#fff" class="px-4 py-2 text-sm font-medium rounded-lg hover:opacity-90">Download PDF</button>
         </div>
     </div>
@@ -437,6 +438,12 @@ function downloadPdf() {
     params.set('kota', document.getElementById('pdfKota').value.trim());
     params.set('franchisee', document.getElementById('pdfFranchisee').value.trim());
     window.open(url + '&' + params.toString(), '_blank');
+}
+
+function downloadPdfNoCover() {
+    closePdfModal();
+    if (!pdfReportId) return;
+    window.open('/pra-monitoring/' + pdfReportId + '/pdf?excel=1&no_cover=1', '_blank');
 }
 
 document.getElementById('pdfNomor').addEventListener('input', function() {

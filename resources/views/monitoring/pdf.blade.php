@@ -69,7 +69,15 @@
                     @endforeach
                 </div>
             @endif
-            @if ($report->note)<div style="margin-top: 12px;">Note: {!! nl2br(e(wordwrap($report->note, 200, "\n", true))) !!}</div>@endif
+            @if ($report->note)
+                @php
+                    $noteLines = collect(preg_split('/\r?\n/', $report->note))
+                        ->filter(fn($l) => trim($l) !== '')
+                        ->map(fn($l) => preg_replace('/^-(?=[^\s-])/', '- ', trim($l)))
+                        ->implode("\n");
+                @endphp
+                <div style="margin-top: 12px;">Note:<br>{!! nl2br(e(wordwrap($noteLines, 200, "\n", true))) !!}</div>
+            @endif
             @if ($report->kondisi_cat || $report->kondisi_awning || $report->kondisi_vinyl || $report->kondisi_stiker_kaca)
                 <div style="margin-top: 12px;">
                     Checklist tampilan gerai:<br>

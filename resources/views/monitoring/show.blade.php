@@ -114,7 +114,7 @@
                     @endif
                     @if ($report->note)
                         <p class="mt-4 mb-0">Note:</p>
-                        <div class="my-0 whitespace-pre-wrap" style="overflow-wrap: break-word; word-break: break-word;">{{ e($report->note) }}</div>
+                        <div class="my-0 whitespace-pre-wrap" style="overflow-wrap: break-word; word-break: break-word;">{{ e(collect(preg_split('/\r?\n/', $report->note))->filter(fn($l) => trim($l) !== '')->map(fn($l) => preg_replace('/^-(?=[^\s-])/', '- ', trim($l)))->implode("\n")) }}</div>
                     @endif
                     @if ($report->kondisi_cat || $report->kondisi_awning || $report->kondisi_vinyl || $report->kondisi_stiker_kaca)
                         <p class="mt-4 mb-0">Checklist tampilan gerai:</p>
